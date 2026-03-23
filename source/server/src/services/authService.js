@@ -13,12 +13,32 @@ function sanitizeUser(user) {
 }
 
 /**
- * Tạo JWT cho user đã đăng nhập thành công.
+ * Tạo access token cho user đã đăng nhập thành công.
  */
-function createToken(user) {
+function createAccessToken(user) {
   return jwt.sign({ userId: user.id }, env.jwtSecret, {
-    expiresIn: env.jwtExpiresIn,
+    expiresIn: env.accessTokenExpiresIn,
   });
+}
+
+/**
+ * Tạo refresh token để cấp lại access token khi phiên làm việc còn hiệu lực.
+ */
+function createRefreshToken(user) {
+  return jwt.sign({ userId: user.id }, env.refreshTokenSecret, {
+    expiresIn: env.refreshTokenExpiresIn,
+  });
+}
+
+/**
+ * Gói toàn bộ token và thông tin user về một format thống nhất cho frontend.
+ */
+function buildAuthPayload(user) {
+  return {
+    refreshToken: createRefreshToken(user),
+    token: createAccessToken(user),
+    user: sanitizeUser(user),
+  };
 }
 
 /**
@@ -46,10 +66,7 @@ export async function registerUser(payload) {
     username: (username || fallbackUsername).trim().toLowerCase(),
   });
 
-  return {
-    token: createToken(user),
-    user: sanitizeUser(user),
-  };
+  return buildAuthPayload(user);
 }
 
 /**
@@ -74,10 +91,7 @@ export async function loginUser(payload) {
     throw new ApiError(401, 'Thông tin đăng nhập không chính xác.');
   }
 
-  return {
-    token: createToken(user),
-    user: sanitizeUser(user),
-  };
+  return buildAuthPayload(user);
 }
 
 /**
@@ -91,4 +105,30 @@ export function getCurrentUser(userId) {
   }
 
   return sanitizeUser(user);
+}
+
+/**
+ * Xác thực refresh token rồi cấp lại cặp token mới cho frontend.
+ */
+export function refreshUserSession(refreshToken) {
+  if (!refreshToken) {
+    throw new ApiError(400, 'Vui lòng cung cấp refresh token hợp lệ.');
+  }
+
+  try {
+    const payload = jwt.verify(refreshToken, env.refreshTokenSecret);
+    const user = findUserById(payload.userId);
+
+    if (!user) {
+      throw new ApiError(401, 'Tài khoản không tồn tại hoặc đã hết hiệu lực.');
+    }
+
+    return buildAuthPayload(user);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+
+    throw new ApiError(401, 'Refresh token không hợp lệ hoặc đã hết hạn.');
+  }
 }

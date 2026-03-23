@@ -1,103 +1,161 @@
-# Tour Project
+# TourFlow
 
-Project web dat tour du lich voi cau truc tach rieng `client/server`, dung chung `package.json`, `node_modules` va `.env` tai thu muc `source`.
+Website đặt tour du lịch với cấu trúc `client/server`, dùng chung `package.json`, `node_modules` và file `.env` tại thư mục `source`.
 
-## Yeu cau moi truong
+## Yêu cầu môi trường
 
-- Node.js 18 tro len
-- npm 9 tro len
+- Node.js 18 trở lên
+- npm 9 trở lên
 
-## Cau truc thu muc
+## Cấu trúc thư mục
 
 ```text
 source/
   .env
   .env.example
   package.json
+  nodemon.json
   client/
     public/
     src/
     index.html
     vite.config.js
   server/
+    app.js
+    server.js
+    migrations/
     src/
+  dist/
 ```
 
 - `client`: frontend React + Vite + Tailwind CSS
-- `server`: backend Node.js/Express se duoc bo sung o giai doan sau
-- `.env`: file bien moi truong dung chung cho ca frontend va backend
+- `server`: backend Express + API người dùng + migrations SQL
+- `.env`: file biến môi trường dùng chung cho cả frontend và backend
+- `dist`: bản build frontend để backend serve ở môi trường production
 
-## Cai dat
-
-Mo terminal va chay:
+## Cài đặt
 
 ```bash
 cd C:\Users\Lenovo\Desktop\tour\source
 npm install
 ```
 
-## Chay frontend o moi truong phat trien
+## Chạy project ở môi trường phát triển
+
+Project hiện được cấu hình để frontend và backend cùng chạy trên một địa chỉ:
+
+- [http://localhost:4000](http://localhost:4000)
+
+Chạy lệnh:
 
 ```bash
 cd C:\Users\Lenovo\Desktop\tour\source
 npm run dev
 ```
 
-Sau khi chay thanh cong, mo trinh duyet tai:
+Giải thích:
 
-- [http://127.0.0.1:5173](http://127.0.0.1:5173)
+- `npm run dev`: chạy Express + Vite middleware trên cùng port `4000`
+- `npm run dev:server`: chạy riêng backend bằng `nodemon`
+- `npm run dev:client`: chạy riêng frontend Vite trên `5173`
 
-Neu cong `5173` dang ban, Vite co the tu chuyen sang cong khac va se hien URL moi trong terminal.
+## Build và chạy production local
 
-## Build production
+Build frontend:
 
 ```bash
 cd C:\Users\Lenovo\Desktop\tour\source
 npm run build
 ```
 
-Ban build se duoc tao trong thu muc:
-
-- `source/dist`
-
-## Preview ban build
+Sau đó chạy backend để serve luôn frontend build:
 
 ```bash
 cd C:\Users\Lenovo\Desktop\tour\source
-npm run preview
+npm run start:server
 ```
 
-## Bien moi truong
+Khi đó ứng dụng cũng truy cập tại:
 
-Project dang dung chung file:
+- [http://localhost:4000](http://localhost:4000)
 
-- `.env`
-- `.env.example`
+## Cấu hình `.env`
 
-Frontend hien da duoc cau hinh doc env tu root `source` thong qua `client/vite.config.js`.
+Project dùng chung:
 
-Neu sau nay can them bien cho frontend, dat theo quy tac Vite:
+- [`.env`](/C:/Users/Lenovo/Desktop/tour/source/.env)
+- [`.env.example`](/C:/Users/Lenovo/Desktop/tour/source/.env.example)
+
+Các nhóm biến chính:
 
 ```env
-VITE_API_BASE_URL=http://localhost:3000/api
+APP_NAME=TourFlow
+APP_ENV=development
+
+PORT=4000
+VITE_APP_NAME=TourFlow
+
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=tour_db
+DB_USER=root
+DB_PASSWORD=
+
+JWT_SECRET=change_me_for_real_project
+REFRESH_TOKEN_SECRET=change_me_for_real_project_refresh
+ACCESS_TOKEN_EXPIRES_IN=7h
+REFRESH_TOKEN_EXPIRES_IN=1d
 ```
 
-## Tinh trang hien tai
+Lưu ý:
 
-- Frontend nguoi dung da co giao dien va mock data
-- Backend moi la khung thu muc `server/src`
-- Chua ket noi API that
+- Biến bắt đầu bằng `VITE_` sẽ được frontend sử dụng
+- `PORT` là cổng dùng chung, backend sẽ tự suy ra URL app là `http://localhost:${PORT}`
+- API frontend và backend đang cố định cùng dùng tiền tố `/api` ngay trong code
+- Access token hiện hết hạn sau `7h`, refresh token hết hạn sau `1d`
+- Cần đổi `JWT_SECRET` khi triển khai môi trường thật
 
-## Mot so lenh hay dung
+## Database và seed dữ liệu
+
+Thư mục SQL hiện có tại:
+
+- [server/migrations/001_create_tour_db.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/001_create_tour_db.sql)
+- [server/migrations/002_data_seed.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/002_data_seed.sql)
+
+Thứ tự chạy:
+
+1. Tạo database và bảng bằng `001_create_tour_db.sql`
+2. Seed dữ liệu mẫu bằng `002_data_seed.sql`
+
+Database mẫu đang dùng tên:
+
+- `tour_db`
+
+## Tài khoản demo
+
+Có sẵn tài khoản demo để kiểm tra luồng đăng nhập:
+
+- Tên đăng nhập: `demo`
+- Mật khẩu: `123456`
+
+## Tình trạng hiện tại
+
+- Frontend người dùng đã có giao diện và đã nối với backend
+- Backend đang chạy bằng Express với dữ liệu mock in-memory và đã có migrations SQL để chuẩn bị chuyển sang MySQL thật
+- Luồng chính đã có: đăng ký, đăng nhập, xem tour, xem chi tiết tour, đặt tour, thanh toán, lịch sử booking
+
+## Lệnh hay dùng
 
 ```bash
 npm run dev
+npm run dev:server
+npm run dev:client
 npm run build
-npm run preview
+npm run start:server
 ```
 
-## Ghi chu
+## Ghi chú
 
-- Chay lenh tai thu muc `source`, khong chay trong `client`
-- Frontend hien dang su dung mock data de demo luong xem tour, dat tour va thanh toan
-- Neu muon noi backend that, co the phat trien tiep trong `source/server`
+- Hãy chạy lệnh tại thư mục `source`
+- Nếu port `4000` đang bận, cần dừng tiến trình cũ trước khi chạy lại
+- Khi chạy development bằng `npm run dev`, backend là entry chính và Vite được mount vào Express

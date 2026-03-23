@@ -6,7 +6,7 @@ import express from 'express';
 import { env } from './src/config/env.js';
 import { errorHandler } from './src/middlewares/errorHandler.js';
 import { notFoundHandler } from './src/middlewares/notFoundHandler.js';
-import { registerRoutes } from './src/routes/index.js';
+import { API_PREFIX, registerRoutes } from './src/routes/index.js';
 
 const serverRoot = path.dirname(fileURLToPath(import.meta.url));
 const workspaceRoot = path.resolve(serverRoot, '..');
@@ -39,7 +39,7 @@ async function registerFrontend(app, httpServer) {
 
     // Trong development, mọi route GET ngoài API sẽ trả về index.html đã được Vite transform.
     app.use(async (req, res, next) => {
-      if (req.method !== 'GET' || req.path.startsWith(env.apiPrefix)) {
+      if (req.method !== 'GET' || req.path.startsWith(API_PREFIX)) {
         return next();
       }
 
@@ -64,7 +64,7 @@ async function registerFrontend(app, httpServer) {
 
     // Trong production, backend serve luôn frontend build từ thư mục dist.
     app.use((req, res, next) => {
-      if (req.method !== 'GET' || req.path.startsWith(env.apiPrefix)) {
+      if (req.method !== 'GET' || req.path.startsWith(API_PREFIX)) {
         return next();
       }
 
@@ -83,7 +83,7 @@ export async function createApp({ httpServer } = {}) {
 
   app.use(
     cors({
-      origin: env.clientUrl,
+      origin: env.appUrl,
       credentials: true,
     }),
   );

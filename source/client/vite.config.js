@@ -8,6 +8,9 @@ const clientRoot = fileURLToPath(new URL('./', import.meta.url));
 export default defineConfig({
   root: clientRoot,
   envDir: '..',
+  define: {
+    __API_BASE_URL__: JSON.stringify('/api'),
+  },
   plugins: [react(), tailwindcss()],
   build: {
     outDir: '../dist',

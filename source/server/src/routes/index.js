@@ -1,10 +1,11 @@
 import express from 'express';
-import { env } from '../config/env.js';
 import { getHealth } from '../controllers/healthController.js';
 import authRouter from './authRoutes.js';
 import bookingRouter from './bookingRoutes.js';
 import paymentRouter from './paymentRoutes.js';
 import tourRouter from './tourRoutes.js';
+
+export const API_PREFIX = '/api';
 
 /**
  * Gắn toàn bộ nhóm route vào Express app theo tiền tố API chung.
@@ -18,5 +19,5 @@ export function registerRoutes(app) {
   apiRouter.use('/bookings', bookingRouter);
   apiRouter.use('/payments', paymentRouter);
 
-  app.use(env.apiPrefix, apiRouter);
+  app.use(API_PREFIX, apiRouter);
 }

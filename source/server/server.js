@@ -12,9 +12,9 @@ async function startServer() {
   // Attach Express after configuration so Vite HMR can share this HTTP server in development.
   httpServer.on('request', app);
 
-  httpServer.listen(env.backendPort, () => {
+  httpServer.listen(env.appPort, () => {
     console.log(
-      `[server] ${env.appName} is running at ${env.backendUrl} (${env.appEnv})`,
+      `[server] ${env.appName} is running at ${env.appUrl} (${env.appEnv})`,
     );
   });
 }

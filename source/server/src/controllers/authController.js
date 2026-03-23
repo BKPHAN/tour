@@ -1,4 +1,9 @@
-import { getCurrentUser, loginUser, registerUser } from '../services/authService.js';
+import {
+  getCurrentUser,
+  loginUser,
+  refreshUserSession,
+  registerUser,
+} from '../services/authService.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 
 /**
@@ -20,6 +25,18 @@ export async function login(req, res, next) {
   try {
     const result = await loginUser(req.body);
     return sendSuccess(res, result, 'Đăng nhập thành công.');
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * Cấp lại access token từ refresh token hợp lệ.
+ */
+export function refreshToken(req, res, next) {
+  try {
+    const result = refreshUserSession(req.body.refreshToken);
+    return sendSuccess(res, result, 'Làm mới phiên đăng nhập thành công.');
   } catch (error) {
     return next(error);
   }

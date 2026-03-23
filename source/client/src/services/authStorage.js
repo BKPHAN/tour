@@ -27,11 +27,30 @@ export function getAccessToken() {
 }
 
 /**
+ * Lấy refresh token hiện tại để làm mới phiên khi access token hết hạn.
+ */
+export function getRefreshToken() {
+  return getStoredAuth()?.refreshToken || '';
+}
+
+/**
  * Lưu token và user sau khi đăng nhập hoặc đăng ký thành công.
  */
 export function setStoredAuth(authData) {
   window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
   window.dispatchEvent(new Event(AUTH_EVENT_NAME));
+}
+
+/**
+ * Cập nhật bộ token mới nhưng vẫn giữ user hiện tại nếu backend không trả lại.
+ */
+export function updateStoredTokens(authData) {
+  const currentAuth = getStoredAuth() || {};
+  setStoredAuth({
+    ...currentAuth,
+    ...authData,
+    user: authData.user || currentAuth.user || null,
+  });
 }
 
 /**
