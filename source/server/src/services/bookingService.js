@@ -36,7 +36,7 @@ export function getUserBookingDetail(userId, bookingId) {
   const booking = findBookingByIdAndUserId(bookingId, userId);
 
   if (!booking) {
-    throw new ApiError(404, 'Khong tim thay booking.');
+    throw new ApiError(404, 'Không tìm thấy booking.');
   }
 
   return booking;

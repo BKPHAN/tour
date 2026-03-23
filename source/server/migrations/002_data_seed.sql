@@ -199,9 +199,9 @@ INSERT INTO bookings (
     'The noi dia',
     'Can phong co cua so lon.',
     JSON_ARRAY(
-      JSON_OBJECT('title', 'Dat cho thanh cong', 'time', '2026-03-14 09:20', 'detail', 'He thong da giu 2 cho cho tour.'),
-      JSON_OBJECT('title', 'Thanh toan hoan tat', 'time', '2026-03-14 09:24', 'detail', 'Khach da thanh toan bang the noi dia.'),
-      JSON_OBJECT('title', 'Da xac nhan lich khoi hanh', 'time', '2026-03-15 14:00', 'detail', 'Nhan vien da goi dien xac nhan thong tin.')
+      JSON_OBJECT('title', 'Đặt chỗ thành công', 'time', '2026-03-14 09:20', 'detail', 'Hệ thống đã giữ 2 chỗ cho tour.'),
+      JSON_OBJECT('title', 'Thanh toán hoàn tất', 'time', '2026-03-14 09:24', 'detail', 'Khách đã thanh toán bằng thẻ nội địa.'),
+      JSON_OBJECT('title', 'Đã xác nhận lịch khởi hành', 'time', '2026-03-15 14:00', 'detail', 'Nhân viên đã gọi điện xác nhận thông tin.')
     ),
     '2026-03-14 09:20:00',
     '2026-03-14 09:20:00',
@@ -223,8 +223,8 @@ INSERT INTO bookings (
     'Chuyen khoan ngan hang',
     'Muon ngoi gan cua so tren xe.',
     JSON_ARRAY(
-      JSON_OBJECT('title', 'Yeu cau dat tour da duoc tao', 'time', '2026-03-18 11:10', 'detail', 'He thong dang giu cho tam thoi trong 24 gio.'),
-      JSON_OBJECT('title', 'Cho thanh toan', 'time', '2026-03-18 11:12', 'detail', 'Can hoan tat thanh toan de khoa cho chinh thuc.')
+      JSON_OBJECT('title', 'Yêu cầu đặt tour đã được tạo', 'time', '2026-03-18 11:10', 'detail', 'Hệ thống đang giữ chỗ tạm thời trong 24 giờ.'),
+      JSON_OBJECT('title', 'Chờ thanh toán', 'time', '2026-03-18 11:12', 'detail', 'Cần hoàn tất thanh toán để khóa chỗ chính thức.')
     ),
     '2026-03-18 11:10:00',
     '2026-03-18 11:10:00',
@@ -246,9 +246,9 @@ INSERT INTO bookings (
     'Vi dien tu',
     'Khong an cay.',
     JSON_ARRAY(
-      JSON_OBJECT('title', 'Dat cho thanh cong', 'time', '2026-03-02 08:40', 'detail', 'Giu cho cho 2 hanh khach.'),
-      JSON_OBJECT('title', 'Thanh toan hoan tat', 'time', '2026-03-02 08:45', 'detail', 'Thanh toan qua vi dien tu thanh cong.'),
-      JSON_OBJECT('title', 'Da khoi hanh va hoan thanh', 'time', '2026-04-10 20:30', 'detail', 'Tour da ket thuc, san sang danh gia.')
+      JSON_OBJECT('title', 'Đặt chỗ thành công', 'time', '2026-03-02 08:40', 'detail', 'Giữ chỗ cho 2 hành khách.'),
+      JSON_OBJECT('title', 'Thanh toán hoàn tất', 'time', '2026-03-02 08:45', 'detail', 'Thanh toán qua ví điện tử thành công.'),
+      JSON_OBJECT('title', 'Đã khởi hành và hoàn thành', 'time', '2026-04-10 20:30', 'detail', 'Tour đã kết thúc, sẵn sàng đánh giá.')
     ),
     '2026-03-02 08:40:00',
     '2026-03-02 08:40:00',
