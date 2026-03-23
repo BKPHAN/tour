@@ -36,7 +36,7 @@ function PaymentPage() {
         setPayment(result.payment);
         setErrorMessage('');
 
-        if (result.booking?.paymentMethod && result.booking.paymentMethod !== 'Chua thanh toan') {
+        if (result.booking?.paymentMethod && result.booking.paymentMethod !== 'Chưa thanh toán') {
           setPaymentData((current) => ({
             ...current,
             method: result.booking.paymentMethod,

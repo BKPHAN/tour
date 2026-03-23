@@ -11,7 +11,7 @@ export function authenticate(req, res, next) {
   const [scheme, token] = authorization.split(' ');
 
   if (scheme !== 'Bearer' || !token) {
-    return next(new ApiError(401, 'Ban can dang nhap de su dung tinh nang nay.'));
+    return next(new ApiError(401, 'Bạn cần đăng nhập để sử dụng tính năng này.'));
   }
 
   try {
@@ -19,12 +19,12 @@ export function authenticate(req, res, next) {
     const user = findUserById(payload.userId);
 
     if (!user) {
-      return next(new ApiError(401, 'Tai khoan khong ton tai hoac da het hieu luc.'));
+      return next(new ApiError(401, 'Tài khoản không tồn tại hoặc đã hết hiệu lực.'));
     }
 
     req.user = user;
     return next();
   } catch (error) {
-    return next(new ApiError(401, 'Token khong hop le hoac da het han.'));
+    return next(new ApiError(401, 'Token không hợp lệ hoặc đã hết hạn.'));
   }
 }

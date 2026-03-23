@@ -16,6 +16,6 @@ export function errorHandler(error, req, res, next) {
 
   return res.status(500).json({
     success: false,
-    message: 'Loi he thong, vui long thu lai sau.',
+    message: 'Lỗi hệ thống, vui lòng thử lại sau.',
   });
 }

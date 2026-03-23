@@ -7,7 +7,7 @@ import { sendSuccess } from '../utils/apiResponse.js';
 export async function register(req, res, next) {
   try {
     const result = await registerUser(req.body);
-    return sendSuccess(res, result, 'Dang ky tai khoan thanh cong.', 201);
+    return sendSuccess(res, result, 'Đăng ký tài khoản thành công.', 201);
   } catch (error) {
     return next(error);
   }
@@ -19,7 +19,7 @@ export async function register(req, res, next) {
 export async function login(req, res, next) {
   try {
     const result = await loginUser(req.body);
-    return sendSuccess(res, result, 'Dang nhap thanh cong.');
+    return sendSuccess(res, result, 'Đăng nhập thành công.');
   } catch (error) {
     return next(error);
   }
@@ -31,7 +31,7 @@ export async function login(req, res, next) {
 export function getProfile(req, res, next) {
   try {
     const result = getCurrentUser(req.user.id);
-    return sendSuccess(res, result, 'Lay thong tin tai khoan thanh cong.');
+    return sendSuccess(res, result, 'Lấy thông tin tài khoản thành công.');
   } catch (error) {
     return next(error);
   }

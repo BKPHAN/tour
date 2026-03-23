@@ -79,7 +79,7 @@ export function getTourDetail(tourId) {
   const tour = findTourById(tourId);
 
   if (!tour) {
-    throw new ApiError(404, 'Khong tim thay tour.');
+    throw new ApiError(404, 'Không tìm thấy tour.');
   }
 
   return tour;

@@ -7,7 +7,7 @@ import { sendSuccess } from '../utils/apiResponse.js';
 export function getPayment(req, res, next) {
   try {
     const result = getPaymentDetail(req.user.id, req.params.bookingId);
-    return sendSuccess(res, result, 'Lay thong tin thanh toan thanh cong.');
+    return sendSuccess(res, result, 'Lấy thông tin thanh toán thành công.');
   } catch (error) {
     return next(error);
   }
@@ -19,7 +19,7 @@ export function getPayment(req, res, next) {
 export function createPayment(req, res, next) {
   try {
     const result = payForBooking(req.user.id, req.body);
-    return sendSuccess(res, result, 'Thanh toan booking thanh cong.', 201);
+    return sendSuccess(res, result, 'Thanh toán booking thành công.', 201);
   } catch (error) {
     return next(error);
   }

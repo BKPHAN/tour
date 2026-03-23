@@ -10,7 +10,7 @@ export function getPaymentDetail(userId, bookingId) {
   const booking = findBookingByIdAndUserId(bookingId, userId);
 
   if (!booking) {
-    throw new ApiError(404, 'Khong tim thay booking.');
+    throw new ApiError(404, 'Không tìm thấy booking.');
   }
 
   return {
@@ -28,15 +28,15 @@ export function payForBooking(userId, payload) {
   const booking = findBookingByIdAndUserId(bookingId, userId);
 
   if (!booking) {
-    throw new ApiError(404, 'Khong tim thay booking.');
+    throw new ApiError(404, 'Không tìm thấy booking.');
   }
 
   if (booking.paymentStatus === 'paid') {
-    throw new ApiError(400, 'Booking nay da duoc thanh toan.');
+    throw new ApiError(400, 'Booking này đã được thanh toán.');
   }
 
   if (!method || !cardName || !cardNumber) {
-    throw new ApiError(400, 'Vui long nhap day du thong tin thanh toan.');
+    throw new ApiError(400, 'Vui lòng nhập đầy đủ thông tin thanh toán.');
   }
 
   const paymentUpdates = {
@@ -61,14 +61,14 @@ export function payForBooking(userId, payload) {
     timeline: [
       ...booking.timeline,
       {
-        detail: `Khach da thanh toan bang ${method}.`,
+        detail: `Khách đã thanh toán bằng ${method}.`,
         time: new Date().toISOString().slice(0, 16).replace('T', ' '),
-        title: 'Thanh toan hoan tat',
+        title: 'Thanh toán hoàn tất',
       },
       {
-        detail: 'Booking da duoc chuyen sang trang thai da xac nhan.',
+        detail: 'Booking đã được chuyển sang trạng thái đã xác nhận.',
         time: new Date().toISOString().slice(0, 16).replace('T', ' '),
-        title: 'Da xac nhan lich khoi hanh',
+        title: 'Đã xác nhận lịch khởi hành',
       },
     ],
   });

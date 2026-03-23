@@ -28,11 +28,11 @@ export async function registerUser(payload) {
   const { email, fullName, password, phone, username } = payload;
 
   if (!fullName || !email || !phone || !password) {
-    throw new ApiError(400, 'Vui long cung cap day du ho ten, email, so dien thoai va mat khau.');
+    throw new ApiError(400, 'Vui lòng cung cấp đầy đủ họ tên, email, số điện thoại và mật khẩu.');
   }
 
   if (findUserByEmail(email)) {
-    throw new ApiError(409, 'Email nay da duoc su dung.');
+    throw new ApiError(409, 'Email này đã được sử dụng.');
   }
 
   const normalizedEmail = email.trim().toLowerCase();
@@ -59,19 +59,19 @@ export async function loginUser(payload) {
   const { loginId, password } = payload;
 
   if (!loginId || !password) {
-    throw new ApiError(400, 'Vui long nhap ten dang nhap/email va mat khau.');
+    throw new ApiError(400, 'Vui lòng nhập tên đăng nhập/email và mật khẩu.');
   }
 
   const user = findUserByLoginId(loginId);
 
   if (!user) {
-    throw new ApiError(401, 'Thong tin dang nhap khong chinh xac.');
+    throw new ApiError(401, 'Thông tin đăng nhập không chính xác.');
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
   if (!isPasswordValid) {
-    throw new ApiError(401, 'Thong tin dang nhap khong chinh xac.');
+    throw new ApiError(401, 'Thông tin đăng nhập không chính xác.');
   }
 
   return {
@@ -87,7 +87,7 @@ export function getCurrentUser(userId) {
   const user = findUserById(userId);
 
   if (!user) {
-    throw new ApiError(404, 'Khong tim thay tai khoan.');
+    throw new ApiError(404, 'Không tìm thấy tài khoản.');
   }
 
   return sanitizeUser(user);

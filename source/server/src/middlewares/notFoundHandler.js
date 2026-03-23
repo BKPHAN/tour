@@ -4,6 +4,6 @@
 export function notFoundHandler(req, res) {
   return res.status(404).json({
     success: false,
-    message: `Khong tim thay route ${req.originalUrl}`,
+    message: `Không tìm thấy route ${req.originalUrl}`,
   });
 }

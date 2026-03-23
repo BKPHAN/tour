@@ -7,7 +7,7 @@ import { sendSuccess } from '../utils/apiResponse.js';
 export function listBookings(req, res, next) {
   try {
     const bookings = getUserBookings(req.user.id);
-    return sendSuccess(res, bookings, 'Lay lich su booking thanh cong.');
+    return sendSuccess(res, bookings, 'Lấy lịch sử booking thành công.');
   } catch (error) {
     return next(error);
   }
@@ -19,7 +19,7 @@ export function listBookings(req, res, next) {
 export function getBooking(req, res, next) {
   try {
     const booking = getUserBookingDetail(req.user.id, req.params.bookingId);
-    return sendSuccess(res, booking, 'Lay chi tiet booking thanh cong.');
+    return sendSuccess(res, booking, 'Lấy chi tiết booking thành công.');
   } catch (error) {
     return next(error);
   }
@@ -31,7 +31,7 @@ export function getBooking(req, res, next) {
 export function createBooking(req, res, next) {
   try {
     const booking = createUserBooking(req.user, req.body);
-    return sendSuccess(res, booking, 'Tao booking thanh cong.', 201);
+    return sendSuccess(res, booking, 'Tạo booking thành công.', 201);
   } catch (error) {
     return next(error);
   }
@@ -43,7 +43,7 @@ export function createBooking(req, res, next) {
 export function cancelBooking(req, res, next) {
   try {
     const booking = cancelUserBooking(req.user.id, req.params.bookingId);
-    return sendSuccess(res, booking, 'Huy booking thanh cong.');
+    return sendSuccess(res, booking, 'Hủy booking thành công.');
   } catch (error) {
     return next(error);
   }

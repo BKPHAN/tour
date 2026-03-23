@@ -23,12 +23,12 @@ export async function apiRequest(path, options = {}) {
   });
 
   const responseData = await response.json().catch(() => ({
-    message: 'Khong doc duoc phan hoi tu server.',
+    message: 'Không đọc được phản hồi từ server.',
     success: false,
   }));
 
   if (!response.ok || responseData.success === false) {
-    const error = new Error(responseData.message || 'Yeu cau that bai.');
+    const error = new Error(responseData.message || 'Yêu cầu thất bại.');
     error.status = response.status;
     error.details = responseData.details || null;
     throw error;

@@ -10,14 +10,14 @@ function createInitialTimeline(travelers) {
 
   return [
     {
-      detail: `He thong da tam giu cho cho ${travelers} hanh khach.`,
+      detail: `Hệ thống đã tạm giữ chỗ cho ${travelers} hành khách.`,
       time: now,
-      title: 'Yeu cau dat tour da duoc tao',
+      title: 'Yêu cầu đặt tour đã được tạo',
     },
     {
-      detail: 'Can hoan tat thanh toan de khoa cho chinh thuc.',
+      detail: 'Cần hoàn tất thanh toán để khóa chỗ chính thức.',
       time: now,
-      title: 'Cho thanh toan',
+      title: 'Chờ thanh toán',
     },
   ];
 }
@@ -50,18 +50,18 @@ export function createUserBooking(user, payload) {
   const travelerCount = Number(travelers);
 
   if (!tourId || !departureId || !travelerCount || travelerCount < 1) {
-    throw new ApiError(400, 'Vui long chon tour, lich khoi hanh va so luong hanh khach hop le.');
+    throw new ApiError(400, 'Vui lòng chọn tour, lịch khởi hành và số lượng hành khách hợp lệ.');
   }
 
   const tour = findTourById(tourId);
   const departure = findDepartureById(tourId, departureId);
 
   if (!tour || !departure) {
-    throw new ApiError(404, 'Tour hoac lich khoi hanh khong ton tai.');
+    throw new ApiError(404, 'Tour hoặc lịch khởi hành không tồn tại.');
   }
 
   if (departure.slots < travelerCount) {
-    throw new ApiError(400, 'So cho con lai khong du cho lua chon cua ban.');
+    throw new ApiError(400, 'Số chỗ còn lại không đủ cho lựa chọn của bạn.');
   }
 
   reserveDepartureSlots(tourId, departureId, travelerCount);
@@ -73,8 +73,8 @@ export function createUserBooking(user, payload) {
     customerPhone: (phone || user.phone).trim(),
     departureDate: departure.date,
     departureId,
-    notes: (note || '').trim() || 'Khong co ghi chu them.',
-    paymentMethod: paymentMethod || 'Chua thanh toan',
+    notes: (note || '').trim() || 'Không có ghi chú thêm.',
+    paymentMethod: paymentMethod || 'Chưa thanh toán',
     paymentStatus: 'waiting',
     status: 'pending',
     timeline: createInitialTimeline(travelerCount),
@@ -92,11 +92,11 @@ export function cancelUserBooking(userId, bookingId) {
   const booking = findBookingByIdAndUserId(bookingId, userId);
 
   if (!booking) {
-    throw new ApiError(404, 'Khong tim thay booking.');
+    throw new ApiError(404, 'Không tìm thấy booking.');
   }
 
   if (booking.status === 'cancelled' || booking.status === 'completed') {
-    throw new ApiError(400, 'Booking nay khong the huy.');
+    throw new ApiError(400, 'Booking này không thể hủy.');
   }
 
   releaseDepartureSlots(booking.tourId, booking.departureId, booking.travelers);
@@ -107,9 +107,9 @@ export function cancelUserBooking(userId, bookingId) {
     timeline: [
       ...booking.timeline,
       {
-        detail: 'Booking da duoc huy tu phia nguoi dung.',
+        detail: 'Booking đã được hủy từ phía người dùng.',
         time: new Date().toISOString().slice(0, 16).replace('T', ' '),
-        title: 'Da huy booking',
+        title: 'Đã hủy booking',
       },
     ],
   });
