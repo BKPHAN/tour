@@ -2,9 +2,13 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
+import { applyTheme, getInitialTheme } from './services/themeService.js';
 import './styles/global.css';
 
-// Khởi tạo ứng dụng React và bọc router ở mức cao nhất để toàn bộ page dùng chung điều hướng.
+// Apply the saved theme before the app mounts to reduce flicker during refresh.
+applyTheme(getInitialTheme());
+
+// Boot the React client and keep routing available for every user-facing page.
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>

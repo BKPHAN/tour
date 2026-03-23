@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { getStoredUser, logout } from '../services/authService.js';
 import { getAuthEventName } from '../services/authStorage.js';
+import { DARK_THEME } from '../services/themeService.js';
 
 const navItems = [
   { to: '/', label: 'Trang chủ' },
@@ -10,16 +11,17 @@ const navItems = [
 ];
 
 /**
- * Header điều hướng chính của khu vực người dùng, có hỗ trợ menu mobile và trạng thái đăng nhập.
+ * Main header navigation for the user area, including auth state and the theme switch.
  */
-function Header() {
+function Header({ themeMode, onToggleTheme }) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(getStoredUser());
+  const isDarkMode = themeMode === DARK_THEME;
 
   useEffect(() => {
     /**
-     * Đồng bộ header khi localStorage hoặc token trong cùng tab thay đổi.
+     * Keep the header in sync when auth data changes in storage or inside the same tab.
      */
     function syncAuthState() {
       setCurrentUser(getStoredUser());
@@ -36,7 +38,7 @@ function Header() {
   }, []);
 
   /**
-   * Đăng xuất khỏi frontend rồi chuyển người dùng về trang đăng nhập.
+   * Log the user out on the client and send them back to the login page.
    */
   function handleLogout() {
     logout();
@@ -52,16 +54,12 @@ function Header() {
           <strong>TourFlow</strong>
         </Link>
 
-        <button
-          className="menu-toggle"
-          type="button"
-          onClick={() => setIsMenuOpen((current) => !current)}
-        >
+        <button className="menu-toggle" type="button" onClick={() => setIsMenuOpen((current) => !current)}>
           Menu
         </button>
 
         <nav className={`main-nav ${isMenuOpen ? 'open' : ''}`}>
-          {/* Đóng menu sau khi chọn link để trải nghiệm mobile gọn hơn. */}
+          {/* Close the mobile navigation after a route is selected to keep the flow tidy. */}
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -75,6 +73,17 @@ function Header() {
         </nav>
 
         <div className="header-actions">
+          <button
+            aria-label={isDarkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
+            className="theme-toggle"
+            type="button"
+            onClick={onToggleTheme}
+          >
+            <span className="theme-toggle-icon" aria-hidden="true">
+              {isDarkMode ? '☀' : '☾'}
+            </span>
+          </button>
+
           {currentUser ? (
             <>
               <span className="header-user">Xin chào, {currentUser.fullName}</span>
