@@ -596,17 +596,17 @@ button {
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px solid var(--line);
+  border: none;
   border-radius: 999px;
-  background: var(--surface-soft);
+  background: transparent;
   color: var(--ink-strong);
-  box-shadow: 0 14px 28px rgba(16, 35, 60, 0.08);
-  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  box-shadow: none;
+  transition: transform 0.2s ease, background 0.2s ease;
 }
 
 .theme-toggle:hover {
   transform: translateY(-1px);
-  border-color: rgba(239, 123, 69, 0.28);
+  background: transparent;
 }
 
 .theme-toggle-icon {
