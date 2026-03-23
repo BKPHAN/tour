@@ -7,6 +7,9 @@ const navItems = [
   { to: '/bookings', label: 'Booking của tôi' },
 ];
 
+/**
+ * Header điều hướng chính của khu vực người dùng, có hỗ trợ menu mobile.
+ */
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -27,6 +30,7 @@ function Header() {
         </button>
 
         <nav className={`main-nav ${isMenuOpen ? 'open' : ''}`}>
+          {/* Đóng menu sau khi chọn link để trải nghiệm mobile gọn hơn. */}
           {navItems.map((item) => (
             <NavLink
               key={item.to}

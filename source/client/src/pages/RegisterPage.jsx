@@ -9,15 +9,24 @@ const initialForm = {
   password: '',
 };
 
+/**
+ * Trang đăng ký mock để hoàn thiện bố cục form trước khi tích hợp API tạo tài khoản thật.
+ */
 function RegisterPage() {
   const [formData, setFormData] = useState(initialForm);
   const [submitted, setSubmitted] = useState(false);
 
+  /**
+   * Đồng bộ từng input vào form state để phục vụ validate và submit ở bước sau.
+   */
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
   }
 
+  /**
+   * Mock thao tác submit để kiểm tra trải nghiệm form và vùng thông báo thành công.
+   */
   function handleSubmit(event) {
     event.preventDefault();
     setSubmitted(true);

@@ -5,6 +5,9 @@ import FormField from '../components/FormField.jsx';
 import { getBookingDetail, getTourDetail } from '../services/mockApi.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 
+/**
+ * Trang thanh toán mock, hỗ trợ cả luồng đi từ booking có sẵn lẫn luồng checkout tạm từ query string.
+ */
 function PaymentPage() {
   const { bookingId } = useParams();
   const [searchParams] = useSearchParams();
@@ -18,6 +21,9 @@ function PaymentPage() {
   });
 
   useEffect(() => {
+    /**
+     * Ưu tiên lấy booking thật theo id; nếu không có thì dựng dữ liệu thanh toán tạm từ query string.
+     */
     async function loadPaymentData() {
       const bookingData = await getBookingDetail(bookingId);
       setBooking(bookingData);
@@ -38,6 +44,7 @@ function PaymentPage() {
     loadPaymentData();
   }, [bookingId, searchParams]);
 
+  // Tạo một object summary thống nhất để phần sidebar dùng chung cho cả booking có sẵn và booking tạm.
   const draftSummary = useMemo(() => {
     if (booking) {
       return {
@@ -61,11 +68,17 @@ function PaymentPage() {
     };
   }, [booking, searchParams, tour]);
 
+  /**
+   * Cập nhật dữ liệu form thanh toán mỗi khi người dùng đổi thông tin thẻ hoặc phương thức.
+   */
   function handleChange(event) {
     const { name, value } = event.target;
     setPaymentData((current) => ({ ...current, [name]: value }));
   }
 
+  /**
+   * Mock bước xác nhận thanh toán thành công để giữ liền mạch flow frontend.
+   */
   function handleSubmit(event) {
     event.preventDefault();
     setSubmitted(true);

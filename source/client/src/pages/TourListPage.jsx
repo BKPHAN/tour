@@ -3,12 +3,18 @@ import SectionHeading from '../components/SectionHeading.jsx';
 import TourCard from '../components/TourCard.jsx';
 import { getAllTours } from '../services/mockApi.js';
 
+/**
+ * Trang danh sách tour, hỗ trợ tìm kiếm theo từ khóa và lọc theo nhóm tour.
+ */
 function TourListPage() {
   const [tours, setTours] = useState([]);
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('all');
 
   useEffect(() => {
+    /**
+     * Lấy toàn bộ danh sách tour từ mock API khi trang được mở.
+     */
     async function loadTours() {
       const data = await getAllTours();
       setTours(data);
@@ -17,8 +23,10 @@ function TourListPage() {
     loadTours();
   }, []);
 
+  // Sinh danh sách category động từ dữ liệu tour để bộ lọc không phải hard-code.
   const categories = useMemo(() => ['all', ...new Set(tours.map((tour) => tour.category))], [tours]);
 
+  // Kết hợp cả từ khóa và category để danh sách hiển thị phản ánh đúng bộ lọc người dùng chọn.
   const filteredTours = useMemo(() => {
     return tours.filter((tour) => {
       const matchesKeyword =

@@ -5,12 +5,18 @@ import SectionHeading from '../components/SectionHeading.jsx';
 import { getBookings, getTourDetail } from '../services/mockApi.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 
+/**
+ * Trang lịch sử booking, hỗ trợ xem lại các đơn và lọc nhanh theo trạng thái.
+ */
 function BookingHistoryPage() {
   const [bookings, setBookings] = useState([]);
   const [tourMap, setTourMap] = useState({});
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
+    /**
+     * Lấy danh sách booking rồi dựng map tour tương ứng để card hiển thị được tên tour.
+     */
     async function loadBookings() {
       const data = await getBookings();
       setBookings(data);
@@ -28,6 +34,7 @@ function BookingHistoryPage() {
     loadBookings();
   }, []);
 
+  // Giữ bộ lọc trạng thái ở client để người dùng đổi nhanh mà không cần gọi lại API mock.
   const filteredBookings = useMemo(() => {
     if (statusFilter === 'all') {
       return bookings;

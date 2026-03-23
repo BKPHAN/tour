@@ -6,12 +6,18 @@ import SectionHeading from '../components/SectionHeading.jsx';
 import { getBookingDetail, getTourDetail } from '../services/mockApi.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 
+/**
+ * Trang chi tiết booking, hiển thị đủ thông tin đơn và timeline xử lý để người dùng theo dõi.
+ */
 function BookingDetailPage() {
   const { bookingId } = useParams();
   const [booking, setBooking] = useState(null);
   const [tour, setTour] = useState(null);
 
   useEffect(() => {
+    /**
+     * Lấy booking trước, sau đó mới lấy tour liên quan để tránh gọi thiếu dữ liệu.
+     */
     async function loadBooking() {
       const bookingData = await getBookingDetail(bookingId);
       setBooking(bookingData);

@@ -433,10 +433,16 @@ export const testimonials = [
   },
 ];
 
+/**
+ * Tìm tour theo id trong bộ dữ liệu mock để mô phỏng truy vấn chi tiết tour.
+ */
 export function getTourById(tourId) {
   return tours.find((tour) => tour.id === tourId);
 }
 
+/**
+ * Tìm booking theo id trong bộ dữ liệu mock để dùng cho trang thanh toán và xem chi tiết đơn.
+ */
 export function getBookingById(bookingId) {
   return bookingHistory.find((booking) => booking.id === bookingId);
 }

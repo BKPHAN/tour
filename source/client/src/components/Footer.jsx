@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
 
+/**
+ * Footer tổng hợp các lối tắt quan trọng của luồng người dùng trong bản mock frontend.
+ */
 function Footer() {
   return (
     <footer className="site-footer">

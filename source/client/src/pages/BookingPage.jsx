@@ -4,6 +4,9 @@ import FormField from '../components/FormField.jsx';
 import { getTourDetail } from '../services/mockApi.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 
+/**
+ * Trang nhập thông tin đặt tour và tính tổng tiền tạm tính trước khi sang bước thanh toán.
+ */
 function BookingPage() {
   const { tourId } = useParams();
   const navigate = useNavigate();
@@ -18,6 +21,9 @@ function BookingPage() {
   });
 
   useEffect(() => {
+    /**
+     * Lấy dữ liệu tour và tự động chọn lịch khởi hành đầu tiên để form có trạng thái mặc định hợp lệ.
+     */
     async function loadTour() {
       const data = await getTourDetail(tourId);
       setTour(data);
@@ -29,17 +35,25 @@ function BookingPage() {
     loadTour();
   }, [tourId]);
 
+  // Xác định lịch khởi hành đang được chọn để hiển thị đúng ngày đi và giá tour.
   const selectedDeparture = useMemo(() => {
     return tour?.departures.find((item) => item.id === formData.departureId);
   }, [formData.departureId, tour]);
 
+  // Tổng tiền tạm tính được suy ra trực tiếp từ số khách và giá của lịch đang chọn.
   const totalPrice = Number(formData.travelerCount || 0) * (selectedDeparture?.price ?? 0);
 
+  /**
+   * Đồng bộ giá trị input vào form state để dùng lại cho bước thanh toán.
+   */
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
   }
 
+  /**
+   * Đóng gói dữ liệu đặt tour vào query string để mô phỏng chuyển sang bước checkout.
+   */
   function handleSubmit(event) {
     event.preventDefault();
 

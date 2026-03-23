@@ -4,11 +4,17 @@ import SectionHeading from '../components/SectionHeading.jsx';
 import { getTourDetail } from '../services/mockApi.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 
+/**
+ * Trang chi tiết tour, gom đầy đủ mô tả, lịch trình và các đợt khởi hành để người dùng quyết định đặt tour.
+ */
 function TourDetailPage() {
   const { tourId } = useParams();
   const [tour, setTour] = useState(null);
 
   useEffect(() => {
+    /**
+     * Nạp chi tiết tour theo id trên URL mỗi khi người dùng đổi sang tour khác.
+     */
     async function loadTour() {
       const data = await getTourDetail(tourId);
       setTour(data);

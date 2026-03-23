@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import FormField from '../components/FormField.jsx';
 
+/**
+ * Trang đăng nhập mock để chốt bố cục form trước khi nối xác thực thật bằng backend.
+ */
 function LoginPage() {
   const [formData, setFormData] = useState({
     loginId: '',
@@ -9,11 +12,17 @@ function LoginPage() {
   });
   const [submitted, setSubmitted] = useState(false);
 
+  /**
+   * Cập nhật giá trị các ô nhập trong form đăng nhập.
+   */
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
   }
 
+  /**
+   * Mock thao tác submit để kiểm tra luồng giao diện và thông báo phản hồi.
+   */
   function handleSubmit(event) {
     event.preventDefault();
     setSubmitted(true);

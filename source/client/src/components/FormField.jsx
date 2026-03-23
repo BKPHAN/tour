@@ -1,5 +1,8 @@
 import { useState } from 'react';
 
+/**
+ * Render field form dùng chung, hỗ trợ input, select, textarea và toggle hiện/ẩn mật khẩu.
+ */
 function FormField({
   label,
   name,
@@ -14,6 +17,7 @@ function FormField({
   const isPasswordField = as === 'input' && type === 'password';
   const inputType = isPasswordField && isPasswordVisible ? 'text' : type;
 
+  // Nhánh select được tách riêng để form page chỉ cần truyền options là đủ.
   if (as === 'select') {
     return (
       <label className="form-field">
@@ -29,6 +33,7 @@ function FormField({
     );
   }
 
+  // Nhánh textarea giữ cùng style và API props với input/select để component dễ tái sử dụng.
   if (as === 'textarea') {
     return (
       <label className="form-field">
@@ -43,6 +48,7 @@ function FormField({
       <span>{label}</span>
       <div className={isPasswordField ? 'input-shell input-shell-password' : 'input-shell'}>
         <input name={name} onChange={onChange} placeholder={placeholder} type={inputType} value={value} />
+        {/* Chỉ hiển thị nút con mắt khi field thật sự là password để tránh nhiễu UI. */}
         {isPasswordField ? (
           <button
             aria-label={isPasswordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}

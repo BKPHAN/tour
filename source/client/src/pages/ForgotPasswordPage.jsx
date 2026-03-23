@@ -1,10 +1,16 @@
 import { useState } from 'react';
 import FormField from '../components/FormField.jsx';
 
+/**
+ * Trang quên mật khẩu mock, giữ sẵn vị trí cho flow gửi email reset sau này.
+ */
 function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  /**
+   * Mock thao tác gửi yêu cầu đặt lại mật khẩu để kiểm tra phản hồi trên giao diện.
+   */
   function handleSubmit(event) {
     event.preventDefault();
     setSubmitted(true);

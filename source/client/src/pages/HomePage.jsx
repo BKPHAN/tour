@@ -110,6 +110,9 @@ const travelGallery = [
   },
 ];
 
+/**
+ * Trang chủ landing page, tập trung vào hero slideshow và các khối nội dung dẫn người dùng sang đặt tour.
+ */
 function HomePage() {
   const [featuredTours, setFeaturedTours] = useState([]);
   const [testimonials, setTestimonials] = useState([]);
@@ -117,6 +120,9 @@ function HomePage() {
   const [previousSlideIndex, setPreviousSlideIndex] = useState(null);
 
   useEffect(() => {
+    /**
+     * Nạp tour nổi bật và testimonial song song để hero và các section bên dưới lên cùng lúc.
+     */
     async function loadPage() {
       const [tourData, testimonialData] = await Promise.all([getFeaturedTours(), getTestimonials()]);
       setFeaturedTours(tourData);
@@ -126,9 +132,11 @@ function HomePage() {
     loadPage();
   }, []);
 
+  // Nếu API mock chưa trả tour nổi bật thì dùng fallback để hero luôn có nội dung hiển thị.
   const heroSlides = useMemo(() => {
     const sourceSlides = featuredTours.length ? featuredTours : fallbackSlides;
 
+    // Ghép thêm lớp nội dung marketing vào từng tour để hero có badge, ribbon và proof riêng.
     return sourceSlides.map((tour, index) => ({
       ...tour,
       ...spotlightThemes[index % spotlightThemes.length],
@@ -140,6 +148,7 @@ function HomePage() {
       return undefined;
     }
 
+    // Tự động chuyển slide theo chu kỳ để hero luôn có cảm giác động như landing page quảng bá.
     const intervalId = window.setInterval(() => {
       setActiveSlideIndex((current) => {
         setPreviousSlideIndex(current);
@@ -156,16 +165,23 @@ function HomePage() {
       return;
     }
 
+    // Khi số lượng slide thay đổi, đưa index hiện tại về phạm vi hợp lệ để tránh lỗi truy cập mảng.
     setActiveSlideIndex((current) => current % heroSlides.length);
   }, [heroSlides.length]);
 
   const activeSlide = heroSlides[activeSlideIndex] ?? heroSlides[0];
 
+  /**
+   * Cho phép người dùng chọn trực tiếp một slide qua dot hoặc thumbnail.
+   */
   function handleSelectSlide(index) {
     setPreviousSlideIndex(activeSlideIndex);
     setActiveSlideIndex(index);
   }
 
+  /**
+   * Chuyển sang slide kế tiếp và lưu lại slide trước đó để chạy animation rời khung.
+   */
   function handleNextSlide() {
     setActiveSlideIndex((current) => {
       setPreviousSlideIndex(current);
@@ -173,6 +189,9 @@ function HomePage() {
     });
   }
 
+  /**
+   * Quay về slide trước đó để hỗ trợ điều hướng bằng nút mũi tên.
+   */
   function handlePrevSlide() {
     setActiveSlideIndex((current) => {
       setPreviousSlideIndex(current);
@@ -237,6 +256,7 @@ function HomePage() {
 
           <div className="hero-visual-column">
             <div className="hero-slider-shell">
+              {/* Mỗi slide được render thành một layer riêng để tránh lộ ảnh kế bên khi animation chạy. */}
               {heroSlides.map((slide, index) => {
                 let slideState = 'next';
 

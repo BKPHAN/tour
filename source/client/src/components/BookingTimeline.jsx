@@ -1,3 +1,6 @@
+/**
+ * Render timeline các mốc xử lý booking để người dùng dễ theo dõi tiến trình.
+ */
 function BookingTimeline({ items }) {
   return (
     <div className="timeline">

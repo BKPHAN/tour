@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '../utils/formatters.js';
 
+/**
+ * Card hiển thị tóm tắt tour, dùng ở trang chủ và trang danh sách tour.
+ */
 function TourCard({ tour }) {
   const formattedPrice = formatCurrency(tour.price);
 
@@ -24,6 +27,7 @@ function TourCard({ tour }) {
           <div className="tour-card-price">
             <small>Giá từ</small>
             <strong aria-label={formattedPrice} className="tour-card-price-animated">
+              {/* Tách chuỗi giá thành từng ký tự để áp dụng animation lệch nhịp cho phần số tiền. */}
               {Array.from(formattedPrice).map((character, index) => (
                 <span
                   key={`${tour.id}-price-${index}`}

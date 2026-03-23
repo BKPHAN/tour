@@ -1,3 +1,6 @@
+/**
+ * Tiêu đề section dùng lại cho nhiều trang để giữ cùng nhịp trình bày.
+ */
 function SectionHeading({ eyebrow, title, description, action }) {
   return (
     <div className="section-heading">
