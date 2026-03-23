@@ -110,6 +110,45 @@ const travelGallery = [
   },
 ];
 
+const fallbackTestimonials = [
+  {
+    id: 'review-fallback-1',
+    name: 'Minh Anh',
+    role: 'Cặp đôi nghỉ dưỡng cuối tuần',
+    content:
+      'Lúc xem ảnh và lịch trình mình đã muốn đi ngay. Đến khi trải nghiệm thật thì mọi khoảnh khắc từ khách sạn, điểm tham quan đến lịch di chuyển đều rất vừa vặn.',
+  },
+  {
+    id: 'review-fallback-2',
+    name: 'Gia Huy',
+    role: 'Nhóm bạn săn trải nghiệm',
+    content:
+      'Trang tour trình bày rõ nên tụi mình chọn được lịch rất nhanh. Chuyến đi thực tế cũng đúng cảm giác đã thấy từ đầu: nhiều cảm hứng, nhiều ảnh đẹp và rất đáng để quay lại.',
+  },
+  {
+    id: 'review-fallback-3',
+    name: 'Thu Trang',
+    role: 'Gia đình có trẻ nhỏ',
+    content:
+      'Điều mình thích nhất là cảm giác yên tâm trước khi đặt tour. Khi đi rồi mới thấy mọi chi tiết được chuẩn bị đủ kỹ để cả nhà tận hưởng chuyến đi một cách nhẹ nhàng hơn.',
+  },
+];
+
+const testimonialAccents = [
+  {
+    accent: 'Biển xanh và hoàng hôn',
+    journey: 'Hành trình được lưu lại nhiều khoảnh khắc đẹp',
+  },
+  {
+    accent: 'Lịch trình dễ theo dõi',
+    journey: 'Trải nghiệm rõ ràng từ lúc xem tour đến lúc lên đường',
+  },
+  {
+    accent: 'Nhiều kết nối đáng nhớ',
+    journey: 'Một chuyến đi khiến người tham gia muốn chia sẻ lại',
+  },
+];
+
 /**
  * Trang chủ landing page, tập trung vào hero slideshow và các khối nội dung dẫn người dùng sang đặt tour.
  */
@@ -118,6 +157,8 @@ function HomePage() {
   const [testimonials, setTestimonials] = useState([]);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [previousSlideIndex, setPreviousSlideIndex] = useState(null);
+  const [activeTestimonialIndex, setActiveTestimonialIndex] = useState(0);
+  const [previousTestimonialIndex, setPreviousTestimonialIndex] = useState(null);
 
   useEffect(() => {
     /**
@@ -175,6 +216,43 @@ function HomePage() {
   }, [heroSlides.length]);
 
   const activeSlide = heroSlides[activeSlideIndex] ?? heroSlides[0];
+  const reviewSource = testimonials.length ? testimonials : fallbackTestimonials;
+  const testimonialSlides = useMemo(() => {
+    return reviewSource.map((item, index) => ({
+      ...item,
+      ...testimonialAccents[index % testimonialAccents.length],
+      initials: item.name
+        .split(' ')
+        .map((part) => part[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase(),
+    }));
+  }, [reviewSource]);
+
+  useEffect(() => {
+    if (!testimonialSlides.length) {
+      setActiveTestimonialIndex(0);
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setActiveTestimonialIndex((current) => {
+        setPreviousTestimonialIndex(current);
+        return (current + 1) % testimonialSlides.length;
+      });
+    }, 5600);
+
+    return () => window.clearInterval(intervalId);
+  }, [testimonialSlides]);
+
+  useEffect(() => {
+    if (!testimonialSlides.length) {
+      return;
+    }
+
+    setActiveTestimonialIndex((current) => current % testimonialSlides.length);
+  }, [testimonialSlides.length]);
 
   /**
    * Cho phép người dùng chọn trực tiếp một slide qua dot hoặc thumbnail.
@@ -201,6 +279,26 @@ function HomePage() {
     setActiveSlideIndex((current) => {
       setPreviousSlideIndex(current);
       return (current - 1 + heroSlides.length) % heroSlides.length;
+    });
+  }
+
+  /**
+   * Chuyển sang bình luận kế tiếp để người xem chủ động duyệt các cảm nhận nổi bật.
+   */
+  function handleNextTestimonial() {
+    setActiveTestimonialIndex((current) => {
+      setPreviousTestimonialIndex(current);
+      return (current + 1) % testimonialSlides.length;
+    });
+  }
+
+  /**
+   * Quay lại bình luận trước đó bằng nút mũi tên trái.
+   */
+  function handlePrevTestimonial() {
+    setActiveTestimonialIndex((current) => {
+      setPreviousTestimonialIndex(current);
+      return (current - 1 + testimonialSlides.length) % testimonialSlides.length;
     });
   }
 
@@ -409,18 +507,94 @@ function HomePage() {
       <section className="container section-block">
         <SectionHeading
           eyebrow="Trải nghiệm nổi bật"
-          title="Một landing page du lịch được tối ưu để mời gọi xem tour và chốt đặt tour"
-          description="Hình ảnh giàu cảm hứng, typography sang hơn và bố cục tập trung vào việc đưa khách từ cảm xúc đến hành động đặt tour."
+          title="Những cảm hứng du lịch được kể lại từ người đã đi, để bạn dễ tìm thấy chuyến đi mình muốn bắt đầu"
+          description="Từ khoảnh khắc biển xanh, phố lên đèn đến những hành trình nhiều kết nối, mỗi trải nghiệm đều gợi cảm giác rất thật để người xem muốn mở tour, xem kỹ hơn và sẵn sàng giữ chỗ."
         />
 
-        <div className="testimonial-grid">
-          {testimonials.map((item) => (
-            <article className="testimonial-card" key={item.id}>
-              <p>{item.content}</p>
-              <strong>{item.name}</strong>
-              <span>{item.role}</span>
-            </article>
-          ))}
+        <div className="testimonial-carousel">
+          <div className="testimonial-carousel-head">
+            <div className="testimonial-carousel-copy">
+              <span>Cảm nhận thật từ người đã tham gia</span>
+              <strong>{testimonialSlides[activeTestimonialIndex]?.accent}</strong>
+            </div>
+          </div>
+
+          <div className="testimonial-stage">
+            <button
+              aria-label="Xem bình luận trước"
+              className="testimonial-control-button testimonial-control-button-left"
+              type="button"
+              onClick={handlePrevTestimonial}
+            >
+              &#8249;
+            </button>
+
+            <button
+              aria-label="Xem bình luận tiếp theo"
+              className="testimonial-control-button testimonial-control-button-right"
+              type="button"
+              onClick={handleNextTestimonial}
+            >
+              &#8250;
+            </button>
+
+            {testimonialSlides.map((item, index) => {
+              let slideState = 'next';
+
+              if (index === activeTestimonialIndex) {
+                slideState = 'active';
+              } else if (index === previousTestimonialIndex) {
+                slideState = 'previous';
+              }
+
+              return (
+                <article className={`testimonial-card testimonial-slide testimonial-slide-layer ${slideState}`} key={item.id}>
+                <div className="testimonial-card-top">
+                  <span className="testimonial-quote-mark">"</span>
+                  <div className="testimonial-stars" aria-label="5 sao">
+                    <span>★</span>
+                    <span>★</span>
+                    <span>★</span>
+                    <span>★</span>
+                    <span>★</span>
+                  </div>
+                </div>
+
+                <p className="testimonial-copy">{item.content}</p>
+
+                <div className="testimonial-highlight">
+                  <strong>{item.accent}</strong>
+                  <span>{item.journey}</span>
+                </div>
+
+                <div className="testimonial-author">
+                  <div className="testimonial-avatar" aria-hidden="true">
+                    {item.initials}
+                  </div>
+                  <div className="testimonial-author-meta">
+                    <strong>{item.name}</strong>
+                    <span>{item.role}</span>
+                  </div>
+                </div>
+              </article>
+              );
+            })}
+          </div>
+
+          <div className="testimonial-dots">
+            {testimonialSlides.map((item, index) => (
+              <button
+                key={item.id}
+                aria-label={`Xem bình luận ${index + 1}`}
+                className={index === activeTestimonialIndex ? 'testimonial-dot active' : 'testimonial-dot'}
+                type="button"
+                onClick={() => {
+                  setPreviousTestimonialIndex(activeTestimonialIndex);
+                  setActiveTestimonialIndex(index);
+                }}
+              />
+            ))}
+          </div>
         </div>
       </section>
     </div>

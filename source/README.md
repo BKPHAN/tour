@@ -94,6 +94,11 @@ APP_ENV=development
 
 PORT=4000
 VITE_APP_NAME=TourFlow
+VITE_HERO_EFFECT=leaves
+VITE_HERO_EFFECT_COUNT=18
+VITE_HERO_EFFECT_SPEED=1
+VITE_HERO_EFFECT_SCALE=1
+VITE_HERO_EFFECT_OPACITY=0.72
 
 DB_HOST=localhost
 DB_PORT=3306
@@ -114,6 +119,18 @@ Lưu ý:
 - API frontend và backend đang cố định cùng dùng tiền tố `/api` ngay trong code
 - Access token hiện hết hạn sau `7h`, refresh token hết hạn sau `1d`
 - Cần đổi `JWT_SECRET` khi triển khai môi trường thật
+
+Hiệu ứng hero có thể đổi nhanh bằng env:
+
+- `VITE_HERO_EFFECT=leaves`: lá rơi
+- `VITE_HERO_EFFECT=particles`: hạt sáng bay
+- `VITE_HERO_EFFECT=stars`: sao rơi
+- `VITE_HERO_EFFECT=snow`: tuyết rơi
+- `VITE_HERO_EFFECT=petals`: cánh hoa rơi
+- `VITE_HERO_EFFECT=clouds`: mây trôi
+- `VITE_HERO_EFFECT=birds`: chim bay
+- `VITE_HERO_EFFECT=sparkles`: nắng lấp lánh
+- `VITE_HERO_EFFECT=none`: tắt hiệu ứng
 
 ## Database và seed dữ liệu
 

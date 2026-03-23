@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import AmbientEffect from '../components/AmbientEffect.jsx';
 import Footer from '../components/Footer.jsx';
 import Header from '../components/Header.jsx';
 
@@ -8,11 +9,14 @@ import Header from '../components/Header.jsx';
 function UserLayout() {
   return (
     <div className="page-shell">
-      <Header />
-      <main className="page-main">
-        <Outlet />
-      </main>
-      <Footer />
+      <AmbientEffect />
+      <div className="page-shell-content">
+        <Header />
+        <main className="page-main">
+          <Outlet />
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }

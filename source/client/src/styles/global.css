@@ -62,7 +62,14 @@ button {
 }
 
 .page-shell {
+  position: relative;
+  isolation: isolate;
   min-height: 100vh;
+}
+
+.page-shell-content {
+  position: relative;
+  z-index: 1;
 }
 
 .page-main {
@@ -743,10 +750,168 @@ body {
 }
 
 .hero-stage {
+  position: relative;
+  z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 34px;
   align-items: center;
+}
+
+.ambient-effect {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-effect-item {
+  position: absolute;
+  left: var(--left);
+  top: var(--top);
+  opacity: var(--opacity);
+  transform: translate3d(0, 0, 0) rotate(var(--rotation)) scale(var(--scale-item));
+  filter: blur(var(--soft-blur));
+  will-change: transform, opacity;
+}
+
+.ambient-effect--snow .ambient-effect-item,
+.ambient-effect--particles .ambient-effect-item,
+.ambient-effect--sparkles .ambient-effect-item {
+  width: var(--size);
+  height: var(--size);
+}
+
+.ambient-effect--snow .ambient-effect-item {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.28),
+    0 0 18px rgba(255, 255, 255, 0.32);
+  animation: snowfall var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+.ambient-effect--leaves .ambient-effect-item,
+.ambient-effect--petals .ambient-effect-item {
+  width: var(--size);
+  height: calc(var(--size) * 1.25);
+  animation: foliage-fall var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+.ambient-effect--leaves .ambient-effect-item {
+  border-radius: 65% 20% 70% 22%;
+  background: linear-gradient(180deg, rgba(120, 154, 78, 0.95), rgba(239, 123, 69, 0.9));
+  box-shadow: inset -3px -6px 10px rgba(76, 99, 46, 0.2);
+}
+
+.ambient-effect--petals .ambient-effect-item {
+  border-radius: 78% 18% 72% 24%;
+  background: linear-gradient(180deg, rgba(255, 216, 226, 0.96), rgba(244, 140, 171, 0.88));
+  box-shadow: inset -3px -4px 8px rgba(171, 69, 109, 0.12);
+}
+
+.ambient-effect--particles .ambient-effect-item {
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 245, 212, 0.96), rgba(255, 190, 92, 0.3) 66%, transparent 100%);
+  box-shadow: 0 0 24px rgba(255, 190, 92, 0.26);
+  animation: particle-float var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.ambient-effect--sparkles .ambient-effect-item {
+  animation: sparkle-twinkle var(--duration) ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+
+.ambient-effect--sparkles .ambient-effect-item::before,
+.ambient-effect--sparkles .ambient-effect-item::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  background: linear-gradient(180deg, rgba(255, 248, 230, 0.98), rgba(255, 190, 92, 0.2));
+  border-radius: 999px;
+}
+
+.ambient-effect--sparkles .ambient-effect-item::before {
+  width: 2px;
+  height: 100%;
+}
+
+.ambient-effect--sparkles .ambient-effect-item::after {
+  width: 100%;
+  height: 2px;
+}
+
+.ambient-effect--stars .ambient-effect-item {
+  width: var(--size);
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 247, 221, 0.96), rgba(255, 190, 92, 0.14));
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.34);
+  animation: shooting-star var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+.ambient-effect--stars .ambient-effect-item::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(255, 248, 226, 0.96);
+  transform: translateY(-50%);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.5);
+}
+
+.ambient-effect--clouds .ambient-effect-item {
+  width: calc(var(--size) * 1.7);
+  height: calc(var(--size) * 0.62);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.44);
+  box-shadow:
+    26px -10px 0 3px rgba(255, 255, 255, 0.38),
+    64px 2px 0 -2px rgba(255, 255, 255, 0.34),
+    -18px 6px 0 2px rgba(255, 255, 255, 0.28);
+  animation: cloud-drift var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+.ambient-effect--birds .ambient-effect-item {
+  width: calc(var(--size) * 1.7);
+  height: calc(var(--size) * 0.78);
+  animation: bird-flight var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+.ambient-effect--birds .ambient-effect-item::before,
+.ambient-effect--birds .ambient-effect-item::after {
+  content: '';
+  position: absolute;
+  top: 40%;
+  width: 52%;
+  height: 60%;
+  border-top: 2px solid rgba(16, 35, 60, 0.58);
+  border-radius: 100% 100% 0 0;
+  animation: wing-flap 1.6s ease-in-out infinite;
+}
+
+.ambient-effect--birds .ambient-effect-item::before {
+  left: 0;
+  transform-origin: right center;
+  transform: rotate(14deg);
+}
+
+.ambient-effect--birds .ambient-effect-item::after {
+  right: 0;
+  transform-origin: left center;
+  transform: rotate(-14deg);
+  animation-delay: -0.8s;
 }
 
 .hero-copy-panel {
@@ -1318,6 +1483,246 @@ body {
   background: radial-gradient(circle, rgba(239, 123, 69, 0.18), transparent 70%);
 }
 
+.testimonial-carousel {
+  --testimonial-card-width: min(430px, calc(100vw - 132px));
+  position: relative;
+  overflow: hidden;
+  margin-top: 8px;
+  padding: 8px 0 4px;
+}
+
+.testimonial-carousel-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.testimonial-carousel-copy {
+  display: grid;
+  gap: 6px;
+}
+
+.testimonial-carousel-copy span {
+  color: var(--ink-soft);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.76rem;
+}
+
+.testimonial-carousel-copy strong {
+  font-size: 1rem;
+  color: var(--ink-strong);
+}
+
+.testimonial-dots {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.testimonial-control-button {
+  position: absolute;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(16, 35, 60, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--ink-strong);
+  box-shadow: 0 14px 24px rgba(16, 35, 60, 0.08);
+  font-size: 1.4rem;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  transform: translateY(-50%);
+  z-index: 5;
+}
+
+.testimonial-control-button:hover {
+  transform: translateY(calc(-50% - 2px));
+  border-color: rgba(239, 123, 69, 0.28);
+  background: white;
+}
+
+.testimonial-control-button-left {
+  left: 18px;
+}
+
+.testimonial-control-button-right {
+  right: 18px;
+}
+
+.testimonial-stage {
+  position: relative;
+  width: var(--testimonial-card-width);
+  min-height: 320px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.testimonial-slide {
+  width: var(--testimonial-card-width);
+  min-height: 320px;
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 252, 255, 0.82)),
+    linear-gradient(135deg, rgba(239, 123, 69, 0.08), rgba(255, 190, 92, 0.04));
+  border: 1px solid rgba(16, 35, 60, 0.08);
+  box-shadow: 0 24px 44px rgba(16, 35, 60, 0.1);
+}
+
+.testimonial-slide-layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateX(110%);
+  transition:
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.5s ease;
+  will-change: transform, opacity;
+}
+
+.testimonial-slide-layer.active {
+  opacity: 1;
+  transform: translateX(0);
+  z-index: 3;
+}
+
+.testimonial-slide-layer.previous {
+  opacity: 0.45;
+  transform: translateX(-110%);
+  z-index: 2;
+}
+
+.testimonial-slide-layer.next {
+  z-index: 1;
+}
+
+.testimonial-slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top right, rgba(255, 190, 92, 0.16), transparent 28%),
+    linear-gradient(180deg, transparent 56%, rgba(16, 35, 60, 0.02) 100%);
+  pointer-events: none;
+}
+
+.testimonial-card-top,
+.testimonial-author {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.testimonial-quote-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 4.4rem;
+  line-height: 0.78;
+  color: rgba(239, 123, 69, 0.34);
+}
+
+.testimonial-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 243, 235, 0.92);
+  color: #ef7b45;
+  box-shadow: inset 0 0 0 1px rgba(239, 123, 69, 0.08);
+}
+
+.testimonial-copy,
+.testimonial-highlight,
+.testimonial-author-meta {
+  position: relative;
+  z-index: 1;
+}
+
+.testimonial-copy {
+  margin: 0;
+  color: var(--ink-strong);
+  font-size: 1.02rem;
+  line-height: 1.8;
+}
+
+.testimonial-highlight {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(16, 35, 60, 0.05);
+  border: 1px solid rgba(16, 35, 60, 0.05);
+}
+
+.testimonial-highlight strong {
+  color: var(--ink-strong);
+  font-size: 0.98rem;
+}
+
+.testimonial-highlight span,
+.testimonial-author-meta span {
+  color: var(--ink-soft);
+}
+
+.testimonial-avatar {
+  width: 54px;
+  height: 54px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(239, 123, 69, 0.96), rgba(255, 190, 92, 0.92));
+  color: white;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  box-shadow: 0 18px 28px rgba(239, 123, 69, 0.2);
+}
+
+.testimonial-author {
+  justify-content: flex-start;
+}
+
+.testimonial-author-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.testimonial-author-meta strong {
+  font-size: 1rem;
+}
+
+.testimonial-dots {
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.testimonial-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(16, 35, 60, 0.18);
+  transition: width 0.2s ease, background 0.2s ease;
+}
+
+.testimonial-dot.active {
+  width: 34px;
+  background: linear-gradient(90deg, var(--accent), var(--sun));
+}
+
 @keyframes fade-slide {
   from {
     opacity: 0;
@@ -1409,7 +1814,117 @@ body {
   }
 }
 
+@keyframes snowfall {
+  0% {
+    transform: translate3d(0, -12%, 0) rotate(0deg) scale(var(--scale-item));
+  }
+
+  100% {
+    transform: translate3d(var(--drift), 108vh, 0) rotate(180deg) scale(var(--scale-item));
+  }
+}
+
+@keyframes foliage-fall {
+  0% {
+    transform: translate3d(0, -14%, 0) rotate(var(--rotation)) scale(var(--scale-item));
+  }
+
+  30% {
+    transform: translate3d(calc(var(--drift) * 0.32), 28vh, 0) rotate(calc(var(--rotation) + 70deg)) scale(var(--scale-item));
+  }
+
+  70% {
+    transform: translate3d(calc(var(--drift) * -0.24), 68vh, 0) rotate(calc(var(--rotation) + 180deg)) scale(var(--scale-item));
+  }
+
+  100% {
+    transform: translate3d(var(--drift), 108vh, 0) rotate(calc(var(--rotation) + 320deg)) scale(var(--scale-item));
+  }
+}
+
+@keyframes particle-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(var(--scale-item));
+    opacity: calc(var(--opacity) * 0.72);
+  }
+
+  50% {
+    transform: translate3d(var(--drift), -28px, 0) scale(calc(var(--scale-item) * 1.08));
+    opacity: var(--opacity);
+  }
+}
+
+@keyframes sparkle-twinkle {
+  0%,
+  100% {
+    transform: scale(calc(var(--scale-item) * 0.82));
+    opacity: calc(var(--opacity) * 0.34);
+  }
+
+  50% {
+    transform: scale(calc(var(--scale-item) * 1.18));
+    opacity: var(--opacity);
+  }
+}
+
+@keyframes shooting-star {
+  0% {
+    transform: translate3d(-18vw, -18vh, 0) rotate(-28deg) scaleX(0.6);
+    opacity: 0;
+  }
+
+  16% {
+    opacity: var(--opacity);
+  }
+
+  100% {
+    transform: translate3d(var(--drift), 88vh, 0) rotate(-28deg) scaleX(1);
+    opacity: 0;
+  }
+}
+
+@keyframes cloud-drift {
+  0% {
+    transform: translate3d(-16vw, 0, 0) scale(var(--scale-item));
+  }
+
+  100% {
+    transform: translate3d(var(--drift), 0, 0) scale(var(--scale-item));
+  }
+}
+
+@keyframes bird-flight {
+  0% {
+    transform: translate3d(-18vw, 0, 0) scale(var(--scale-item));
+    opacity: 0;
+  }
+
+  12% {
+    opacity: var(--opacity);
+  }
+
+  100% {
+    transform: translate3d(var(--drift), -18px, 0) scale(var(--scale-item));
+    opacity: 0;
+  }
+}
+
+@keyframes wing-flap {
+  0%,
+  100% {
+    transform: rotate(14deg);
+  }
+
+  50% {
+    transform: rotate(-12deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .ambient-effect-item,
+  .ambient-effect-item::before,
+  .ambient-effect-item::after,
   .tour-card-price-char {
     animation: none;
     transform: none;
@@ -1432,6 +1947,23 @@ body {
   .hero-floating-note-bottom {
     right: 18px;
     bottom: 124px;
+  }
+
+  .testimonial-carousel-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .testimonial-carousel {
+    --testimonial-card-width: min(380px, calc(100vw - 84px));
+  }
+
+  .testimonial-control-button-left {
+    left: 12px;
+  }
+
+  .testimonial-control-button-right {
+    right: 12px;
   }
 }
 
@@ -1469,5 +2001,22 @@ body {
 
   .hero-display {
     font-size: clamp(2.25rem, 11vw, 3.4rem);
+  }
+
+  .testimonial-carousel {
+    --testimonial-card-width: min(300px, calc(100vw - 44px));
+  }
+
+  .testimonial-control-button-left {
+    left: 8px;
+  }
+
+  .testimonial-control-button-right {
+    right: 8px;
+  }
+
+  .testimonial-slide {
+    min-height: 286px;
+    padding: 20px;
   }
 }
