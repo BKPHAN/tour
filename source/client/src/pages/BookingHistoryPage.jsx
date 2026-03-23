@@ -1,40 +1,55 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import BookingStatusPill from '../components/BookingStatusPill.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
-import { getBookings, getTourDetail } from '../services/mockApi.js';
+import { getBookings } from '../services/bookingService.js';
+import { logout } from '../services/authService.js';
+import { getTourDetail } from '../services/tourService.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 
 /**
- * Trang lịch sử booking, hỗ trợ xem lại các đơn và lọc nhanh theo trạng thái.
+ * Trang lịch sử booking, lấy danh sách booking thật của user và lọc nhanh theo trạng thái.
  */
 function BookingHistoryPage() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [tourMap, setTourMap] = useState({});
   const [statusFilter, setStatusFilter] = useState('all');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     /**
      * Lấy danh sách booking rồi dựng map tour tương ứng để card hiển thị được tên tour.
      */
     async function loadBookings() {
-      const data = await getBookings();
-      setBookings(data);
+      try {
+        const data = await getBookings();
+        setBookings(data);
 
-      const entries = await Promise.all(
-        data.map(async (booking) => {
-          const tour = await getTourDetail(booking.tourId);
-          return [booking.tourId, tour];
-        }),
-      );
+        const entries = await Promise.all(
+          data.map(async (booking) => {
+            const tour = await getTourDetail(booking.tourId);
+            return [booking.tourId, tour];
+          }),
+        );
 
-      setTourMap(Object.fromEntries(entries));
+        setTourMap(Object.fromEntries(entries));
+        setErrorMessage('');
+      } catch (error) {
+        if (error.status === 401) {
+          logout();
+          navigate('/login', { replace: true, state: { redirectTo: '/bookings' } });
+          return;
+        }
+
+        setErrorMessage(error.message);
+      }
     }
 
     loadBookings();
-  }, []);
+  }, [navigate]);
 
-  // Giữ bộ lọc trạng thái ở client để người dùng đổi nhanh mà không cần gọi lại API mock.
+  // Giữ bộ lọc trạng thái ở client để người dùng đổi nhanh mà không cần gọi lại API.
   const filteredBookings = useMemo(() => {
     if (statusFilter === 'all') {
       return bookings;
@@ -49,9 +64,11 @@ function BookingHistoryPage() {
         <SectionHeading
           eyebrow="Lịch sử booking"
           title="Bảng tổng hợp các booking của người dùng"
-          description="Trang này giúp user xem lại trạng thái đặt tour, tính tiền và truy cập trang chi tiết booking."
+          description="Trang này hiển thị dữ liệu booking thật lấy từ backend người dùng."
         />
       </section>
+
+      {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
 
       <section className="filters-panel">
         <label className="form-field">
@@ -61,37 +78,47 @@ function BookingHistoryPage() {
             <option value="pending">Chờ thanh toán</option>
             <option value="confirmed">Đã xác nhận</option>
             <option value="completed">Đã hoàn thành</option>
+            <option value="cancelled">Đã hủy</option>
           </select>
         </label>
       </section>
 
-      <section className="history-list">
-        {filteredBookings.map((booking) => (
-          <article className="history-card" key={booking.id}>
-            <div>
-              <p className="booking-id">{booking.id}</p>
-              <h3>{tourMap[booking.tourId]?.title ?? 'Đang tải tên tour'}</h3>
-              <p>
-                Khởi hành {formatDate(booking.departureDate)} | {booking.travelers} khách
-              </p>
-            </div>
-            <div>
-              <BookingStatusPill paymentStatus={booking.paymentStatus} status={booking.status} />
-              <strong>{formatCurrency(booking.totalPrice)}</strong>
-            </div>
-            <div className="history-actions">
-              <Link className="button button-secondary" to={`/bookings/${booking.id}`}>
-                Xem chi tiết
-              </Link>
-              {booking.paymentStatus === 'waiting' ? (
-                <Link className="button button-primary" to={`/payment/${booking.id}`}>
-                  Thanh toán ngay
+      {filteredBookings.length ? (
+        <section className="history-list">
+          {filteredBookings.map((booking) => (
+            <article className="history-card" key={booking.id}>
+              <div>
+                <p className="booking-id">{booking.id}</p>
+                <h3>{tourMap[booking.tourId]?.title ?? 'Đang tải tên tour'}</h3>
+                <p>
+                  Khởi hành {formatDate(booking.departureDate)} | {booking.travelers} khách
+                </p>
+              </div>
+              <div>
+                <BookingStatusPill paymentStatus={booking.paymentStatus} status={booking.status} />
+                <strong>{formatCurrency(booking.totalPrice)}</strong>
+              </div>
+              <div className="history-actions">
+                <Link className="button button-secondary" to={`/bookings/${booking.id}`}>
+                  Xem chi tiết
                 </Link>
-              ) : null}
-            </div>
-          </article>
-        ))}
-      </section>
+                {booking.paymentStatus === 'waiting' ? (
+                  <Link className="button button-primary" to={`/payment/${booking.id}`}>
+                    Thanh toán ngay
+                  </Link>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </section>
+      ) : (
+        <section className="empty-panel">
+          <h2>Bạn chưa có booking nào</h2>
+          <Link className="button button-primary" to="/tours">
+            Khám phá tour
+          </Link>
+        </section>
+      )}
     </div>
   );
 }

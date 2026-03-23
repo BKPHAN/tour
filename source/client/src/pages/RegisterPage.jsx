@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormField from '../components/FormField.jsx';
+import { register } from '../services/authService.js';
 
 const initialForm = {
   fullName: '',
@@ -10,11 +11,14 @@ const initialForm = {
 };
 
 /**
- * Trang đăng ký mock để hoàn thiện bố cục form trước khi tích hợp API tạo tài khoản thật.
+ * Trang đăng ký, tạo tài khoản thật qua backend và tự động đăng nhập sau khi thành công.
  */
 function RegisterPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState(initialForm);
-  const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
    * Đồng bộ từng input vào form state để phục vụ validate và submit ở bước sau.
@@ -25,11 +29,22 @@ function RegisterPage() {
   }
 
   /**
-   * Mock thao tác submit để kiểm tra trải nghiệm form và vùng thông báo thành công.
+   * Gửi dữ liệu đăng ký lên backend, sau đó chuyển thẳng sang luồng người dùng đã đăng nhập.
    */
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setErrorMessage('');
+
+    try {
+      await register(formData);
+      const redirectTo = location.state?.redirectTo || '/tours';
+      navigate(redirectTo, { replace: true });
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -38,12 +53,12 @@ function RegisterPage() {
         <p className="section-eyebrow">Trang đăng ký</p>
         <h1>Tạo tài khoản để bắt đầu đặt tour.</h1>
         <p>
-          Form này được dùng để chốt bố cục input, nút CTA và thông điệp phản hồi trước khi làm API đăng ký thật.
+          Sau khi đăng ký thành công, hệ thống sẽ lưu phiên đăng nhập để bạn có thể đặt tour và theo dõi booking ngay.
         </p>
         <ul className="feature-list">
-          <li>Input rõ ràng cho họ tên, email, số điện thoại, mật khẩu</li>
-          <li>Sẵn vị trí cho validate và thông báo lỗi backend sau này</li>
-          <li>Có đường dẫn nhanh sang đăng nhập</li>
+          <li>Tạo tài khoản bằng họ tên, email, số điện thoại và mật khẩu</li>
+          <li>Email sẽ được dùng để đăng nhập hoặc nhận thông tin booking</li>
+          <li>Form đã sẵn sàng để mở rộng validate sâu hơn khi cần</li>
         </ul>
       </section>
 
@@ -53,10 +68,10 @@ function RegisterPage() {
           <FormField label="Email" name="email" onChange={handleChange} placeholder="you@example.com" type="email" value={formData.email} />
           <FormField label="Số điện thoại" name="phone" onChange={handleChange} placeholder="09xxxxxxxx" value={formData.phone} />
           <FormField label="Mật khẩu" name="password" onChange={handleChange} placeholder="Nhập mật khẩu" type="password" value={formData.password} />
-          <button className="button button-primary full-width" type="submit">
-            Tạo tài khoản
+          <button className="button button-primary full-width" disabled={isSubmitting} type="submit">
+            {isSubmitting ? 'Đang tạo tài khoản...' : 'Tạo tài khoản'}
           </button>
-          {submitted ? <p className="success-message">Mock submit thành công. Có thể nối API đăng ký ở bước backend.</p> : null}
+          {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
           <p className="helper-text">
             Đã có tài khoản? <Link to="/login">Đăng nhập ngay</Link>
           </p>

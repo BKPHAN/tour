@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../components/SectionHeading.jsx';
 import TourCard from '../components/TourCard.jsx';
-import { getFeaturedTours, getTestimonials } from '../services/mockApi.js';
+import { getFeaturedTours, getTestimonials } from '../services/tourService.js';
 import { formatCurrency } from '../utils/formatters.js';
 
 const fallbackSlides = [
@@ -124,9 +124,14 @@ function HomePage() {
      * Nạp tour nổi bật và testimonial song song để hero và các section bên dưới lên cùng lúc.
      */
     async function loadPage() {
-      const [tourData, testimonialData] = await Promise.all([getFeaturedTours(), getTestimonials()]);
-      setFeaturedTours(tourData);
-      setTestimonials(testimonialData);
+      try {
+        const [tourData, testimonialData] = await Promise.all([getFeaturedTours(), getTestimonials()]);
+        setFeaturedTours(tourData);
+        setTestimonials(testimonialData);
+      } catch (error) {
+        setFeaturedTours([]);
+        setTestimonials([]);
+      }
     }
 
     loadPage();

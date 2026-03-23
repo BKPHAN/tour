@@ -1,38 +1,82 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import BookingStatusPill from '../components/BookingStatusPill.jsx';
 import BookingTimeline from '../components/BookingTimeline.jsx';
 import SectionHeading from '../components/SectionHeading.jsx';
-import { getBookingDetail, getTourDetail } from '../services/mockApi.js';
+import { cancelBooking, getBookingDetail } from '../services/bookingService.js';
+import { logout } from '../services/authService.js';
+import { getTourDetail } from '../services/tourService.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 
 /**
- * Trang chi tiết booking, hiển thị đủ thông tin đơn và timeline xử lý để người dùng theo dõi.
+ * Trang chi tiết booking, hiển thị đủ thông tin đơn và cho phép hủy booking nếu backend còn cho phép.
  */
 function BookingDetailPage() {
   const { bookingId } = useParams();
+  const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
   const [tour, setTour] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
     /**
      * Lấy booking trước, sau đó mới lấy tour liên quan để tránh gọi thiếu dữ liệu.
      */
     async function loadBooking() {
-      const bookingData = await getBookingDetail(bookingId);
-      setBooking(bookingData);
+      try {
+        const bookingData = await getBookingDetail(bookingId);
+        setBooking(bookingData);
 
-      if (bookingData) {
-        const tourData = await getTourDetail(bookingData.tourId);
-        setTour(tourData);
+        if (bookingData) {
+          const tourData = await getTourDetail(bookingData.tourId);
+          setTour(tourData);
+        }
+
+        setErrorMessage('');
+      } catch (error) {
+        if (error.status === 401) {
+          logout();
+          navigate('/login', { replace: true, state: { redirectTo: `/bookings/${bookingId}` } });
+          return;
+        }
+
+        setErrorMessage(error.message);
       }
     }
 
     loadBooking();
-  }, [bookingId]);
+  }, [bookingId, navigate]);
+
+  /**
+   * Hủy booking hiện tại rồi cập nhật lại toàn bộ thông tin đơn trên giao diện.
+   */
+  async function handleCancelBooking() {
+    try {
+      const updatedBooking = await cancelBooking(bookingId);
+      setBooking(updatedBooking);
+      setSuccessMessage('Booking đã được hủy thành công.');
+      setErrorMessage('');
+    } catch (error) {
+      if (error.status === 401) {
+        logout();
+        navigate('/login', { replace: true, state: { redirectTo: `/bookings/${bookingId}` } });
+        return;
+      }
+
+      setErrorMessage(error.message);
+    }
+  }
 
   if (!booking) {
-    return null;
+    return (
+      <div className="container empty-panel">
+        <h2>{errorMessage || 'Đang tải chi tiết booking'}</h2>
+        <Link className="button button-primary" to="/bookings">
+          Quay lại lịch sử
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -43,12 +87,15 @@ function BookingDetailPage() {
         <BookingStatusPill paymentStatus={booking.paymentStatus} status={booking.status} />
       </section>
 
+      {successMessage ? <p className="success-message">{successMessage}</p> : null}
+      {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
+
       <div className="detail-grid">
         <section className="content-card">
           <SectionHeading
             eyebrow="Thông tin chung"
             title={tour?.title ?? 'Đang tải tên tour'}
-            description="Trang này mô phỏng trang xem chi tiết đơn đặt tour và các mốc xử lý của booking."
+            description="Dữ liệu booking và timeline hiện đang được lấy trực tiếp từ backend."
           />
           <ul className="detail-list">
             <li>Ngày đặt: {formatDate(booking.bookedAt)}</li>
@@ -76,6 +123,11 @@ function BookingDetailPage() {
                 Thanh toán ngay
               </Link>
             ) : null}
+            {booking.status !== 'cancelled' && booking.status !== 'completed' ? (
+              <button className="button button-ghost" type="button" onClick={handleCancelBooking}>
+                Hủy booking
+              </button>
+            ) : null}
           </div>
         </aside>
       </div>
@@ -84,7 +136,7 @@ function BookingDetailPage() {
         <SectionHeading
           eyebrow="Tiến trình xử lý"
           title="Timeline booking"
-          description="Các mốc xử lý sẽ giúp user và admin dễ theo dõi tình trạng đơn đặt sau này."
+          description="Các mốc xử lý được cập nhật từ backend để người dùng theo dõi đơn đặt tour."
         />
         <BookingTimeline items={booking.timeline} />
       </section>

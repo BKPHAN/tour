@@ -512,6 +512,23 @@ button {
   color: #1a6759;
 }
 
+.error-message {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(191, 71, 87, 0.12);
+  color: #8a2230;
+}
+
+.header-user {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  color: var(--ink-strong);
+  font-weight: 600;
+}
+
 .helper-text,
 .inline-links {
   font-size: 0.95rem;

@@ -1,20 +1,25 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import FormField from '../components/FormField.jsx';
-import { getTourDetail } from '../services/mockApi.js';
+import { createBooking } from '../services/bookingService.js';
+import { getStoredUser, logout } from '../services/authService.js';
+import { getTourDetail } from '../services/tourService.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 
 /**
- * Trang nhập thông tin đặt tour và tính tổng tiền tạm tính trước khi sang bước thanh toán.
+ * Trang nhập thông tin đặt tour và tạo booking thật trước khi sang bước thanh toán.
  */
 function BookingPage() {
   const { tourId } = useParams();
   const navigate = useNavigate();
+  const storedUser = getStoredUser();
   const [tour, setTour] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phone: '',
+    fullName: storedUser?.fullName || '',
+    email: storedUser?.email || '',
+    phone: storedUser?.phone || '',
     travelerCount: '2',
     departureId: '',
     note: '',
@@ -25,10 +30,19 @@ function BookingPage() {
      * Lấy dữ liệu tour và tự động chọn lịch khởi hành đầu tiên để form có trạng thái mặc định hợp lệ.
      */
     async function loadTour() {
-      const data = await getTourDetail(tourId);
-      setTour(data);
-      if (data?.departures?.[0]) {
-        setFormData((current) => ({ ...current, departureId: data.departures[0].id }));
+      try {
+        const data = await getTourDetail(tourId);
+        setTour(data);
+        setErrorMessage('');
+
+        if (data?.departures?.[0]) {
+          setFormData((current) => ({
+            ...current,
+            departureId: current.departureId || data.departures[0].id,
+          }));
+        }
+      } catch (error) {
+        setErrorMessage(error.message);
       }
     }
 
@@ -52,25 +66,44 @@ function BookingPage() {
   }
 
   /**
-   * Đóng gói dữ liệu đặt tour vào query string để mô phỏng chuyển sang bước checkout.
+   * Tạo booking ở backend rồi điều hướng sang trang thanh toán với booking id thật.
    */
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage('');
 
-    const searchParams = new URLSearchParams({
-      tourId,
-      departureId: formData.departureId,
-      travelers: formData.travelerCount,
-      fullName: formData.fullName,
-      email: formData.email,
-      totalPrice: String(totalPrice),
-    });
+    try {
+      const booking = await createBooking({
+        departureId: formData.departureId,
+        email: formData.email,
+        fullName: formData.fullName,
+        note: formData.note,
+        phone: formData.phone,
+        tourId,
+        travelers: Number(formData.travelerCount),
+      });
 
-    navigate(`/payment/mock-checkout?${searchParams.toString()}`);
+      navigate(`/payment/${booking.id}`);
+    } catch (error) {
+      if (error.status === 401) {
+        logout();
+        navigate('/login', { replace: true, state: { redirectTo: `/booking/${tourId}` } });
+        return;
+      }
+
+      setErrorMessage(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   if (!tour) {
-    return null;
+    return (
+      <div className="container empty-panel">
+        <h2>{errorMessage || 'Đang tải thông tin tour'}</h2>
+      </div>
+    );
   }
 
   return (
@@ -117,9 +150,10 @@ function BookingPage() {
             placeholder="Ví dụ: ăn chay, cần xếp chỗ ngồi..."
             value={formData.note}
           />
-          <button className="button button-primary full-width" type="submit">
-            Tiếp tục sang thanh toán
+          <button className="button button-primary full-width" disabled={isSubmitting} type="submit">
+            {isSubmitting ? 'Đang tạo booking...' : 'Tiếp tục sang thanh toán'}
           </button>
+          {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
         </form>
 
         <aside className="summary-card">

@@ -1,16 +1,20 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormField from '../components/FormField.jsx';
+import { login } from '../services/authService.js';
 
 /**
- * Trang đăng nhập mock để chốt bố cục form trước khi nối xác thực thật bằng backend.
+ * Trang đăng nhập, gọi API xác thực thật và lưu phiên người dùng sau khi thành công.
  */
 function LoginPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     loginId: '',
     password: '',
   });
-  const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
    * Cập nhật giá trị các ô nhập trong form đăng nhập.
@@ -21,11 +25,22 @@ function LoginPage() {
   }
 
   /**
-   * Mock thao tác submit để kiểm tra luồng giao diện và thông báo phản hồi.
+   * Gọi backend đăng nhập rồi chuyển người dùng về trang họ vừa định truy cập.
    */
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setErrorMessage('');
+
+    try {
+      await login(formData);
+      const redirectTo = location.state?.redirectTo || '/bookings';
+      navigate(redirectTo, { replace: true });
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -34,8 +49,12 @@ function LoginPage() {
         <p className="section-eyebrow">Trang đăng nhập</p>
         <h1>Quay lại tài khoản để tiếp tục chuyến đi đang dở.</h1>
         <p>
-          Luồng đăng nhập được bố trí gọn gàng để sau này chèn validate, xử lý JWT và điều hướng sang booking history.
+          Đăng nhập bằng tên đăng nhập hoặc email để xem booking, thanh toán và tiếp tục các hành trình đã chọn.
         </p>
+        <ul className="feature-list">
+          <li>Tài khoản demo: `demo`</li>
+          <li>Mật khẩu demo: `123456`</li>
+        </ul>
       </section>
 
       <section className="auth-panel">
@@ -48,11 +67,18 @@ function LoginPage() {
             type="text"
             value={formData.loginId}
           />
-          <FormField label="Mật khẩu" name="password" onChange={handleChange} placeholder="Nhập mật khẩu" type="password" value={formData.password} />
-          <button className="button button-primary full-width" type="submit">
-            Đăng nhập
+          <FormField
+            label="Mật khẩu"
+            name="password"
+            onChange={handleChange}
+            placeholder="Nhập mật khẩu"
+            type="password"
+            value={formData.password}
+          />
+          <button className="button button-primary full-width" disabled={isSubmitting} type="submit">
+            {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
           </button>
-          {submitted ? <p className="success-message">Mock login thành công. Sau này sẽ thay bằng xử lý JWT thật.</p> : null}
+          {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
           <div className="inline-links">
             <Link to="/forgot-password">Quên mật khẩu?</Link>
             <Link to="/register">Tạo tài khoản mới</Link>

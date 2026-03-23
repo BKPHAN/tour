@@ -10,6 +10,7 @@ import PaymentPage from '../pages/PaymentPage.jsx';
 import RegisterPage from '../pages/RegisterPage.jsx';
 import TourDetailPage from '../pages/TourDetailPage.jsx';
 import TourListPage from '../pages/TourListPage.jsx';
+import RequireAuth from '../components/RequireAuth.jsx';
 
 /**
  * Khai báo toàn bộ route người dùng của giai đoạn frontend, bao gồm cả route fallback.
@@ -24,10 +25,12 @@ function AppRoutes() {
         <Route element={<RegisterPage />} path="register" />
         <Route element={<LoginPage />} path="login" />
         <Route element={<ForgotPasswordPage />} path="forgot-password" />
-        <Route element={<BookingPage />} path="booking/:tourId" />
-        <Route element={<PaymentPage />} path="payment/:bookingId" />
-        <Route element={<BookingHistoryPage />} path="bookings" />
-        <Route element={<BookingDetailPage />} path="bookings/:bookingId" />
+        <Route element={<RequireAuth />}>
+          <Route element={<BookingPage />} path="booking/:tourId" />
+          <Route element={<PaymentPage />} path="payment/:bookingId" />
+          <Route element={<BookingHistoryPage />} path="bookings" />
+          <Route element={<BookingDetailPage />} path="bookings/:bookingId" />
+        </Route>
       </Route>
       <Route element={<Navigate replace to="/" />} path="*" />
     </Routes>

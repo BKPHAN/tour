@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { getStoredUser, logout } from '../services/authService.js';
+import { getAuthEventName } from '../services/authStorage.js';
 
 const navItems = [
   { to: '/', label: 'Trang chủ' },
@@ -8,10 +10,39 @@ const navItems = [
 ];
 
 /**
- * Header điều hướng chính của khu vực người dùng, có hỗ trợ menu mobile.
+ * Header điều hướng chính của khu vực người dùng, có hỗ trợ menu mobile và trạng thái đăng nhập.
  */
 function Header() {
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(getStoredUser());
+
+  useEffect(() => {
+    /**
+     * Đồng bộ header khi localStorage hoặc token trong cùng tab thay đổi.
+     */
+    function syncAuthState() {
+      setCurrentUser(getStoredUser());
+    }
+
+    const authEventName = getAuthEventName();
+    window.addEventListener('storage', syncAuthState);
+    window.addEventListener(authEventName, syncAuthState);
+
+    return () => {
+      window.removeEventListener('storage', syncAuthState);
+      window.removeEventListener(authEventName, syncAuthState);
+    };
+  }, []);
+
+  /**
+   * Đăng xuất khỏi frontend rồi chuyển người dùng về trang đăng nhập.
+   */
+  function handleLogout() {
+    logout();
+    setIsMenuOpen(false);
+    navigate('/login');
+  }
 
   return (
     <header className="site-header">
@@ -44,12 +75,23 @@ function Header() {
         </nav>
 
         <div className="header-actions">
-          <Link className="button button-ghost" to="/login">
-            Đăng nhập
-          </Link>
-          <Link className="button button-primary" to="/register">
-            Đăng ký
-          </Link>
+          {currentUser ? (
+            <>
+              <span className="header-user">Xin chào, {currentUser.fullName}</span>
+              <button className="button button-ghost" type="button" onClick={handleLogout}>
+                Đăng xuất
+              </button>
+            </>
+          ) : (
+            <>
+              <Link className="button button-ghost" to="/login">
+                Đăng nhập
+              </Link>
+              <Link className="button button-primary" to="/register">
+                Đăng ký
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

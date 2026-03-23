@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import SectionHeading from '../components/SectionHeading.jsx';
 import TourCard from '../components/TourCard.jsx';
-import { getAllTours } from '../services/mockApi.js';
+import { getAllTours } from '../services/tourService.js';
 
 /**
  * Trang danh sách tour, hỗ trợ tìm kiếm theo từ khóa và lọc theo nhóm tour.
@@ -10,14 +10,20 @@ function TourListPage() {
   const [tours, setTours] = useState([]);
   const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('all');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     /**
-     * Lấy toàn bộ danh sách tour từ mock API khi trang được mở.
+     * Lấy toàn bộ danh sách tour từ backend khi trang được mở.
      */
     async function loadTours() {
-      const data = await getAllTours();
-      setTours(data);
+      try {
+        const data = await getAllTours();
+        setTours(data);
+        setErrorMessage('');
+      } catch (error) {
+        setErrorMessage(error.message);
+      }
     }
 
     loadTours();
@@ -47,6 +53,8 @@ function TourListPage() {
           description="Mock data đang được dùng để user có thể tìm, lọc và bấm vào chi tiết tour trước khi nối backend."
         />
       </section>
+
+      {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
 
       <section className="filters-panel">
         <label className="form-field">

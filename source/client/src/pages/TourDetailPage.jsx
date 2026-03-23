@@ -1,23 +1,30 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import SectionHeading from '../components/SectionHeading.jsx';
-import { getTourDetail } from '../services/mockApi.js';
+import { getTourDetail } from '../services/tourService.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
 
 /**
- * Trang chi tiết tour, gom đầy đủ mô tả, lịch trình và các đợt khởi hành để người dùng quyết định đặt tour.
+ * Trang chi tiết tour, lấy dữ liệu trực tiếp từ backend để hiển thị lịch trình và lịch khởi hành.
  */
 function TourDetailPage() {
   const { tourId } = useParams();
   const [tour, setTour] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     /**
      * Nạp chi tiết tour theo id trên URL mỗi khi người dùng đổi sang tour khác.
      */
     async function loadTour() {
-      const data = await getTourDetail(tourId);
-      setTour(data);
+      try {
+        const data = await getTourDetail(tourId);
+        setTour(data);
+        setErrorMessage('');
+      } catch (error) {
+        setTour(null);
+        setErrorMessage(error.message);
+      }
     }
 
     loadTour();
@@ -26,7 +33,7 @@ function TourDetailPage() {
   if (!tour) {
     return (
       <div className="container empty-panel">
-        <h2>Không tìm thấy tour</h2>
+        <h2>{errorMessage || 'Không tìm thấy tour'}</h2>
         <Link className="button button-primary" to="/tours">
           Quay lại danh sách tour
         </Link>
@@ -64,7 +71,7 @@ function TourDetailPage() {
           <SectionHeading
             eyebrow="Điểm nhấn tour"
             title="Những trải nghiệm nổi bật"
-            description="Trang chi tiết cần cho thấy rõ vì sao user nên đặt tour này."
+            description="Các highlight được lấy từ backend để người dùng thấy rõ lý do nên chọn hành trình này."
           />
           <div className="chip-row">
             {tour.highlights.map((item) => (
@@ -78,7 +85,7 @@ function TourDetailPage() {
         <aside className="sidebar-card">
           <small>Giá bắt đầu</small>
           <h2>{formatCurrency(tour.price)}</h2>
-          <p>Đã bao gồm một phần dịch vụ cơ bản và có thể mở rộng sau khi nối backend thật.</p>
+          <p>Dữ liệu tour, tiện ích đi kèm và mức giá hiện đã được tải từ API backend người dùng.</p>
           <ul className="detail-list">
             {tour.inclusions.map((item) => (
               <li key={item}>{item}</li>
@@ -90,8 +97,8 @@ function TourDetailPage() {
       <section className="content-card">
         <SectionHeading
           eyebrow="Lịch trình tour"
-          title="Mô phỏng trang xem lịch trình"
-          description="Đây là nơi user có thể đọc từng ngày trước khi quyết định đặt tour."
+          title="Theo dõi hành trình từng ngày"
+          description="Người dùng có thể đọc lịch trình thật trước khi quyết định đặt tour."
         />
         <div className="itinerary-list">
           {tour.itinerary.map((item) => (
@@ -108,7 +115,7 @@ function TourDetailPage() {
         <SectionHeading
           eyebrow="Lịch khởi hành"
           title="Lựa chọn ngày đi phù hợp"
-          description="Bảng dữ liệu này sẽ được nối API thật ở giai đoạn backend, hiện tại đang dùng mock data."
+          description="Danh sách lịch khởi hành và số chỗ còn lại đang được lấy trực tiếp từ backend."
         />
         <div className="departure-grid">
           {tour.departures.map((item) => (
