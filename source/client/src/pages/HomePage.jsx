@@ -157,8 +157,8 @@ function HomePage() {
   const [testimonials, setTestimonials] = useState([]);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [previousSlideIndex, setPreviousSlideIndex] = useState(null);
-  const [activeTestimonialIndex, setActiveTestimonialIndex] = useState(0);
-  const [previousTestimonialIndex, setPreviousTestimonialIndex] = useState(null);
+  const [activeTestimonialIndex, setActiveTestimonialIndex] = useState(4);
+  const [isTestimonialResetting, setIsTestimonialResetting] = useState(false);
 
   useEffect(() => {
     /**
@@ -218,7 +218,17 @@ function HomePage() {
   const activeSlide = heroSlides[activeSlideIndex] ?? heroSlides[0];
   const reviewSource = testimonials.length ? testimonials : fallbackTestimonials;
   const testimonialSlides = useMemo(() => {
-    return reviewSource.map((item, index) => ({
+    const sourceTestimonials =
+      reviewSource.length >= 4
+        ? reviewSource
+        : [
+            ...reviewSource,
+            ...fallbackTestimonials.filter(
+              (fallbackItem) => !reviewSource.some((item) => item.id === fallbackItem.id),
+            ),
+          ];
+
+    return sourceTestimonials.map((item, index) => ({
       ...item,
       ...testimonialAccents[index % testimonialAccents.length],
       initials: item.name
@@ -230,29 +240,89 @@ function HomePage() {
     }));
   }, [reviewSource]);
 
+  const testimonialCloneCount = 4;
+  const testimonialLoopSlides = useMemo(() => {
+    if (!testimonialSlides.length) {
+      return [];
+    }
+
+    return [
+      ...testimonialSlides.slice(-testimonialCloneCount),
+      ...testimonialSlides,
+      ...testimonialSlides.slice(0, testimonialCloneCount),
+    ];
+  }, [testimonialSlides]);
+
+  const activeTestimonialAccent =
+    testimonialSlides[
+      ((activeTestimonialIndex - testimonialCloneCount) % testimonialSlides.length +
+        testimonialSlides.length) %
+        testimonialSlides.length
+    ];
+  const normalizedTestimonialIndex =
+    ((activeTestimonialIndex - testimonialCloneCount) % testimonialSlides.length + testimonialSlides.length) %
+    testimonialSlides.length;
+
   useEffect(() => {
     if (!testimonialSlides.length) {
-      setActiveTestimonialIndex(0);
+      setActiveTestimonialIndex(testimonialCloneCount);
       return;
     }
 
     const intervalId = window.setInterval(() => {
-      setActiveTestimonialIndex((current) => {
-        setPreviousTestimonialIndex(current);
-        return (current + 1) % testimonialSlides.length;
-      });
+      setActiveTestimonialIndex((current) => current + 1);
     }, 5600);
 
     return () => window.clearInterval(intervalId);
-  }, [testimonialSlides]);
+  }, [testimonialCloneCount, testimonialSlides.length]);
 
   useEffect(() => {
     if (!testimonialSlides.length) {
       return;
     }
 
-    setActiveTestimonialIndex((current) => current % testimonialSlides.length);
-  }, [testimonialSlides.length]);
+    setActiveTestimonialIndex(testimonialCloneCount);
+  }, [testimonialCloneCount, testimonialSlides.length]);
+
+  useEffect(() => {
+    if (!testimonialSlides.length) {
+      return undefined;
+    }
+
+    let timeoutId;
+
+    if (activeTestimonialIndex >= testimonialSlides.length + testimonialCloneCount) {
+      timeoutId = window.setTimeout(() => {
+        setIsTestimonialResetting(true);
+        setActiveTestimonialIndex(testimonialCloneCount);
+
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            setIsTestimonialResetting(false);
+          });
+        });
+      }, 760);
+    }
+
+    if (activeTestimonialIndex <= testimonialCloneCount - 1) {
+      timeoutId = window.setTimeout(() => {
+        setIsTestimonialResetting(true);
+        setActiveTestimonialIndex(testimonialSlides.length + testimonialCloneCount - 1);
+
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            setIsTestimonialResetting(false);
+          });
+        });
+      }, 760);
+    }
+
+    return () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [activeTestimonialIndex, testimonialCloneCount, testimonialSlides.length]);
 
   /**
    * Cho phép người dùng chọn trực tiếp một slide qua dot hoặc thumbnail.
@@ -286,20 +356,14 @@ function HomePage() {
    * Chuyển sang bình luận kế tiếp để người xem chủ động duyệt các cảm nhận nổi bật.
    */
   function handleNextTestimonial() {
-    setActiveTestimonialIndex((current) => {
-      setPreviousTestimonialIndex(current);
-      return (current + 1) % testimonialSlides.length;
-    });
+    setActiveTestimonialIndex((current) => current + 1);
   }
 
   /**
    * Quay lại bình luận trước đó bằng nút mũi tên trái.
    */
   function handlePrevTestimonial() {
-    setActiveTestimonialIndex((current) => {
-      setPreviousTestimonialIndex(current);
-      return (current - 1 + testimonialSlides.length) % testimonialSlides.length;
-    });
+    setActiveTestimonialIndex((current) => current - 1);
   }
 
   return (
@@ -515,7 +579,7 @@ function HomePage() {
           <div className="testimonial-carousel-head">
             <div className="testimonial-carousel-copy">
               <span>Cảm nhận thật từ người đã tham gia</span>
-              <strong>{testimonialSlides[activeTestimonialIndex]?.accent}</strong>
+              <strong>{activeTestimonialAccent?.accent}</strong>
             </div>
           </div>
 
@@ -538,47 +602,44 @@ function HomePage() {
               &#8250;
             </button>
 
-            {testimonialSlides.map((item, index) => {
-              let slideState = 'next';
-
-              if (index === activeTestimonialIndex) {
-                slideState = 'active';
-              } else if (index === previousTestimonialIndex) {
-                slideState = 'previous';
-              }
-
-              return (
-                <article className={`testimonial-card testimonial-slide testimonial-slide-layer ${slideState}`} key={item.id}>
-                <div className="testimonial-card-top">
-                  <span className="testimonial-quote-mark">"</span>
-                  <div className="testimonial-stars" aria-label="5 sao">
-                    <span>★</span>
-                    <span>★</span>
-                    <span>★</span>
-                    <span>★</span>
-                    <span>★</span>
+            <div
+              className={isTestimonialResetting ? 'testimonial-track no-transition' : 'testimonial-track'}
+              style={{
+                transform: `translateX(calc(-${activeTestimonialIndex} * (((100% - (var(--testimonial-visible) - 1) * var(--testimonial-gap)) / var(--testimonial-visible)) + var(--testimonial-gap))))`,
+              }}
+            >
+              {testimonialLoopSlides.map((item, index) => (
+                <article className="testimonial-card testimonial-slide" key={`${item.id}-${index}`}>
+                  <div className="testimonial-card-top">
+                    <span className="testimonial-quote-mark">"</span>
+                    <div className="testimonial-stars" aria-label="5 sao">
+                      <span>★</span>
+                      <span>★</span>
+                      <span>★</span>
+                      <span>★</span>
+                      <span>★</span>
+                    </div>
                   </div>
-                </div>
 
-                <p className="testimonial-copy">{item.content}</p>
+                  <p className="testimonial-copy">{item.content}</p>
 
-                <div className="testimonial-highlight">
-                  <strong>{item.accent}</strong>
-                  <span>{item.journey}</span>
-                </div>
-
-                <div className="testimonial-author">
-                  <div className="testimonial-avatar" aria-hidden="true">
-                    {item.initials}
+                  <div className="testimonial-highlight">
+                    <strong>{item.accent}</strong>
+                    <span>{item.journey}</span>
                   </div>
-                  <div className="testimonial-author-meta">
-                    <strong>{item.name}</strong>
-                    <span>{item.role}</span>
+
+                  <div className="testimonial-author">
+                    <div className="testimonial-avatar" aria-hidden="true">
+                      {item.initials}
+                    </div>
+                    <div className="testimonial-author-meta">
+                      <strong>{item.name}</strong>
+                      <span>{item.role}</span>
+                    </div>
                   </div>
-                </div>
-              </article>
-              );
-            })}
+                </article>
+              ))}
+            </div>
           </div>
 
           <div className="testimonial-dots">
@@ -586,12 +647,9 @@ function HomePage() {
               <button
                 key={item.id}
                 aria-label={`Xem bình luận ${index + 1}`}
-                className={index === activeTestimonialIndex ? 'testimonial-dot active' : 'testimonial-dot'}
+                className={index === normalizedTestimonialIndex ? 'testimonial-dot active' : 'testimonial-dot'}
                 type="button"
-                onClick={() => {
-                  setPreviousTestimonialIndex(activeTestimonialIndex);
-                  setActiveTestimonialIndex(index);
-                }}
+                onClick={() => setActiveTestimonialIndex(index + testimonialCloneCount)}
               />
             ))}
           </div>
@@ -602,3 +660,4 @@ function HomePage() {
 }
 
 export default HomePage;
+

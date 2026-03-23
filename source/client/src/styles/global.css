@@ -1484,7 +1484,8 @@ body {
 }
 
 .testimonial-carousel {
-  --testimonial-card-width: min(430px, calc(100vw - 132px));
+  --testimonial-visible: 4;
+  --testimonial-gap: 18px;
   position: relative;
   overflow: hidden;
   margin-top: 8px;
@@ -1556,14 +1557,24 @@ body {
 
 .testimonial-stage {
   position: relative;
-  width: var(--testimonial-card-width);
   min-height: 320px;
-  margin: 0 auto;
   overflow: hidden;
+  padding: 10px 64px;
+}
+
+.testimonial-track {
+  display: flex;
+  gap: var(--testimonial-gap);
+  transition: transform 0.76s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.testimonial-track.no-transition {
+  transition: none;
 }
 
 .testimonial-slide {
-  width: var(--testimonial-card-width);
+  flex: 0 0 calc((100% - (var(--testimonial-visible) - 1) * var(--testimonial-gap)) / var(--testimonial-visible));
   min-height: 320px;
   padding: 24px;
   display: grid;
@@ -1574,33 +1585,12 @@ body {
     linear-gradient(135deg, rgba(239, 123, 69, 0.08), rgba(255, 190, 92, 0.04));
   border: 1px solid rgba(16, 35, 60, 0.08);
   box-shadow: 0 24px 44px rgba(16, 35, 60, 0.1);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
 
-.testimonial-slide-layer {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transform: translateX(110%);
-  transition:
-    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 0.5s ease;
-  will-change: transform, opacity;
-}
-
-.testimonial-slide-layer.active {
-  opacity: 1;
-  transform: translateX(0);
-  z-index: 3;
-}
-
-.testimonial-slide-layer.previous {
-  opacity: 0.45;
-  transform: translateX(-110%);
-  z-index: 2;
-}
-
-.testimonial-slide-layer.next {
-  z-index: 1;
+.testimonial-slide:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 30px 48px rgba(16, 35, 60, 0.14);
 }
 
 .testimonial-slide::before {
@@ -1955,7 +1945,7 @@ body {
   }
 
   .testimonial-carousel {
-    --testimonial-card-width: min(380px, calc(100vw - 84px));
+    --testimonial-visible: 3;
   }
 
   .testimonial-control-button-left {
@@ -2004,7 +1994,8 @@ body {
   }
 
   .testimonial-carousel {
-    --testimonial-card-width: min(300px, calc(100vw - 44px));
+    --testimonial-visible: 1;
+    --testimonial-gap: 14px;
   }
 
   .testimonial-control-button-left {
