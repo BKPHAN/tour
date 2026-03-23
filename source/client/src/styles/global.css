@@ -77,13 +77,17 @@
 
 html {
   scroll-behavior: smooth;
+  width: 100%;
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  width: 100%;
   color: var(--ink-strong);
   background: var(--page-background);
+  overflow-x: hidden;
   transition: background 0.35s ease, color 0.35s ease;
 }
 
@@ -117,11 +121,13 @@ button {
   position: relative;
   isolation: isolate;
   min-height: 100vh;
+  overflow-x: clip;
 }
 
 .page-shell-content {
   position: relative;
   z-index: 1;
+  overflow-x: clip;
 }
 
 .page-main {
