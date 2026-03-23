@@ -12,6 +12,7 @@ Mục tiêu là làm theo hướng đơn giản, dễ hiểu, phù hợp với n
 ## 2. Công nghệ sử dụng
 
 - Frontend: ReactJS
+- UI styling: Tailwind CSS
 - Backend: Node.js + ExpressJS
 - Database: MySQL
 - Gọi API từ frontend: Axios
@@ -160,55 +161,55 @@ Ví dụ error response:
 
 ## 5. Cấu trúc thư mục đề xuất
 
-## 5.1. Frontend ReactJS
+## 5.1. Cấu trúc project hoàn chỉnh dùng chung module và env
 
 ```text
-frontend/
-  src/
-    components/
-    pages/
-    services/
-    utils/
-    layouts/
-    routes/
-    App.js
-    main.js
-```
-
-Giải thích:
-
-- `components`: chứa các khối giao diện dùng lại nhiều lần.
-- `pages`: chứa từng trang lớn như trang đăng nhập, trang danh sách tour.
-- `services`: chứa code gọi API.
-- `utils`: chứa hàm dùng chung.
-- `layouts`: chứa bố cục trang người dùng và quản lý.
-- `routes`: chứa khai báo đường dẫn trang.
-
-## 5.2. Backend Node.js
-
-```text
-backend/
-  src/
-    config/
-    controllers/
-    middlewares/
-    models/
-    routes/
-    services/
-    utils/
+source/
+  .env
+  .env.example
+  .gitignore
+  package.json
+  package-lock.json
+  node_modules/
+  client/
+    public/
+    src/
+      components/
+      pages/
+      services/
+      utils/
+      layouts/
+      routes/
+      App.jsx
+      main.jsx
+    index.html
+    vite.config.js
+  server/
+    src/
+      config/
+      controllers/
+      middlewares/
+      models/
+      routes/
+      services/
+      utils/
     app.js
     server.js
 ```
 
 Giải thích:
 
-- `config`: cấu hình database, JWT, biến môi trường.
-- `controllers`: nhận request, xử lý dữ liệu đầu vào, trả response.
-- `models`: viết câu lệnh SQL làm việc với MySQL.
-- `routes`: khai báo các API endpoint.
-- `middlewares`: xác thực token, kiểm tra quyền admin.
-- `services`: xử lý nghiệp vụ tách riêng nếu logic dài.
-- `utils`: các hàm hỗ trợ dùng lại.
+- `source` là thư mục gốc của toàn bộ project client và server.
+- `.env` và `.env.example` đặt chung để frontend và backend dùng cùng một bộ biến môi trường.
+- `package.json`, `package-lock.json`, `node_modules` đặt chung để client và server dùng cùng một hướng quản lý thư viện.
+- `client/public`, `client/src`, `client/vite.config.js`, `client/index.html` là phần client ReactJS.
+- `server/src` là phần backend Node.js + ExpressJS.
+- `components`: chứa các khối giao diện dùng lại nhiều lần.
+- `pages`: chứa từng trang lớn như trang đăng nhập, trang danh sách tour.
+- `services`: chứa code gọi API ở client và có thể tạo thêm service ở backend khi cần.
+- `utils`: chứa hàm dùng chung.
+- `layouts`: chứa bố cục trang người dùng và quản lý.
+- `routes`: chứa khai báo đường dẫn trang ở client hoặc API route ở backend tùy vị trí.
 
 ## 6. Database sử dụng
 
@@ -327,13 +328,14 @@ Sau khi frontend đã xong khung giao diện, mới bắt đầu viết backend 
 
 ## 7.4. Thứ tự làm giai đoạn 1
 
-### Bước 1: Khởi tạo project frontend và backend
+### Bước 1: Khởi tạo project client và server trong cùng `source`
 
-- Tạo thư mục `frontend`
-- Tạo thư mục `backend`
-- Cài ReactJS cho frontend
-- Cài ExpressJS cho backend
-- Chuẩn bị cấu trúc thư mục đơn giản, dễ học
+- Tạo thư mục `source`
+- Đặt file `.env` chung và `.env.example` trong `source`
+- Cài ReactJS cho phần client và ExpressJS cho phần server dùng chung `package.json`
+- Cài Tailwind CSS cho phần client để chuẩn bị dựng giao diện nhanh và đồng bộ
+- Đặt `node_modules` chung trong `source`
+- Chuẩn bị cấu trúc thư mục đơn giản, dễ học và dễ quản lý cả 2 phía
 
 ### Bước 2: Làm frontend người dùng trước
 
@@ -595,6 +597,7 @@ Sau giai đoạn này, admin phải có thể quản lý toàn bộ dữ liệu 
 - Phần gọi API để trong `services`.
 - Component nào dùng lại nhiều lần thì mới tách riêng.
 - State đặt tên rõ ràng như `tourList`, `bookingDetail`, `isLoading`.
+- Ưu tiên dùng Tailwind CSS để viết giao diện, chỉ giữ CSS riêng cho phần global hoặc layout đặc biệt.
 
 ### 10.3. Quy ước comment
 
@@ -659,36 +662,36 @@ Lý do:
 
 ### Frontend
 
-- `src/pages/LoginPage.jsx`
-- `src/pages/RegisterPage.jsx`
-- `src/pages/TourListPage.jsx`
-- `src/pages/TourDetailPage.jsx`
-- `src/pages/BookingPage.jsx`
-- `src/pages/PaymentPage.jsx`
-- `src/pages/MyBookingsPage.jsx`
-- `src/services/authService.js`
-- `src/services/tourService.js`
-- `src/services/bookingService.js`
-- `src/services/paymentService.js`
+- `client/src/pages/LoginPage.jsx`
+- `client/src/pages/RegisterPage.jsx`
+- `client/src/pages/TourListPage.jsx`
+- `client/src/pages/TourDetailPage.jsx`
+- `client/src/pages/BookingPage.jsx`
+- `client/src/pages/PaymentPage.jsx`
+- `client/src/pages/BookingHistoryPage.jsx`
+- `client/src/services/authService.js`
+- `client/src/services/tourService.js`
+- `client/src/services/bookingService.js`
+- `client/src/services/paymentService.js`
 
 ### Backend
 
-- `src/routes/authRoutes.js`
-- `src/routes/tourRoutes.js`
-- `src/routes/bookingRoutes.js`
-- `src/routes/paymentRoutes.js`
-- `src/routes/adminRoutes.js`
-- `src/controllers/authController.js`
-- `src/controllers/tourController.js`
-- `src/controllers/bookingController.js`
-- `src/controllers/paymentController.js`
-- `src/models/userModel.js`
-- `src/models/tourModel.js`
-- `src/models/bookingModel.js`
-- `src/models/paymentModel.js`
-- `src/middlewares/authMiddleware.js`
-- `src/middlewares/adminMiddleware.js`
-- `src/config/db.js`
+- `server/src/routes/authRoutes.js`
+- `server/src/routes/tourRoutes.js`
+- `server/src/routes/bookingRoutes.js`
+- `server/src/routes/paymentRoutes.js`
+- `server/src/routes/adminRoutes.js`
+- `server/src/controllers/authController.js`
+- `server/src/controllers/tourController.js`
+- `server/src/controllers/bookingController.js`
+- `server/src/controllers/paymentController.js`
+- `server/src/models/userModel.js`
+- `server/src/models/tourModel.js`
+- `server/src/models/bookingModel.js`
+- `server/src/models/paymentModel.js`
+- `server/src/middlewares/authMiddleware.js`
+- `server/src/middlewares/adminMiddleware.js`
+- `server/src/config/db.js`
 
 ## 13. Kết luận
 
