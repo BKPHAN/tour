@@ -1484,7 +1484,7 @@ body {
 }
 
 .testimonial-carousel {
-  --testimonial-visible: 4;
+  --testimonial-visible: 3;
   --testimonial-gap: 18px;
   position: relative;
   overflow: hidden;
@@ -1945,7 +1945,7 @@ body {
   }
 
   .testimonial-carousel {
-    --testimonial-visible: 3;
+    --testimonial-visible: 2;
   }
 
   .testimonial-control-button-left {
