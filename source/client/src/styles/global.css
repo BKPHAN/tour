@@ -397,6 +397,10 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.tour-list-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .step-grid,
 .departure-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -670,6 +674,48 @@ button {
   font-size: 0.95rem;
 }
 
+.tour-list-toolbar,
+.pagination-bar,
+.pagination-pages {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tour-list-toolbar,
+.pagination-bar {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.pagination-pages {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pagination-page {
+  min-width: 42px;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-strong);
+  color: var(--ink-strong);
+  font-weight: 600;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.pagination-page:hover {
+  transform: translateY(-1px);
+  border-color: rgba(239, 123, 69, 0.3);
+}
+
+.pagination-page.active {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-deep) 100%);
+  color: white;
+}
+
 .inline-links a {
   color: var(--accent-deep);
   font-weight: 600;
@@ -862,6 +908,10 @@ button {
   .form-card,
   .filters-panel {
     padding: 18px;
+  }
+
+  .pagination-bar {
+    justify-content: center;
   }
 }
 
@@ -2177,5 +2227,24 @@ button {
   .testimonial-slide {
     min-height: 286px;
     padding: 20px;
+  }
+
+}
+
+@media (max-width: 1179px) {
+  .tour-list-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 899px) {
+  .tour-list-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 599px) {
+  .tour-list-grid {
+    grid-template-columns: 1fr;
   }
 }

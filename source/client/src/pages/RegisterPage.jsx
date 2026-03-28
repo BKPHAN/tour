@@ -57,8 +57,8 @@ function RegisterPage() {
         </p>
         <ul className="feature-list">
           <li>Tạo tài khoản bằng họ tên, email, số điện thoại và mật khẩu</li>
-          <li>Email sẽ được dùng để đăng nhập hoặc nhận thông tin booking</li>
-          <li>Form đã sẵn sàng để mở rộng validate sâu hơn khi cần</li>
+          <li>Email sẽ được dùng để đăng nhập và nhận thông tin xác nhận chuyến đi</li>
+          <li>Quản lý lịch khởi hành, thanh toán và lịch sử đặt tour trong cùng một tài khoản</li>
         </ul>
       </section>
 

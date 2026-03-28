@@ -1,45 +1,143 @@
-import { mockDatabase, generateUserId } from '../config/mockDatabase.js';
+import { execute, select } from '../config/database.js';
+import { toNumber } from '../utils/dbHelpers.js';
 
 /**
- * Tìm user theo id.
+ * Map tên cột `snake_case` trong MySQL về object `camelCase` mà service đang dùng.
  */
-export function findUserById(userId) {
-  return mockDatabase.users.find((user) => user.id === userId) || null;
-}
+function mapUserRow(row) {
+  if (!row) {
+    return null;
+  }
 
-/**
- * Tìm user theo email hoặc username để phục vụ đăng nhập.
- */
-export function findUserByLoginId(loginId) {
-  const normalizedLoginId = String(loginId || '').toLowerCase();
-
-  return (
-    mockDatabase.users.find(
-      (user) =>
-        user.email.toLowerCase() === normalizedLoginId ||
-        user.username.toLowerCase() === normalizedLoginId,
-    ) || null
-  );
-}
-
-/**
- * Kiểm tra email đã tồn tại hay chưa.
- */
-export function findUserByEmail(email) {
-  const normalizedEmail = String(email || '').toLowerCase();
-  return mockDatabase.users.find((user) => user.email.toLowerCase() === normalizedEmail) || null;
-}
-
-/**
- * Tạo user mới trong bộ nhớ tạm.
- */
-export function createUser(payload) {
-  const user = {
-    id: generateUserId(),
-    ...payload,
-    createdAt: new Date().toISOString(),
+  return {
+    createdAt: row.created_at,
+    email: row.email,
+    fullName: row.full_name,
+    id: toNumber(row.id, null),
+    passwordHash: row.password_hash,
+    phone: row.phone,
+    role: row.role,
+    status: row.status,
+    updatedAt: row.updated_at,
+    username: row.username,
   };
+}
 
-  mockDatabase.users.push(user);
-  return user;
+/**
+ * Tìm user theo primary key để auth middleware và refresh token có thể xác thực lại phiên.
+ */
+export async function findUserById(userId, connection = null) {
+  const normalizedUserId = Number(userId);
+
+  if (!Number.isInteger(normalizedUserId) || normalizedUserId < 1) {
+    return null;
+  }
+
+  const rows = await select(
+    `
+      SELECT id, full_name, username, email, phone, password_hash, role, status, created_at, updated_at
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+    `,
+    [normalizedUserId],
+    connection,
+  );
+
+  return mapUserRow(rows[0]);
+}
+
+/**
+ * Cho phép đăng nhập bằng email hoặc username trên cùng một endpoint.
+ */
+export async function findUserByLoginId(loginId, connection = null) {
+  const normalizedLoginId = String(loginId || '').trim().toLowerCase();
+
+  if (!normalizedLoginId) {
+    return null;
+  }
+
+  const rows = await select(
+    `
+      SELECT id, full_name, username, email, phone, password_hash, role, status, created_at, updated_at
+      FROM users
+      WHERE LOWER(email) = ? OR LOWER(username) = ?
+      LIMIT 1
+    `,
+    [normalizedLoginId, normalizedLoginId],
+    connection,
+  );
+
+  return mapUserRow(rows[0]);
+}
+
+/**
+ * Kiểm tra email tồn tại trước khi tạo tài khoản mới.
+ */
+export async function findUserByEmail(email, connection = null) {
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  const rows = await select(
+    `
+      SELECT id, full_name, username, email, phone, password_hash, role, status, created_at, updated_at
+      FROM users
+      WHERE LOWER(email) = ?
+      LIMIT 1
+    `,
+    [normalizedEmail],
+    connection,
+  );
+
+  return mapUserRow(rows[0]);
+}
+
+/**
+ * Kiểm tra username tồn tại trước khi đăng ký.
+ */
+export async function findUserByUsername(username, connection = null) {
+  const normalizedUsername = String(username || '').trim().toLowerCase();
+
+  if (!normalizedUsername) {
+    return null;
+  }
+
+  const rows = await select(
+    `
+      SELECT id, full_name, username, email, phone, password_hash, role, status, created_at, updated_at
+      FROM users
+      WHERE LOWER(username) = ?
+      LIMIT 1
+    `,
+    [normalizedUsername],
+    connection,
+  );
+
+  return mapUserRow(rows[0]);
+}
+
+/**
+ * Tạo user mới trong bảng `users`, sau đó đọc lại bản ghi vừa tạo để đồng bộ format.
+ */
+export async function createUser(payload, connection = null) {
+  const result = await execute(
+    `
+      INSERT INTO users (full_name, username, email, phone, password_hash, role)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `,
+    [
+      payload.fullName,
+      payload.username,
+      payload.email,
+      payload.phone,
+      payload.passwordHash,
+      payload.role || 'user',
+    ],
+    connection,
+  );
+
+  return findUserById(result.insertId, connection);
 }

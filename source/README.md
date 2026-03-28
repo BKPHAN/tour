@@ -15,11 +15,11 @@ source/
   .env.example
   package.json
   nodemon.json
+  vite.config.js
   client/
     public/
     src/
     index.html
-    vite.config.js
   server/
     app.js
     server.js
@@ -138,11 +138,13 @@ Thư mục SQL hiện có tại:
 
 - [server/migrations/001_create_tour_db.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/001_create_tour_db.sql)
 - [server/migrations/002_data_seed.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/002_data_seed.sql)
+- [server/migrations/003_admin_user_mock_data.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/003_admin_user_mock_data.sql)
 
 Thứ tự chạy:
 
 1. Tạo database và bảng bằng `001_create_tour_db.sql`
 2. Seed dữ liệu mẫu bằng `002_data_seed.sql`
+3. Bổ sung role `admin/staff/user`, trạng thái `blocked`, cờ `delete_flg` và tài khoản mock admin bằng `003_admin_user_mock_data.sql`
 
 Database mẫu đang dùng tên:
 
@@ -154,11 +156,13 @@ Có sẵn tài khoản demo để kiểm tra luồng đăng nhập:
 
 - Tên đăng nhập: `demo`
 - Mật khẩu: `123456`
+- Admin: `admin` / `admin123`
+- Staff: `staff` / `staff123`
 
 ## Tình trạng hiện tại
 
 - Frontend người dùng đã có giao diện và đã nối với backend
-- Backend đang chạy bằng Express với dữ liệu mock in-memory và đã có migrations SQL để chuẩn bị chuyển sang MySQL thật
+- Backend đang chạy bằng Express và đọc dữ liệu người dùng trực tiếp từ MySQL theo cấu hình trong `.env`
 - Luồng chính đã có: đăng ký, đăng nhập, xem tour, xem chi tiết tour, đặt tour, thanh toán, lịch sử booking
 
 ## Lệnh hay dùng

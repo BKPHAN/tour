@@ -95,7 +95,7 @@ function BookingDetailPage() {
           <SectionHeading
             eyebrow="Thông tin chung"
             title={tour?.title ?? 'Đang tải tên tour'}
-            description="Dữ liệu booking và timeline hiện đang được lấy trực tiếp từ backend."
+            description="Toàn bộ thông tin giữ chỗ, thanh toán và liên hệ của đơn đặt tour được tổng hợp tại đây để bạn tiện theo dõi."
           />
           <ul className="detail-list">
             <li>Ngày đặt: {formatDate(booking.bookedAt)}</li>
@@ -135,8 +135,8 @@ function BookingDetailPage() {
       <section className="content-card">
         <SectionHeading
           eyebrow="Tiến trình xử lý"
-          title="Timeline booking"
-          description="Các mốc xử lý được cập nhật từ backend để người dùng theo dõi đơn đặt tour."
+          title="Hành trình xác nhận đơn đặt tour"
+          description="Các mốc quan trọng sẽ được cập nhật liên tục để bạn biết đơn đang ở bước nào trước ngày khởi hành."
         />
         <BookingTimeline items={booking.timeline} />
       </section>

@@ -23,7 +23,7 @@ async function registerFrontend(app, httpServer) {
     const { createServer } = await import('vite');
     const vite = await createServer({
       appType: 'custom',
-      configFile: path.resolve(clientRoot, 'vite.config.js'),
+      configFile: path.resolve(workspaceRoot, 'vite.config.js'),
       server: {
         middlewareMode: true,
         // Reuse the shared HTTP server so Vite does not open a second HMR WebSocket port.

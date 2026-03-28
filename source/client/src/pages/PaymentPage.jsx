@@ -125,7 +125,7 @@ function PaymentPage() {
     <div className="container page-stack">
       <section className="page-banner">
         <p className="section-eyebrow">Trang thanh toán</p>
-        <h1>Hoàn tất thanh toán cho đơn đặt tour của bạn.</h1>
+        <h1>Hoàn tất thanh toán để khóa chỗ chính thức.</h1>
       </section>
 
       <div className="booking-grid">
@@ -166,6 +166,7 @@ function PaymentPage() {
             <span>Tổng thanh toán</span>
             <strong>{formatCurrency(draftSummary.totalPrice)}</strong>
           </div>
+          <p className="helper-text">Sau khi thanh toán thành công, bạn có thể xem lại trạng thái đơn và thông tin chuyến đi trong mục lịch sử booking.</p>
           <div className="inline-links">
             <Link to="/bookings">Xem lịch sử booking</Link>
             <Link to={`/tours/${tour.id}`}>Quay lại chi tiết tour</Link>

@@ -1,70 +1,316 @@
-import { mockDatabase } from '../config/mockDatabase.js';
+import { execute, select } from '../config/database.js';
+import { parseJsonValue, toNumber } from '../utils/dbHelpers.js';
 
 /**
- * Lấy toàn bộ danh sách tour đang có trong bộ dữ liệu mock.
+ * Tour summary là format chung cho card/listing và cũng là nền của trang chi tiết.
  */
-export function findAllTours() {
-  return mockDatabase.tours;
+function mapTourSummary(row) {
+  return {
+    category: row.category,
+    departurePoint: row.departure_point,
+    description: row.description,
+    duration: row.duration_label,
+    id: toNumber(row.id, null),
+    image: row.image_url,
+    inclusions: parseJsonValue(row.inclusions_json, []),
+    highlights: parseJsonValue(row.highlights_json, []),
+    location: row.location,
+    price: toNumber(row.price),
+    rating: toNumber(row.rating),
+    reviewCount: toNumber(row.review_count),
+    title: row.title,
+  };
 }
 
 /**
- * Lấy một tour theo id.
+ * Đổi `day_number` trong DB thành nhãn "Ngày X" để frontend render trực tiếp.
  */
-export function findTourById(tourId) {
-  return mockDatabase.tours.find((tour) => tour.id === tourId) || null;
+function mapItineraryRow(row) {
+  return {
+    day: `Ngày ${row.day_number}`,
+    description: row.description,
+    title: row.title,
+  };
 }
 
 /**
- * Lấy tour nổi bật cho trang chủ.
+ * Đổi row lịch khởi hành sang format frontend, đồng thời tính số chỗ còn lại từ `slots_total - slots_booked`.
  */
-export function findFeaturedTours(limit = 3) {
-  return mockDatabase.tours.slice(0, limit);
+function mapDepartureRow(row, includeInternal = false) {
+  const mappedDeparture = {
+    date: row.departure_date,
+    id: row.departure_code,
+    label: row.label_text,
+    price: toNumber(row.price),
+    slots: toNumber(row.slots_total) - toNumber(row.slots_booked),
+    status: row.status,
+  };
+
+  if (includeInternal) {
+    mappedDeparture._departureDbId = toNumber(row.id, null);
+    mappedDeparture._tourDbId = toNumber(row.tour_id, null);
+  }
+
+  return mappedDeparture;
 }
 
 /**
- * Lấy danh sách testimonial cho landing page.
+ * Query danh sách tour với bộ lọc từ frontend, filter được đẩy xuống SQL thay vì lọc trong RAM.
  */
-export function findTestimonials() {
-  return mockDatabase.testimonials;
+export async function findAllTours(filters = {}, connection = null) {
+  const conditions = [`status = 'published'`];
+  const params = [];
+  const normalizedKeyword = String(filters.keyword || '').trim().toLowerCase();
+  const normalizedLocation = String(filters.location || '').trim().toLowerCase();
+
+  if (normalizedKeyword) {
+    const likeKeyword = `%${normalizedKeyword}%`;
+    conditions.push(`(LOWER(title) LIKE ? OR LOWER(location) LIKE ? OR LOWER(description) LIKE ?)`);
+    params.push(likeKeyword, likeKeyword, likeKeyword);
+  }
+
+  if (filters.category && filters.category !== 'all') {
+    conditions.push('category = ?');
+    params.push(filters.category);
+  }
+
+  if (normalizedLocation) {
+    conditions.push('LOWER(location) LIKE ?');
+    params.push(`%${normalizedLocation}%`);
+  }
+
+  if (filters.minPrice) {
+    conditions.push('price >= ?');
+    params.push(Number(filters.minPrice));
+  }
+
+  if (filters.maxPrice) {
+    conditions.push('price <= ?');
+    params.push(Number(filters.maxPrice));
+  }
+
+  if (filters.minDays) {
+    conditions.push('duration_days >= ?');
+    params.push(Number(filters.minDays));
+  }
+
+  if (filters.maxDays) {
+    conditions.push('duration_days <= ?');
+    params.push(Number(filters.maxDays));
+  }
+
+  const rows = await select(
+    `
+      SELECT
+        id,
+        title,
+        location,
+        departure_point,
+        category,
+        duration_label,
+        price,
+        rating,
+        review_count,
+        image_url,
+        description,
+        highlights_json,
+        inclusions_json
+      FROM tours
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY created_at DESC, id DESC
+    `,
+    params,
+    connection,
+  );
+
+  return rows.map(mapTourSummary);
 }
 
 /**
- * Tìm đợt khởi hành của một tour theo departure id.
+ * Lấy nhóm tour nổi bật cho trang chủ theo tiêu chí rating và review_count.
  */
-export function findDepartureById(tourId, departureId) {
-  const tour = findTourById(tourId);
+export async function findFeaturedTours(limit = 3, connection = null) {
+  const normalizedLimit = Number.isInteger(Number(limit)) && Number(limit) > 0 ? Number(limit) : 3;
+  const rows = await select(
+    `
+      SELECT
+        id,
+        title,
+        location,
+        departure_point,
+        category,
+        duration_label,
+        price,
+        rating,
+        review_count,
+        image_url,
+        description,
+        highlights_json,
+        inclusions_json
+      FROM tours
+      WHERE status = 'published'
+      ORDER BY rating DESC, review_count DESC, id ASC
+      LIMIT ?
+    `,
+    [normalizedLimit],
+    connection,
+  );
 
-  if (!tour) {
+  return rows.map(mapTourSummary);
+}
+
+/**
+ * Landing page dùng testimonials riêng, được map về shape `name/role/content` mà UI đang đọc.
+ */
+export async function findTestimonials(connection = null) {
+  const rows = await select(
+    `
+      SELECT id, user_name, role_label, content
+      FROM testimonials
+      ORDER BY sort_order ASC, id ASC
+    `,
+    [],
+    connection,
+  );
+
+  return rows.map((row) => ({
+    content: row.content,
+    id: `review-${row.id}`,
+    name: row.user_name,
+    role: row.role_label,
+  }));
+}
+
+/**
+ * Lấy một tour chi tiết kèm itinerary và departures từ DB thật.
+ */
+export async function findTourById(tourId, connection = null) {
+  const normalizedTourId = Number(tourId);
+
+  if (!Number.isInteger(normalizedTourId) || normalizedTourId < 1) {
     return null;
   }
 
-  return tour.departures.find((departure) => departure.id === departureId) || null;
-}
+  const tourRows = await select(
+    `
+      SELECT
+        id,
+        title,
+        location,
+        departure_point,
+        category,
+        duration_label,
+        price,
+        rating,
+        review_count,
+        image_url,
+        description,
+        highlights_json,
+        inclusions_json
+      FROM tours
+      WHERE id = ? AND status = 'published'
+      LIMIT 1
+    `,
+    [normalizedTourId],
+    connection,
+  );
 
-/**
- * Trừ số chỗ còn lại khi booking được tạo thành công.
- */
-export function reserveDepartureSlots(tourId, departureId, travelerCount) {
-  const departure = findDepartureById(tourId, departureId);
+  const tourRow = tourRows[0];
 
-  if (!departure) {
+  if (!tourRow) {
     return null;
   }
 
-  departure.slots -= travelerCount;
-  return departure;
+  const itineraryRows = await select(
+    `
+      SELECT day_number, title, description
+      FROM tour_itineraries
+      WHERE tour_id = ?
+      ORDER BY day_number ASC
+    `,
+    [normalizedTourId],
+    connection,
+  );
+
+  const departureRows = await select(
+    `
+      SELECT id, tour_id, departure_code, departure_date, slots_total, slots_booked, price, label_text, status
+      FROM tour_departures
+      WHERE tour_id = ?
+      ORDER BY departure_date ASC, id ASC
+    `,
+    [normalizedTourId],
+    connection,
+  );
+
+  return {
+    ...mapTourSummary(tourRow),
+    departures: departureRows.map((row) => mapDepartureRow(row)),
+    itinerary: itineraryRows.map(mapItineraryRow),
+  };
 }
 
 /**
- * Hoàn trả số chỗ khi booking bị hủy.
+ * Tìm một lịch khởi hành cụ thể theo `tour + departure_code` để tạo booking.
  */
-export function releaseDepartureSlots(tourId, departureId, travelerCount) {
-  const departure = findDepartureById(tourId, departureId);
+export async function findDepartureById(tourId, departureId, connection = null) {
+  const normalizedTourId = Number(tourId);
+  const normalizedDepartureId = String(departureId || '').trim();
 
-  if (!departure) {
+  if (!Number.isInteger(normalizedTourId) || normalizedTourId < 1 || !normalizedDepartureId) {
     return null;
   }
 
-  departure.slots += travelerCount;
-  return departure;
+  const rows = await select(
+    `
+      SELECT id, tour_id, departure_code, departure_date, slots_total, slots_booked, price, label_text, status
+      FROM tour_departures
+      WHERE tour_id = ? AND departure_code = ?
+      LIMIT 1
+    `,
+    [normalizedTourId, normalizedDepartureId],
+    connection,
+  );
+
+  return rows[0] ? mapDepartureRow(rows[0], true) : null;
+}
+
+/**
+ * Giữ chỗ theo số lượng khách; điều kiện `slots` trong `WHERE` giúp tránh overbooking khi nhiều request đến cùng lúc.
+ */
+export async function reserveDepartureSlots(tourId, departureId, travelerCount, connection = null) {
+  const result = await execute(
+    `
+      UPDATE tour_departures
+      SET slots_booked = slots_booked + ?
+      WHERE tour_id = ?
+        AND departure_code = ?
+        AND status = 'open'
+        AND (slots_total - slots_booked) >= ?
+    `,
+    [travelerCount, Number(tourId), String(departureId || '').trim(), travelerCount],
+    connection,
+  );
+
+  return result.affectedRows > 0;
+}
+
+/**
+ * Trả lại số chỗ khi booking bị hủy.
+ */
+export async function releaseDepartureSlots(tourId, departureId, travelerCount, connection = null) {
+  const result = await execute(
+    `
+      UPDATE tour_departures
+      SET slots_booked = CASE
+        WHEN slots_booked >= ? THEN slots_booked - ?
+        ELSE 0
+      END
+      WHERE tour_id = ? AND departure_code = ?
+    `,
+    [travelerCount, travelerCount, Number(tourId), String(departureId || '').trim()],
+    connection,
+  );
+
+  return result.affectedRows > 0;
 }

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import { applyTheme, getInitialTheme } from './services/themeService.js';
+import './styles/admin.css';
 import './styles/global.css';
 
 // Apply the saved theme before the app mounts to reduce flicker during refresh.

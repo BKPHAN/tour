@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormField from '../components/FormField.jsx';
-import { login } from '../services/authService.js';
+import { loginAdmin } from '../services/adminAuthService.js';
 
 /**
- * Trang đăng nhập, gọi API xác thực thật và lưu phiên người dùng sau khi thành công.
+ * Trang dang nhap rieng cho admin de tach biet voi luong dang nhap nguoi dung.
  */
-function LoginPage() {
+function AdminLoginPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -17,15 +17,15 @@ function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
-   * Cập nhật giá trị các ô nhập trong form đăng nhập.
+   * Cap nhat state cho 2 truong dang nhap va mat khau.
    */
   function handleChange(event) {
     const { name, value } = event.target;
-    setFormData((current) => ({ ...current, [name]: value }));
+    setFormData((currentFormData) => ({ ...currentFormData, [name]: value }));
   }
 
   /**
-   * Gọi backend đăng nhập rồi chuyển người dùng về trang họ vừa định truy cập.
+   * Dang nhap admin xong thi quay lai trang dich, neu khong co thi ve dashboard.
    */
   async function handleSubmit(event) {
     event.preventDefault();
@@ -33,9 +33,8 @@ function LoginPage() {
     setErrorMessage('');
 
     try {
-      await login(formData);
-      const redirectTo = location.state?.redirectTo || '/bookings';
-      navigate(redirectTo, { replace: true });
+      await loginAdmin(formData);
+      navigate(location.state?.redirectTo || '/admin', { replace: true });
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -44,44 +43,44 @@ function LoginPage() {
   }
 
   return (
-    <div className="auth-shell container">
-      <section className="auth-panel auth-intro">
-        <p className="section-eyebrow">Trang đăng nhập</p>
-        <h1>Quay lại tài khoản để tiếp tục chuyến đi đang dở.</h1>
+    <div className="admin-login-shell">
+      <section className="admin-login-panel admin-login-intro">
+        <p className="section-eyebrow">Giai doan 2 frontend</p>
+        <h1>Dang nhap khu quan tri de demo luong quan ly nguoi dung.</h1>
         <p>
-          Đăng nhập bằng tên đăng nhập hoặc email để xem booking, thanh toán và tiếp tục các hành trình đã chọn.
+          Trang nay dung session mock rieng cho admin. Sau khi dang nhap, ban co the di qua dashboard, danh
+          sach user va trang chi tiet de xem toan bo flow quan tri.
         </p>
         <ul className="feature-list">
-          <li>Tài khoản trải nghiệm: `demo`</li>
-          <li>Mật khẩu trải nghiệm: `123456`</li>
+          <li>Admin demo: `admin` hoac `admin@tourflow.vn` / `admin123`</li>
+          <li>Staff demo: `staff` hoac `linh.ops@tourflow.vn` / `staff123`</li>
+          <li>Chi role `admin` va `staff` moi vao duoc trang quan ly, role `user` chi dung cho khu vuc nguoi dung</li>
         </ul>
       </section>
 
-      <section className="auth-panel">
+      <section className="admin-login-panel">
         <form className="form-card" onSubmit={handleSubmit}>
           <FormField
-            label="Tên đăng nhập hoặc email"
+            label="Tai khoan admin"
             name="loginId"
             onChange={handleChange}
-            placeholder="Nhập tên đăng nhập hoặc email"
-            type="text"
+            placeholder="Nhap username hoac email quan tri"
             value={formData.loginId}
           />
           <FormField
-            label="Mật khẩu"
+            label="Mat khau"
             name="password"
             onChange={handleChange}
-            placeholder="Nhập mật khẩu"
+            placeholder="Nhap mat khau admin"
             type="password"
             value={formData.password}
           />
           <button className="button button-primary full-width" disabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
+            {isSubmitting ? 'Dang dang nhap...' : 'Vao khu quan tri'}
           </button>
           {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
           <div className="inline-links">
-            <Link to="/forgot-password">Quên mật khẩu?</Link>
-            <Link to="/register">Tạo tài khoản mới</Link>
+            <Link to="/">Ve website nguoi dung</Link>
           </div>
         </form>
       </section>
@@ -89,4 +88,4 @@ function LoginPage() {
   );
 }
 
-export default LoginPage;
+export default AdminLoginPage;

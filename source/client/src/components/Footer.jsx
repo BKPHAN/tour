@@ -1,17 +1,17 @@
 import { Link } from 'react-router-dom';
 
 /**
- * Footer tổng hợp các lối tắt quan trọng của luồng người dùng trong bản mock frontend.
+ * Footer tổng hợp các lối tắt quan trọng của luồng người dùng.
  */
 function Footer() {
   return (
     <footer className="site-footer">
       <div className="container footer-grid">
         <div>
-          <p className="footer-kicker">Frontend mock data</p>
-          <h3>Hoàn thiện khung giao diện cho luồng người dùng.</h3>
+          <p className="footer-kicker">TourFlow</p>
+          <h3>Lên kế hoạch chuyến đi gọn gàng, dễ chọn và dễ đặt hơn.</h3>
           <p>
-            Toàn bộ trang hiện đang dùng dữ liệu giả để chuẩn bị cho giai đoạn backend kết nối MySQL và API thật.
+            Khám phá điểm đến nổi bật, so sánh lịch khởi hành và hoàn tất đặt tour trong cùng một hành trình trực quan, rõ ràng.
           </p>
         </div>
 
@@ -26,12 +26,12 @@ function Footer() {
         </div>
 
         <div>
-          <h4>Trang đã dựng</h4>
+          <h4>Hành trình nổi bật</h4>
           <ul className="footer-list">
-            <li>Trang chủ</li>
-            <li>Chi tiết tour</li>
-            <li>Đăng ký / Đăng nhập</li>
-            <li>Booking / Payment</li>
+            <li>Khám phá tour theo điểm đến</li>
+            <li>Xem lịch trình và ngày khởi hành</li>
+            <li>Giữ chỗ và thanh toán nhanh</li>
+            <li>Theo dõi đơn đặt tour dễ dàng</li>
           </ul>
         </div>
       </div>

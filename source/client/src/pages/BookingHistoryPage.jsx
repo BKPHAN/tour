@@ -63,8 +63,8 @@ function BookingHistoryPage() {
       <section className="page-banner">
         <SectionHeading
           eyebrow="Lịch sử booking"
-          title="Bảng tổng hợp các booking của người dùng"
-          description="Trang này hiển thị dữ liệu booking thật lấy từ backend người dùng."
+          title="Theo dõi các chuyến đi bạn đã giữ chỗ"
+          description="Xem nhanh trạng thái thanh toán, ngày khởi hành và toàn bộ đơn đặt tour để chủ động sắp xếp kế hoạch trước mỗi chuyến đi."
         />
       </section>
 

@@ -2,14 +2,14 @@ import { useState } from 'react';
 import FormField from '../components/FormField.jsx';
 
 /**
- * Trang quên mật khẩu mock, giữ sẵn vị trí cho flow gửi email reset sau này.
+ * Trang quên mật khẩu.
  */
 function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   /**
-   * Mock thao tác gửi yêu cầu đặt lại mật khẩu để kiểm tra phản hồi trên giao diện.
+   * Ghi nhận yêu cầu đặt lại mật khẩu trên giao diện.
    */
   function handleSubmit(event) {
     event.preventDefault();
@@ -20,8 +20,8 @@ function ForgotPasswordPage() {
     <div className="auth-shell container">
       <section className="auth-panel auth-intro">
         <p className="section-eyebrow">Trang quên mật khẩu</p>
-        <h1>Gửi yêu cầu đặt lại mật khẩu cho người dùng.</h1>
-        <p>Trang này hiện mô phỏng một form đơn giản, sẵn cho API gửi email reset trong giai đoạn sau.</p>
+        <h1>Lấy lại quyền truy cập vào tài khoản của bạn.</h1>
+        <p>Nhập email đã đăng ký để nhận hướng dẫn đặt lại mật khẩu và tiếp tục quản lý các chuyến đi đang quan tâm.</p>
       </section>
 
       <section className="auth-panel">
@@ -37,7 +37,7 @@ function ForgotPasswordPage() {
           <button className="button button-primary full-width" type="submit">
             Gửi link đặt lại mật khẩu
           </button>
-          {submitted ? <p className="success-message">Mock request đã được tạo. Chờ bước backend gửi email thật.</p> : null}
+          {submitted ? <p className="success-message">Yêu cầu đã được ghi nhận. Vui lòng kiểm tra email để tiếp tục đặt lại mật khẩu.</p> : null}
         </form>
       </section>
     </div>

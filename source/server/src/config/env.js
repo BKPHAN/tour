@@ -17,6 +17,11 @@ export const env = {
   appName: process.env.APP_NAME || 'TourFlow',
   appPort: port,
   appUrl,
+  dbHost: process.env.DB_HOST || 'localhost',
+  dbName: process.env.DB_NAME || 'tour_db',
+  dbPassword: process.env.DB_PASSWORD || '',
+  dbPort: Number(process.env.DB_PORT || 3306),
+  dbUser: process.env.DB_USER || 'root',
   jwtSecret: process.env.JWT_SECRET || 'change_me_for_real_project',
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '1d',
   refreshTokenSecret:

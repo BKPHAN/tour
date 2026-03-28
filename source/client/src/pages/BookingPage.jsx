@@ -110,7 +110,7 @@ function BookingPage() {
     <div className="container page-stack">
       <section className="page-banner">
         <p className="section-eyebrow">Trang đặt tour</p>
-        <h1>Hoàn thiện thông tin đặt chỗ trước khi sang thanh toán.</h1>
+        <h1>Giữ chỗ nhanh cho hành trình bạn đã chọn.</h1>
       </section>
 
       <div className="booking-grid">
@@ -151,7 +151,7 @@ function BookingPage() {
             value={formData.note}
           />
           <button className="button button-primary full-width" disabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Đang tạo booking...' : 'Tiếp tục sang thanh toán'}
+            {isSubmitting ? 'Đang giữ chỗ cho bạn...' : 'Tiếp tục đến bước thanh toán'}
           </button>
           {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
         </form>
@@ -169,6 +169,7 @@ function BookingPage() {
             <span>Tổng tạm tính</span>
             <strong>{formatCurrency(totalPrice)}</strong>
           </div>
+          <p className="helper-text">Thông tin của bạn sẽ được dùng để giữ chỗ, xác nhận lịch khởi hành và hỗ trợ trước chuyến đi.</p>
         </aside>
       </div>
     </div>

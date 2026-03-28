@@ -7,7 +7,7 @@ import {
 import { sendSuccess } from '../utils/apiResponse.js';
 
 /**
- * Xử lý đăng ký tài khoản người dùng.
+ * Nhận request đăng ký và ủy quyền xử lý cho auth service.
  */
 export async function register(req, res, next) {
   try {
@@ -19,7 +19,7 @@ export async function register(req, res, next) {
 }
 
 /**
- * Xử lý đăng nhập bằng email hoặc username.
+ * Nhận request đăng nhập và trả về auth payload cho frontend.
  */
 export async function login(req, res, next) {
   try {
@@ -31,11 +31,11 @@ export async function login(req, res, next) {
 }
 
 /**
- * Cấp lại access token từ refresh token hợp lệ.
+ * Endpoint làm mới session khi access token hết hạn.
  */
-export function refreshToken(req, res, next) {
+export async function refreshToken(req, res, next) {
   try {
-    const result = refreshUserSession(req.body.refreshToken);
+    const result = await refreshUserSession(req.body.refreshToken);
     return sendSuccess(res, result, 'Làm mới phiên đăng nhập thành công.');
   } catch (error) {
     return next(error);
@@ -43,11 +43,11 @@ export function refreshToken(req, res, next) {
 }
 
 /**
- * Trả về thông tin user hiện tại từ token.
+ * Trả profile user hiện tại dựa trên `req.user` đã được middleware xác thực.
  */
-export function getProfile(req, res, next) {
+export async function getProfile(req, res, next) {
   try {
-    const result = getCurrentUser(req.user.id);
+    const result = await getCurrentUser(req.user.id);
     return sendSuccess(res, result, 'Lấy thông tin tài khoản thành công.');
   } catch (error) {
     return next(error);

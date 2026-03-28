@@ -1,4 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import RequireAdminAuth from '../components/RequireAdminAuth.jsx';
+import AdminLayout from '../layouts/AdminLayout.jsx';
+import AdminDashboardPage from '../pages/AdminDashboardPage.jsx';
+import AdminLoginPage from '../pages/AdminLoginPage.jsx';
+import AdminUserDetailPage from '../pages/AdminUserDetailPage.jsx';
+import AdminUserListPage from '../pages/AdminUserListPage.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
 import BookingDetailPage from '../pages/BookingDetailPage.jsx';
 import BookingHistoryPage from '../pages/BookingHistoryPage.jsx';
@@ -18,6 +24,15 @@ import RequireAuth from '../components/RequireAuth.jsx';
 function AppRoutes() {
   return (
     <Routes>
+      <Route element={<AdminLoginPage />} path="/admin/login" />
+      <Route element={<RequireAdminAuth />} path="/admin">
+        <Route element={<AdminLayout />}>
+          <Route index element={<AdminDashboardPage />} />
+          <Route element={<AdminUserListPage />} path="users" />
+          <Route element={<AdminUserDetailPage />} path="users/:userId" />
+        </Route>
+      </Route>
+
       <Route element={<UserLayout />} path="/">
         <Route index element={<HomePage />} />
         <Route element={<TourListPage />} path="tours" />

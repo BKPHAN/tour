@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatCurrency } from '../utils/formatters.js';
+import { handleTourImageError } from '../utils/tourImageFallback.js';
 
 /**
  * Card hiển thị tóm tắt tour, dùng ở trang chủ và trang danh sách tour.
@@ -9,7 +10,7 @@ function TourCard({ tour }) {
 
   return (
     <article className="tour-card">
-      <img alt={tour.title} className="tour-card-image" src={tour.image} />
+      <img alt={tour.title} className="tour-card-image" src={tour.image} onError={handleTourImageError} />
       <div className="tour-card-body">
         <div className="tour-card-topline">
           <span>{tour.category}</span>

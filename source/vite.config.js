@@ -3,17 +3,17 @@ import { defineConfig } from 'vite';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 
-const clientRoot = fileURLToPath(new URL('./', import.meta.url));
+const clientRoot = fileURLToPath(new URL('./client/', import.meta.url));
 
 export default defineConfig({
   root: clientRoot,
-  envDir: '..',
+  envDir: '.',
   define: {
     __API_BASE_URL__: JSON.stringify('/api'),
   },
   plugins: [react(), tailwindcss()],
   build: {
-    outDir: '../dist',
+    outDir: 'dist',
     emptyOutDir: true,
   },
 });

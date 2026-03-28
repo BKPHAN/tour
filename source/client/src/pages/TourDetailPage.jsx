@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import SectionHeading from '../components/SectionHeading.jsx';
 import { getTourDetail } from '../services/tourService.js';
 import { formatCurrency, formatDate } from '../utils/formatters.js';
+import { handleTourImageError } from '../utils/tourImageFallback.js';
 
 /**
  * Trang chi tiết tour, lấy dữ liệu trực tiếp từ backend để hiển thị lịch trình và lịch khởi hành.
@@ -44,7 +45,7 @@ function TourDetailPage() {
   return (
     <div className="container page-stack">
       <section className="detail-hero">
-        <img alt={tour.title} className="detail-cover" src={tour.image} />
+        <img alt={tour.title} className="detail-cover" src={tour.image} onError={handleTourImageError} />
         <div className="detail-summary">
           <p className="section-eyebrow">{tour.category}</p>
           <h1>{tour.title}</h1>
@@ -71,7 +72,7 @@ function TourDetailPage() {
           <SectionHeading
             eyebrow="Điểm nhấn tour"
             title="Những trải nghiệm nổi bật"
-            description="Các highlight được lấy từ backend để người dùng thấy rõ lý do nên chọn hành trình này."
+            description="Từ cảnh sắc, điểm check-in đến nhịp nghỉ dưỡng, đây là những điều khiến hành trình này luôn được nhiều du khách ưu tiên lựa chọn."
           />
           <div className="chip-row">
             {tour.highlights.map((item) => (
@@ -85,7 +86,7 @@ function TourDetailPage() {
         <aside className="sidebar-card">
           <small>Giá bắt đầu</small>
           <h2>{formatCurrency(tour.price)}</h2>
-          <p>Dữ liệu tour, tiện ích đi kèm và mức giá hiện đã được tải từ API backend người dùng.</p>
+          <p>Chi phí đã bao gồm nhiều tiện ích thiết yếu để bạn an tâm lên kế hoạch và chốt lịch khởi hành phù hợp.</p>
           <ul className="detail-list">
             {tour.inclusions.map((item) => (
               <li key={item}>{item}</li>
@@ -98,7 +99,7 @@ function TourDetailPage() {
         <SectionHeading
           eyebrow="Lịch trình tour"
           title="Theo dõi hành trình từng ngày"
-          description="Người dùng có thể đọc lịch trình thật trước khi quyết định đặt tour."
+          description="Lịch trình được sắp xếp rõ ràng để bạn dễ hình dung nhịp di chuyển, thời gian nghỉ ngơi và các điểm dừng nổi bật trong suốt chuyến đi."
         />
         <div className="itinerary-list">
           {tour.itinerary.map((item) => (
@@ -115,7 +116,7 @@ function TourDetailPage() {
         <SectionHeading
           eyebrow="Lịch khởi hành"
           title="Lựa chọn ngày đi phù hợp"
-          description="Danh sách lịch khởi hành và số chỗ còn lại đang được lấy trực tiếp từ backend."
+          description="Chọn đợt khởi hành phù hợp với lịch cá nhân và ưu tiên giữ chỗ sớm ở những ngày đi đang được quan tâm nhiều."
         />
         <div className="departure-grid">
           {tour.departures.map((item) => (

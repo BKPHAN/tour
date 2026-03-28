@@ -7,76 +7,31 @@ import {
 import { ApiError } from '../utils/apiError.js';
 
 /**
- * Rút số ngày từ chuỗi duration để hỗ trợ lọc theo số ngày.
+ * Service tour chỉ đóng vai trò điều phối, để bộ lọc SQL nằm ở model.
  */
-function getDurationDays(duration) {
-  const match = String(duration).match(/\d+/);
-  return match ? Number(match[0]) : 0;
+export async function getTours(filters) {
+  return findAllTours(filters);
 }
 
 /**
- * Lấy danh sách tour có hỗ trợ lọc theo từ khóa, category, location, giá và số ngày.
+ * Lấy tour nổi bật cho trang chủ.
  */
-export function getTours(filters) {
-  const {
-    category,
-    keyword,
-    location,
-    maxDays,
-    maxPrice,
-    minDays,
-    minPrice,
-  } = filters;
-
-  return findAllTours().filter((tour) => {
-    const normalizedKeyword = String(keyword || '').toLowerCase();
-    const normalizedLocation = String(location || '').toLowerCase();
-    const durationDays = getDurationDays(tour.duration);
-
-    const matchesKeyword =
-      !normalizedKeyword ||
-      tour.title.toLowerCase().includes(normalizedKeyword) ||
-      tour.location.toLowerCase().includes(normalizedKeyword) ||
-      tour.description.toLowerCase().includes(normalizedKeyword);
-    const matchesCategory = !category || category === 'all' || tour.category === category;
-    const matchesLocation =
-      !normalizedLocation || tour.location.toLowerCase().includes(normalizedLocation);
-    const matchesMinPrice = !minPrice || tour.price >= Number(minPrice);
-    const matchesMaxPrice = !maxPrice || tour.price <= Number(maxPrice);
-    const matchesMinDays = !minDays || durationDays >= Number(minDays);
-    const matchesMaxDays = !maxDays || durationDays <= Number(maxDays);
-
-    return (
-      matchesKeyword &&
-      matchesCategory &&
-      matchesLocation &&
-      matchesMinPrice &&
-      matchesMaxPrice &&
-      matchesMinDays &&
-      matchesMaxDays
-    );
-  });
-}
-
-/**
- * Lấy danh sách tour nổi bật phục vụ landing page.
- */
-export function getFeaturedTours(limit) {
+export async function getFeaturedTours(limit) {
   return findFeaturedTours(limit ? Number(limit) : 3);
 }
 
 /**
- * Lấy testimonial cho trang chủ.
+ * Lấy testimonials cho landing page.
  */
-export function getLandingTestimonials() {
+export async function getLandingTestimonials() {
   return findTestimonials();
 }
 
 /**
- * Lấy chi tiết một tour theo id.
+ * Báo lỗi 404 nếu id tour không tồn tại trong DB.
  */
-export function getTourDetail(tourId) {
-  const tour = findTourById(tourId);
+export async function getTourDetail(tourId) {
+  const tour = await findTourById(tourId);
 
   if (!tour) {
     throw new ApiError(404, 'Không tìm thấy tour.');

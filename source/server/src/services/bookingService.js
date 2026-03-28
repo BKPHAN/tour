@@ -1,9 +1,20 @@
-import { createBooking, findBookingByIdAndUserId, findBookingsByUserId, updateBooking } from '../models/bookingModel.js';
-import { findDepartureById, findTourById, releaseDepartureSlots, reserveDepartureSlots } from '../models/tourModel.js';
+import {
+  createBooking,
+  findBookingByIdAndUserId,
+  findBookingsByUserId,
+  updateBooking,
+} from '../models/bookingModel.js';
+import {
+  findDepartureById,
+  findTourById,
+  releaseDepartureSlots,
+  reserveDepartureSlots,
+} from '../models/tourModel.js';
+import { withTransaction } from '../config/database.js';
 import { ApiError } from '../utils/apiError.js';
 
 /**
- * Tạo timeline mặc định khi người dùng vừa đặt tour.
+ * Tạo 2 mốc timeline đầu tiên ngay khi booking vừa được tạo.
  */
 function createInitialTimeline(travelers) {
   const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
@@ -23,17 +34,17 @@ function createInitialTimeline(travelers) {
 }
 
 /**
- * Lấy toàn bộ booking của user hiện tại.
+ * Trả về lịch sử booking của user hiện tại.
  */
-export function getUserBookings(userId) {
+export async function getUserBookings(userId) {
   return findBookingsByUserId(userId);
 }
 
 /**
- * Lấy chi tiết booking thuộc về user hiện tại.
+ * Đọc một booking chi tiết và chặn truy cập chéo giữa các user.
  */
-export function getUserBookingDetail(userId, bookingId) {
-  const booking = findBookingByIdAndUserId(bookingId, userId);
+export async function getUserBookingDetail(userId, bookingId) {
+  const booking = await findBookingByIdAndUserId(bookingId, userId);
 
   if (!booking) {
     throw new ApiError(404, 'Không tìm thấy booking.');
@@ -43,74 +54,108 @@ export function getUserBookingDetail(userId, bookingId) {
 }
 
 /**
- * Tạo booking mới, kiểm tra lịch khởi hành và trừ số chỗ còn lại.
+ * Luồng tạo booking:
+ * 1. validate input
+ * 2. mở transaction
+ * 3. đọc tour + departure
+ * 4. giữ chỗ
+ * 5. tạo booking
  */
-export function createUserBooking(user, payload) {
+export async function createUserBooking(user, payload) {
   const { departureId, email, fullName, note, paymentMethod, phone, tourId, travelers } = payload;
+  const normalizedTourId = Number(tourId);
+  const normalizedDepartureId = String(departureId || '').trim();
   const travelerCount = Number(travelers);
 
-  if (!tourId || !departureId || !travelerCount || travelerCount < 1) {
+  if (!normalizedTourId || !normalizedDepartureId || !travelerCount || travelerCount < 1) {
     throw new ApiError(400, 'Vui lòng chọn tour, lịch khởi hành và số lượng hành khách hợp lệ.');
   }
 
-  const tour = findTourById(tourId);
-  const departure = findDepartureById(tourId, departureId);
+  return withTransaction(async (connection) => {
+    const tour = await findTourById(normalizedTourId, connection);
+    const departure = await findDepartureById(normalizedTourId, normalizedDepartureId, connection);
 
-  if (!tour || !departure) {
-    throw new ApiError(404, 'Tour hoặc lịch khởi hành không tồn tại.');
-  }
+    if (!tour || !departure) {
+      throw new ApiError(404, 'Tour hoặc lịch khởi hành không tồn tại.');
+    }
 
-  if (departure.slots < travelerCount) {
-    throw new ApiError(400, 'Số chỗ còn lại không đủ cho lựa chọn của bạn.');
-  }
+    if (departure.status !== 'open') {
+      throw new ApiError(400, 'Lịch khởi hành này không còn mở để đặt chỗ.');
+    }
 
-  reserveDepartureSlots(tourId, departureId, travelerCount);
+    if (departure.slots < travelerCount) {
+      throw new ApiError(400, 'Số chỗ còn lại không đủ cho lựa chọn của bạn.');
+    }
 
-  return createBooking({
-    bookedAt: new Date().toISOString().slice(0, 10),
-    customerEmail: (email || user.email).trim().toLowerCase(),
-    customerName: (fullName || user.fullName).trim(),
-    customerPhone: (phone || user.phone).trim(),
-    departureDate: departure.date,
-    departureId,
-    notes: (note || '').trim() || 'Không có ghi chú thêm.',
-    paymentMethod: paymentMethod || 'Chưa thanh toán',
-    paymentStatus: 'waiting',
-    status: 'pending',
-    timeline: createInitialTimeline(travelerCount),
-    totalPrice: departure.price * travelerCount,
-    tourId,
-    travelers: travelerCount,
-    userId: user.id,
+    const reserved = await reserveDepartureSlots(
+      normalizedTourId,
+      normalizedDepartureId,
+      travelerCount,
+      connection,
+    );
+
+    if (!reserved) {
+      throw new ApiError(400, 'Số chỗ còn lại vừa thay đổi. Vui lòng thử lại.');
+    }
+
+    return createBooking(
+      {
+        customerEmail: (email || user.email).trim().toLowerCase(),
+        customerName: (fullName || user.fullName).trim(),
+        customerPhone: (phone || user.phone).trim(),
+        departureDbId: departure._departureDbId,
+        notes: (note || '').trim() || 'Không có ghi chú thêm.',
+        paymentMethod: paymentMethod || 'Chưa thanh toán',
+        paymentStatus: 'waiting',
+        status: 'pending',
+        timeline: createInitialTimeline(travelerCount),
+        totalPrice: departure.price * travelerCount,
+        tourId: normalizedTourId,
+        travelers: travelerCount,
+        userId: user.id,
+      },
+      connection,
+    );
   });
 }
 
 /**
- * Hủy booking nếu trạng thái hiện tại vẫn cho phép thay đổi.
+ * Hủy booking trong transaction để việc trả slot và đổi trạng thái luôn đi cùng nhau.
  */
-export function cancelUserBooking(userId, bookingId) {
-  const booking = findBookingByIdAndUserId(bookingId, userId);
+export async function cancelUserBooking(userId, bookingId) {
+  return withTransaction(async (connection) => {
+    const booking = await findBookingByIdAndUserId(
+      bookingId,
+      userId,
+      { includeInternal: true },
+      connection,
+    );
 
-  if (!booking) {
-    throw new ApiError(404, 'Không tìm thấy booking.');
-  }
+    if (!booking) {
+      throw new ApiError(404, 'Không tìm thấy booking.');
+    }
 
-  if (booking.status === 'cancelled' || booking.status === 'completed') {
-    throw new ApiError(400, 'Booking này không thể hủy.');
-  }
+    if (booking.status === 'cancelled' || booking.status === 'completed') {
+      throw new ApiError(400, 'Booking này không thể hủy.');
+    }
 
-  releaseDepartureSlots(booking.tourId, booking.departureId, booking.travelers);
+    await releaseDepartureSlots(booking.tourId, booking.departureId, booking.travelers, connection);
 
-  return updateBooking(bookingId, userId, {
-    paymentStatus: booking.paymentStatus === 'paid' ? 'refunded' : booking.paymentStatus,
-    status: 'cancelled',
-    timeline: [
-      ...booking.timeline,
+    return updateBooking(
+      booking._bookingDbId,
       {
-        detail: 'Booking đã được hủy từ phía người dùng.',
-        time: new Date().toISOString().slice(0, 16).replace('T', ' '),
-        title: 'Đã hủy booking',
+        paymentStatus: booking.paymentStatus === 'paid' ? 'refunded' : booking.paymentStatus,
+        status: 'cancelled',
+        timeline: [
+          ...booking.timeline,
+          {
+            detail: 'Booking đã được hủy từ phía người dùng.',
+            time: new Date().toISOString().slice(0, 16).replace('T', ' '),
+            title: 'Đã hủy booking',
+          },
+        ],
       },
-    ],
+      connection,
+    );
   });
 }
