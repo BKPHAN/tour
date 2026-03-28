@@ -150,11 +150,13 @@ Thư mục SQL hiện có tại:
 
 - [server/migrations/001_create_tour_db.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/001_create_tour_db.sql)
 - [server/migrations/002_data_seed.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/002_data_seed.sql)
+- [server/migrations/003_password_reset_tokens.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/003_password_reset_tokens.sql)
 
 Thứ tự chạy:
 
 1. Tạo database và bảng bằng `001_create_tour_db.sql`
 2. Seed dữ liệu mẫu bằng `002_data_seed.sql`
+3. Tạo bảng token đặt lại mật khẩu bằng `003_password_reset_tokens.sql`
 
 Database mẫu đang dùng tên:
 
@@ -168,13 +170,23 @@ Có sẵn tài khoản demo để kiểm tra nhanh các luồng chính:
 - Admin portal mock: `admin` / `admin123`
 - Staff portal mock: `staff` / `staff123`
 
+Các luồng tài khoản người dùng hiện có:
+
+- Đăng ký tài khoản mới và tự động đăng nhập
+- Đăng nhập bằng email hoặc tên đăng nhập
+- Quên mật khẩu và đặt lại mật khẩu qua reset token
+- Cài đặt tài khoản để cập nhật họ tên, email, số điện thoại
+- Đổi mật khẩu khi đang đăng nhập
+- Đăng xuất từ menu tài khoản trên header
+
 ## Tình trạng hiện tại
 
 - Frontend người dùng đã có giao diện và đã nối với backend
 - Thư mục page frontend đã được tách rõ thành `client/src/pages/user` và `client/src/pages/admin`
 - Thư mục service frontend đã được tách rõ thành `client/src/services/user`, `client/src/services/admin` và `client/src/services/shared`
 - Backend đang chạy bằng Express và đọc dữ liệu người dùng trực tiếp từ MySQL theo cấu hình trong `.env`
-- Luồng chính đã có: đăng ký, đăng nhập, xem tour, xem chi tiết tour, đặt tour, thanh toán, lịch sử booking
+- Header người dùng đã dùng nút tài khoản dạng dropdown, dẫn tới trang cài đặt tài khoản, đổi mật khẩu và đăng xuất
+- Luồng chính đã có: đăng ký, đăng nhập, quên mật khẩu, đặt lại mật khẩu, cập nhật hồ sơ, đổi mật khẩu, xem tour, xem chi tiết tour, đặt tour, thanh toán, lịch sử booking
 - Portal admin hiện vẫn là frontend mock cho các màn đăng nhập admin, dashboard và quản lý người dùng; chưa nối backend thật
 
 ## Lệnh hay dùng
