@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import FormField from '../components/FormField.jsx';
-import { editableUserRoleOptions, editableUserStatusOptions } from '../data/adminMockData.js';
-import { getAdminUserDetail, toggleAdminUserDeleteFlag, updateAdminUser } from '../services/adminUserService.js';
-import { formatCurrency, formatDate } from '../utils/formatters.js';
-import { formatDateTime, getAdminRoleLabel, getAdminUserStatusLabel } from '../utils/adminFormatters.js';
+import FormField from '../../components/FormField.jsx';
+import { editableUserRoleOptions, editableUserStatusOptions } from '../../data/adminMockData.js';
+import { getAdminUserDetail, toggleAdminUserDeleteFlag, updateAdminUser } from '../../services/adminUserService.js';
+import { formatCurrency, formatDate } from '../../utils/formatters.js';
+import { formatDateTime, getAdminRoleLabel, getAdminUserStatusLabel } from '../../utils/adminFormatters.js';
 
 function createFormState(user) {
   return {

@@ -1,21 +1,21 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import RequireAdminAuth from '../components/RequireAdminAuth.jsx';
 import AdminLayout from '../layouts/AdminLayout.jsx';
-import AdminDashboardPage from '../pages/AdminDashboardPage.jsx';
-import AdminLoginPage from '../pages/AdminLoginPage.jsx';
-import AdminUserDetailPage from '../pages/AdminUserDetailPage.jsx';
-import AdminUserListPage from '../pages/AdminUserListPage.jsx';
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage.jsx';
+import AdminLoginPage from '../pages/admin/AdminLoginPage.jsx';
+import AdminUserDetailPage from '../pages/admin/AdminUserDetailPage.jsx';
+import AdminUserListPage from '../pages/admin/AdminUserListPage.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
-import BookingDetailPage from '../pages/BookingDetailPage.jsx';
-import BookingHistoryPage from '../pages/BookingHistoryPage.jsx';
-import BookingPage from '../pages/BookingPage.jsx';
-import ForgotPasswordPage from '../pages/ForgotPasswordPage.jsx';
-import HomePage from '../pages/HomePage.jsx';
-import LoginPage from '../pages/LoginPage.jsx';
-import PaymentPage from '../pages/PaymentPage.jsx';
-import RegisterPage from '../pages/RegisterPage.jsx';
-import TourDetailPage from '../pages/TourDetailPage.jsx';
-import TourListPage from '../pages/TourListPage.jsx';
+import BookingDetailPage from '../pages/user/BookingDetailPage.jsx';
+import BookingHistoryPage from '../pages/user/BookingHistoryPage.jsx';
+import BookingPage from '../pages/user/BookingPage.jsx';
+import ForgotPasswordPage from '../pages/user/ForgotPasswordPage.jsx';
+import HomePage from '../pages/user/HomePage.jsx';
+import LoginPage from '../pages/user/LoginPage.jsx';
+import PaymentPage from '../pages/user/PaymentPage.jsx';
+import RegisterPage from '../pages/user/RegisterPage.jsx';
+import TourDetailPage from '../pages/user/TourDetailPage.jsx';
+import TourListPage from '../pages/user/TourListPage.jsx';
 import RequireAuth from '../components/RequireAuth.jsx';
 
 /**

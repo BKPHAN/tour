@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import FormField from '../components/FormField.jsx';
-import { login } from '../services/authService.js';
+import FormField from '../../components/FormField.jsx';
+import { login } from '../../services/authService.js';
 
 /**
  * Trang đăng nhập, gọi API xác thực thật và lưu phiên người dùng sau khi thành công.

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import FormField from '../components/FormField.jsx';
-import { createBooking } from '../services/bookingService.js';
-import { getStoredUser, logout } from '../services/authService.js';
-import { getTourDetail } from '../services/tourService.js';
-import { formatCurrency, formatDate } from '../utils/formatters.js';
+import FormField from '../../components/FormField.jsx';
+import { createBooking } from '../../services/bookingService.js';
+import { getStoredUser, logout } from '../../services/authService.js';
+import { getTourDetail } from '../../services/tourService.js';
+import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
 /**
  * Trang nhập thông tin đặt tour và tạo booking thật trước khi sang bước thanh toán.

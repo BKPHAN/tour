@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import FormField from '../components/FormField.jsx';
-import { loginAdmin } from '../services/adminAuthService.js';
+import FormField from '../../components/FormField.jsx';
+import { loginAdmin } from '../../services/adminAuthService.js';
 
 /**
  * Trang dang nhap rieng cho admin de tach biet voi luong dang nhap nguoi dung.

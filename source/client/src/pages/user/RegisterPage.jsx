@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import FormField from '../components/FormField.jsx';
-import { register } from '../services/authService.js';
+import FormField from '../../components/FormField.jsx';
+import { register } from '../../services/authService.js';
 
 const initialForm = {
   fullName: '',

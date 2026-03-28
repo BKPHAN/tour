@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import SectionHeading from '../components/SectionHeading.jsx';
-import { getTourDetail } from '../services/tourService.js';
-import { formatCurrency, formatDate } from '../utils/formatters.js';
-import { handleTourImageError } from '../utils/tourImageFallback.js';
+import SectionHeading from '../../components/SectionHeading.jsx';
+import { getTourDetail } from '../../services/tourService.js';
+import { formatCurrency, formatDate } from '../../utils/formatters.js';
+import { handleTourImageError } from '../../utils/tourImageFallback.js';
 
 /**
  * Trang chi tiết tour, lấy dữ liệu trực tiếp từ backend để hiển thị lịch trình và lịch khởi hành.

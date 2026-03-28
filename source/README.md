@@ -19,6 +19,9 @@ source/
   client/
     public/
     src/
+      pages/
+        admin/
+        user/
     index.html
   server/
     app.js
@@ -29,6 +32,8 @@ source/
 ```
 
 - `client`: frontend React + Vite + Tailwind CSS
+- `client/src/pages/user`: nhóm page giao diện người dùng
+- `client/src/pages/admin`: nhóm page giao diện quản trị admin/staff
 - `server`: backend Express + API người dùng + migrations SQL
 - `.env`: file biến môi trường dùng chung cho cả frontend và backend
 - `dist`: bản build frontend để backend serve ở môi trường production
@@ -150,18 +155,19 @@ Database mẫu đang dùng tên:
 
 ## Tài khoản demo
 
-Có sẵn tài khoản demo để kiểm tra luồng đăng nhập:
+Có sẵn tài khoản demo để kiểm tra nhanh các luồng chính:
 
-- Tên đăng nhập: `demo`
-- Mật khẩu: `123456`
-- Admin: `admin` / `admin123`
-- Staff: `staff` / `staff123`
+- Người dùng frontend: `demo` / `123456`
+- Admin portal mock: `admin` / `admin123`
+- Staff portal mock: `staff` / `staff123`
 
 ## Tình trạng hiện tại
 
 - Frontend người dùng đã có giao diện và đã nối với backend
+- Thư mục page frontend đã được tách rõ thành `client/src/pages/user` và `client/src/pages/admin`
 - Backend đang chạy bằng Express và đọc dữ liệu người dùng trực tiếp từ MySQL theo cấu hình trong `.env`
 - Luồng chính đã có: đăng ký, đăng nhập, xem tour, xem chi tiết tour, đặt tour, thanh toán, lịch sử booking
+- Portal admin hiện vẫn là frontend mock cho các màn đăng nhập admin, dashboard và quản lý người dùng; chưa nối backend thật
 
 ## Lệnh hay dùng
 

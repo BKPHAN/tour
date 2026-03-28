@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import BookingStatusPill from '../components/BookingStatusPill.jsx';
-import BookingTimeline from '../components/BookingTimeline.jsx';
-import SectionHeading from '../components/SectionHeading.jsx';
-import { cancelBooking, getBookingDetail } from '../services/bookingService.js';
-import { logout } from '../services/authService.js';
-import { getTourDetail } from '../services/tourService.js';
-import { formatCurrency, formatDate } from '../utils/formatters.js';
+import BookingStatusPill from '../../components/BookingStatusPill.jsx';
+import BookingTimeline from '../../components/BookingTimeline.jsx';
+import SectionHeading from '../../components/SectionHeading.jsx';
+import { cancelBooking, getBookingDetail } from '../../services/bookingService.js';
+import { logout } from '../../services/authService.js';
+import { getTourDetail } from '../../services/tourService.js';
+import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
 /**
  * Trang chi tiết booking, hiển thị đủ thông tin đơn và cho phép hủy booking nếu backend còn cho phép.

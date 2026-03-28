@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import BookingStatusPill from '../components/BookingStatusPill.jsx';
-import SectionHeading from '../components/SectionHeading.jsx';
-import { getBookings } from '../services/bookingService.js';
-import { logout } from '../services/authService.js';
-import { getTourDetail } from '../services/tourService.js';
-import { formatCurrency, formatDate } from '../utils/formatters.js';
+import BookingStatusPill from '../../components/BookingStatusPill.jsx';
+import SectionHeading from '../../components/SectionHeading.jsx';
+import { getBookings } from '../../services/bookingService.js';
+import { logout } from '../../services/authService.js';
+import { getTourDetail } from '../../services/tourService.js';
+import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
 /**
  * Trang lịch sử booking, lấy danh sách booking thật của user và lọc nhanh theo trạng thái.

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import SectionHeading from '../components/SectionHeading.jsx';
-import { getAdminDashboardSummary, getAdminUsers } from '../services/adminUserService.js';
-import { formatCurrency, formatDate } from '../utils/formatters.js';
-import { formatDateTime, getAdminRoleLabel, getAdminUserStatusLabel } from '../utils/adminFormatters.js';
+import SectionHeading from '../../components/SectionHeading.jsx';
+import { getAdminDashboardSummary, getAdminUsers } from '../../services/adminUserService.js';
+import { formatCurrency, formatDate } from '../../utils/formatters.js';
+import { formatDateTime, getAdminRoleLabel, getAdminUserStatusLabel } from '../../utils/adminFormatters.js';
 
 /**
  * Dashboard quan tri tong hop nhanh de admin thay tinh trang nguoi dung truoc khi di sau vao danh sach.

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import BookingStatusPill from '../components/BookingStatusPill.jsx';
-import FormField from '../components/FormField.jsx';
-import { logout } from '../services/authService.js';
-import { getPaymentDetail, payBooking } from '../services/paymentService.js';
-import { formatCurrency, formatDate } from '../utils/formatters.js';
+import BookingStatusPill from '../../components/BookingStatusPill.jsx';
+import FormField from '../../components/FormField.jsx';
+import { logout } from '../../services/authService.js';
+import { getPaymentDetail, payBooking } from '../../services/paymentService.js';
+import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
 /**
  * Trang thanh toán, lấy dữ liệu booking thật từ backend và xác nhận thanh toán qua API.
