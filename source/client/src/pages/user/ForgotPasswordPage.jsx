@@ -1,19 +1,34 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
+import { forgotPassword } from '../../services/user/authService.js';
 
 /**
  * Trang quên mật khẩu.
  */
 function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [result, setResult] = useState(null);
 
   /**
-   * Ghi nhận yêu cầu đặt lại mật khẩu trên giao diện.
+   * Gửi yêu cầu đặt lại mật khẩu lên backend.
    */
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setErrorMessage('');
+
+    try {
+      const response = await forgotPassword({ email });
+      setResult(response);
+    } catch (error) {
+      setErrorMessage(error.message);
+      setResult(null);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -34,10 +49,25 @@ function ForgotPasswordPage() {
             type="email"
             value={email}
           />
-          <button className="button button-primary full-width" type="submit">
-            Gửi link đặt lại mật khẩu
+          <button className="button button-primary full-width" disabled={isSubmitting} type="submit">
+            {isSubmitting ? 'Đang gửi yêu cầu...' : 'Gửi link đặt lại mật khẩu'}
           </button>
-          {submitted ? <p className="success-message">Yêu cầu đã được ghi nhận. Vui lòng kiểm tra email để tiếp tục đặt lại mật khẩu.</p> : null}
+          {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
+          {result ? (
+            <div className="form-card">
+              <p className="success-message">{result.message}</p>
+              {result.resetUrl ? (
+                <>
+                  <p className="helper-text">
+                    Môi trường development đang trả trực tiếp link đặt lại mật khẩu để bạn kiểm tra nhanh.
+                  </p>
+                  <Link className="button button-secondary" to={`/reset-password?token=${result.resetToken}`}>
+                    Mở trang đặt lại mật khẩu
+                  </Link>
+                </>
+              ) : null}
+            </div>
+          ) : null}
         </form>
       </section>
     </div>

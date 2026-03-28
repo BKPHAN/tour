@@ -1,5 +1,5 @@
 import { apiRequest } from './apiClient.js';
-import { clearStoredAuth, getStoredAuth, setStoredAuth } from './authStorage.js';
+import { clearStoredAuth, getStoredAuth, setStoredAuth, updateStoredUser } from './authStorage.js';
 
 /**
  * Đăng nhập bằng email hoặc username và lưu phiên làm việc vào localStorage.
@@ -28,10 +28,55 @@ export async function register(payload) {
 }
 
 /**
+ * Gửi yêu cầu quên mật khẩu để backend tạo token reset hoặc xử lý email.
+ */
+export async function forgotPassword(payload) {
+  return apiRequest('/auth/forgot-password', {
+    body: JSON.stringify(payload),
+    method: 'POST',
+  });
+}
+
+/**
+ * Gửi token reset cùng mật khẩu mới để hoàn tất đặt lại mật khẩu.
+ */
+export async function resetPassword(payload) {
+  return apiRequest('/auth/reset-password', {
+    body: JSON.stringify(payload),
+    method: 'POST',
+  });
+}
+
+/**
  * Lấy thông tin user hiện tại từ backend để đồng bộ trạng thái phiên.
  */
 export async function getCurrentUser() {
   return apiRequest('/auth/me');
+}
+
+/**
+ * Cập nhật thông tin hồ sơ và lưu lại user mới trong localStorage để header đổi ngay.
+ * Đây là mắt xích nối luồng `trang tài khoản -> API /auth/me -> authStorage -> Header`.
+ */
+export async function updateProfile(payload) {
+  const user = await apiRequest('/auth/me', {
+    body: JSON.stringify(payload),
+    method: 'PUT',
+  });
+
+  updateStoredUser(user);
+  return user;
+}
+
+/**
+ * Đổi mật khẩu cho tài khoản đang đăng nhập.
+ * API này không tự đăng xuất người dùng, nhưng những lần đăng nhập cũ bằng mật khẩu cũ sẽ không còn hợp lệ nữa.
+ */
+export async function changePassword(payload) {
+  return apiRequest('/auth/change-password', {
+    body: JSON.stringify(payload),
+    method: 'POST',
+  });
 }
 
 /**

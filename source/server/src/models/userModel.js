@@ -120,6 +120,30 @@ export async function findUserByUsername(username, connection = null) {
 }
 
 /**
+ * Kiểm tra số điện thoại tồn tại trước khi cập nhật hồ sơ hoặc tạo tài khoản.
+ */
+export async function findUserByPhone(phone, connection = null) {
+  const normalizedPhone = String(phone || '').trim();
+
+  if (!normalizedPhone) {
+    return null;
+  }
+
+  const rows = await select(
+    `
+      SELECT id, full_name, username, email, phone, password_hash, role, status, created_at, updated_at
+      FROM users
+      WHERE phone = ?
+      LIMIT 1
+    `,
+    [normalizedPhone],
+    connection,
+  );
+
+  return mapUserRow(rows[0]);
+}
+
+/**
  * Tạo user mới trong bảng `users`, sau đó đọc lại bản ghi vừa tạo để đồng bộ format.
  */
 export async function createUser(payload, connection = null) {
@@ -140,4 +164,50 @@ export async function createUser(payload, connection = null) {
   );
 
   return findUserById(result.insertId, connection);
+}
+
+/**
+ * Cập nhật thông tin hồ sơ cơ bản để người dùng tự chỉnh sửa tài khoản của mình.
+ */
+export async function updateUserProfile(userId, payload, connection = null) {
+  const normalizedUserId = Number(userId);
+
+  if (!Number.isInteger(normalizedUserId) || normalizedUserId < 1) {
+    return null;
+  }
+
+  await execute(
+    `
+      UPDATE users
+      SET full_name = ?, email = ?, phone = ?
+      WHERE id = ?
+    `,
+    [payload.fullName, payload.email, payload.phone, normalizedUserId],
+    connection,
+  );
+
+  return findUserById(normalizedUserId, connection);
+}
+
+/**
+ * Cập nhật password hash cho một tài khoản sau khi đổi hoặc đặt lại mật khẩu.
+ */
+export async function updateUserPassword(userId, passwordHash, connection = null) {
+  const normalizedUserId = Number(userId);
+
+  if (!Number.isInteger(normalizedUserId) || normalizedUserId < 1) {
+    return null;
+  }
+
+  await execute(
+    `
+      UPDATE users
+      SET password_hash = ?
+      WHERE id = ?
+    `,
+    [passwordHash, normalizedUserId],
+    connection,
+  );
+
+  return findUserById(normalizedUserId, connection);
 }

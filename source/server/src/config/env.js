@@ -23,6 +23,7 @@ export const env = {
   dbPort: Number(process.env.DB_PORT || 3306),
   dbUser: process.env.DB_USER || 'root',
   jwtSecret: process.env.JWT_SECRET || 'change_me_for_real_project',
+  passwordResetExpiresMinutes: Number(process.env.PASSWORD_RESET_EXPIRES_MINUTES || 30),
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '1d',
   refreshTokenSecret:
     process.env.REFRESH_TOKEN_SECRET || 'change_me_for_real_project_refresh',

@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { getStoredUser, logout } from '../services/user/authService.js';
 import { getAuthEventName } from '../services/user/authStorage.js';
 import { DARK_THEME } from '../services/shared/themeService.js';
@@ -14,8 +14,11 @@ const navItems = [
  * Header điều hướng chính cho khu vực người dùng, gồm trạng thái đăng nhập và nút đổi theme.
  */
 function Header({ themeMode, onToggleTheme }) {
+  const accountMenuRef = useRef(null);
+  const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(getStoredUser());
   const isDarkMode = themeMode === DARK_THEME;
 
@@ -37,12 +40,38 @@ function Header({ themeMode, onToggleTheme }) {
     };
   }, []);
 
+  useEffect(() => {
+    /**
+     * Mỗi lần đổi route thì đóng menu mobile và dropdown tài khoản để header không giữ trạng thái cũ.
+     */
+    setIsMenuOpen(false);
+    setIsAccountMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    /**
+     * Đóng dropdown tài khoản khi người dùng bấm ra ngoài vùng menu để thao tác tự nhiên hơn.
+     */
+    function handleClickOutside(event) {
+      if (!accountMenuRef.current?.contains(event.target)) {
+        setIsAccountMenuOpen(false);
+      }
+    }
+
+    window.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      window.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   /**
    * Đăng xuất ở phía client và đưa người dùng trở về trang đăng nhập.
    */
   function handleLogout() {
     logout();
     setIsMenuOpen(false);
+    setIsAccountMenuOpen(false);
     navigate('/login');
   }
 
@@ -137,12 +166,35 @@ function Header({ themeMode, onToggleTheme }) {
           </button>
 
           {currentUser ? (
-            <>
-              <span className="header-user">Xin chào, {currentUser.fullName}</span>
-              <button className="button button-ghost" type="button" onClick={handleLogout}>
-                Đăng xuất
+            <div className="account-menu" ref={accountMenuRef}>
+              {/* Nút tài khoản thay cho câu "Xin chào ...", mở ra các thao tác quản lý hồ sơ. */}
+              <button
+                aria-expanded={isAccountMenuOpen}
+                className="account-menu-button"
+                type="button"
+                onClick={() => setIsAccountMenuOpen((current) => !current)}
+              >
+                <span className="account-menu-label">{currentUser.fullName || 'Tài khoản'}</span>
+                <span aria-hidden="true" className={`account-menu-caret ${isAccountMenuOpen ? 'open' : ''}`}>
+                  ▾
+                </span>
               </button>
-            </>
+
+              {isAccountMenuOpen ? (
+                <div className="account-dropdown">
+                  {/* Các route này đều nằm sau RequireAuth nên chỉ user đã đăng nhập mới truy cập được. */}
+                  <Link className="account-dropdown-link" to="/account">
+                    Cài đặt tài khoản
+                  </Link>
+                  <Link className="account-dropdown-link" to="/account/password">
+                    Đổi mật khẩu
+                  </Link>
+                  <button className="account-dropdown-link danger" type="button" onClick={handleLogout}>
+                    Đăng xuất
+                  </button>
+                </div>
+              ) : null}
+            </div>
           ) : (
             <>
               <Link className="button button-ghost" to="/login">

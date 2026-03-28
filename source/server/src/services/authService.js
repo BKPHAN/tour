@@ -1,12 +1,23 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
+import { withTransaction } from '../config/database.js';
 import { env } from '../config/env.js';
+import {
+  createPasswordResetToken,
+  findValidPasswordResetToken,
+  invalidatePasswordResetTokensForUser,
+  markPasswordResetTokenUsed,
+} from '../models/passwordResetTokenModel.js';
 import {
   createUser,
   findUserByEmail,
   findUserById,
   findUserByLoginId,
+  findUserByPhone,
   findUserByUsername,
+  updateUserProfile,
+  updateUserPassword,
 } from '../models/userModel.js';
 import { ApiError } from '../utils/apiError.js';
 
@@ -45,6 +56,35 @@ function buildAuthPayload(user) {
     token: createAccessToken(user),
     user: sanitizeUser(user),
   };
+}
+
+function createPasswordResetDebugPayload(token, expiresAt) {
+  const resetUrl = `${env.appUrl}/reset-password?token=${token}`;
+
+  return {
+    expiresAt,
+    ...(env.appEnv !== 'production'
+      ? {
+          resetToken: token,
+          resetUrl,
+        }
+      : {}),
+  };
+}
+
+function hashResetToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function formatSqlDateTime(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -150,6 +190,49 @@ export async function getCurrentUser(userId) {
 }
 
 /**
+ * Cập nhật thông tin cá nhân của user đang đăng nhập và đồng bộ lại dữ liệu trả về frontend.
+ * Backend chỉ trả về user đã được làm sạch, còn frontend sẽ tự ghi đè lại localStorage để Header đổi tên ngay.
+ */
+export async function updateCurrentUserProfile(userId, payload) {
+  const user = await findUserById(userId);
+
+  if (!user) {
+    throw new ApiError(404, 'Không tìm thấy tài khoản.');
+  }
+
+  const fullName = String(payload?.fullName || '').trim();
+  const email = String(payload?.email || '').trim().toLowerCase();
+  const phone = String(payload?.phone || '').trim();
+
+  if (!fullName || !email || !phone) {
+    throw new ApiError(400, 'Vui lòng nhập đầy đủ họ tên, email và số điện thoại.');
+  }
+
+  // Kiểm tra trùng dữ liệu với tài khoản khác trước khi ghi đè để tránh lỗi unique key khó đọc từ DB.
+  const emailOwner = await findUserByEmail(email);
+  if (emailOwner && emailOwner.id !== user.id) {
+    throw new ApiError(409, 'Email này đã được sử dụng.');
+  }
+
+  const phoneOwner = await findUserByPhone(phone);
+  if (phoneOwner && phoneOwner.id !== user.id) {
+    throw new ApiError(409, 'Số điện thoại này đã được sử dụng.');
+  }
+
+  try {
+    const updatedUser = await updateUserProfile(user.id, {
+      email,
+      fullName,
+      phone,
+    });
+
+    return sanitizeUser(updatedUser);
+  } catch (error) {
+    mapUserWriteError(error);
+  }
+}
+
+/**
  * Xác thực refresh token và cấp lại trọn bộ session token cho frontend.
  */
 export async function refreshUserSession(refreshToken) {
@@ -173,4 +256,128 @@ export async function refreshUserSession(refreshToken) {
 
     throw new ApiError(401, 'Refresh token không hợp lệ hoặc đã hết hạn.');
   }
+}
+
+/**
+ * Tạo yêu cầu đặt lại mật khẩu. Ở môi trường development sẽ trả lại token để test local dễ hơn.
+ */
+export async function requestPasswordReset(payload) {
+  const email = String(payload?.email || '').trim().toLowerCase();
+
+  if (!email) {
+    throw new ApiError(400, 'Vui lòng nhập email đã đăng ký.');
+  }
+
+  const user = await findUserByEmail(email);
+
+  if (!user) {
+    return {
+      email,
+      message: 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu sẽ được gửi đi.',
+    };
+  }
+
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = hashResetToken(rawToken);
+  const expiresAt = formatSqlDateTime(
+    new Date(Date.now() + env.passwordResetExpiresMinutes * 60 * 1000),
+  );
+
+  await withTransaction(async (connection) => {
+    await invalidatePasswordResetTokensForUser(user.id, connection);
+    await createPasswordResetToken(
+      {
+        expiresAt,
+        tokenHash,
+        userId: user.id,
+      },
+      connection,
+    );
+  });
+
+  return {
+    email,
+    message: 'Nếu email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu sẽ được gửi đi.',
+    ...createPasswordResetDebugPayload(rawToken, expiresAt),
+  };
+}
+
+/**
+ * Xác thực token reset và cập nhật mật khẩu mới cho tài khoản.
+ */
+export async function resetUserPassword(payload) {
+  const token = String(payload?.token || '').trim();
+  const newPassword = String(payload?.newPassword || '').trim();
+
+  if (!token || !newPassword) {
+    throw new ApiError(400, 'Vui lòng cung cấp token đặt lại mật khẩu và mật khẩu mới.');
+  }
+
+  if (newPassword.length < 6) {
+    throw new ApiError(400, 'Mật khẩu mới cần có ít nhất 6 ký tự.');
+  }
+
+  const hashedToken = hashResetToken(token);
+  const resetToken = await findValidPasswordResetToken(hashedToken);
+
+  if (!resetToken) {
+    throw new ApiError(400, 'Token đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.');
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+
+  await withTransaction(async (connection) => {
+    await updateUserPassword(resetToken.userId, passwordHash, connection);
+    await markPasswordResetTokenUsed(resetToken.id, connection);
+    await invalidatePasswordResetTokensForUser(resetToken.userId, connection);
+  });
+
+  return {
+    email: resetToken.email,
+    resetAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+  };
+}
+
+/**
+ * Đổi mật khẩu trong phiên đăng nhập hiện tại bằng cách yêu cầu người dùng nhập mật khẩu cũ.
+ * Đây là luồng đổi mật khẩu chủ động sau khi đăng nhập, tách biệt với luồng reset mật khẩu bằng token.
+ */
+export async function changeCurrentUserPassword(userId, payload) {
+  const currentPassword = String(payload?.currentPassword || '').trim();
+  const newPassword = String(payload?.newPassword || '').trim();
+
+  if (!currentPassword || !newPassword) {
+    throw new ApiError(400, 'Vui lòng nhập mật khẩu hiện tại và mật khẩu mới.');
+  }
+
+  if (newPassword.length < 6) {
+    throw new ApiError(400, 'Mật khẩu mới cần có ít nhất 6 ký tự.');
+  }
+
+  const user = await findUserById(userId);
+
+  if (!user) {
+    throw new ApiError(404, 'Không tìm thấy tài khoản.');
+  }
+
+  const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.passwordHash);
+
+  if (!isCurrentPasswordValid) {
+    throw new ApiError(400, 'Mật khẩu hiện tại không chính xác.');
+  }
+
+  const isSamePassword = await bcrypt.compare(newPassword, user.passwordHash);
+
+  if (isSamePassword) {
+    throw new ApiError(400, 'Mật khẩu mới cần khác mật khẩu hiện tại.');
+  }
+
+  // Chỉ khi đã xác minh mật khẩu cũ hợp lệ mới ghi đè password hash mới vào DB.
+  const passwordHash = await bcrypt.hash(newPassword, 10);
+  await updateUserPassword(user.id, passwordHash);
+
+  return {
+    changedAt: formatSqlDateTime(new Date()),
+    message: 'Đổi mật khẩu thành công.',
+  };
 }

@@ -628,13 +628,73 @@ button {
   color: #8a2230;
 }
 
-.header-user {
+.account-menu {
+  position: relative;
+}
+
+.account-menu-button {
   display: inline-flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
   min-height: 44px;
-  padding: 0 8px;
+  padding: 0 16px;
+  border: 1px solid rgba(16, 35, 60, 0.08);
+  border-radius: 999px;
+  background: var(--surface-muted);
   color: var(--ink-strong);
   font-weight: 600;
+}
+
+.account-menu-label {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-menu-caret {
+  transition: transform 0.2s ease;
+}
+
+.account-menu-caret.open {
+  transform: rotate(180deg);
+}
+
+.account-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 220px;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface-strong);
+  box-shadow: var(--shadow);
+}
+
+.account-dropdown-link {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink-strong);
+  text-align: left;
+}
+
+.account-dropdown-link:hover {
+  background: rgba(16, 35, 60, 0.06);
+}
+
+.account-dropdown-link.danger {
+  color: #b23a48;
 }
 
 .theme-toggle {
@@ -798,6 +858,7 @@ button {
 :root[data-theme='dark'] .button-ghost,
 :root[data-theme='dark'] .button-secondary,
 :root[data-theme='dark'] .menu-toggle,
+:root[data-theme='dark'] .account-menu-button,
 :root[data-theme='dark'] .theme-toggle,
 :root[data-theme='dark'] .hero-thumb-card,
 :root[data-theme='dark'] .hero-kicker-pill,
@@ -815,6 +876,10 @@ button {
 
 :root[data-theme='dark'] .theme-toggle-icon {
   background: rgba(255, 147, 93, 0.16);
+}
+
+:root[data-theme='dark'] .account-dropdown-link:hover {
+  background: rgba(157, 176, 198, 0.12);
 }
 
 :root[data-theme='dark'] .hero-floating-note strong,
@@ -886,8 +951,16 @@ button {
     width: 100%;
   }
 
-  .header-actions .button {
+  .header-actions .button,
+  .account-menu,
+  .account-menu-button {
     flex: 1;
+  }
+
+  .account-dropdown {
+    left: 0;
+    right: auto;
+    width: 100%;
   }
 
   .hero-panel,

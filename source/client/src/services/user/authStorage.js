@@ -54,6 +54,18 @@ export function updateStoredTokens(authData) {
 }
 
 /**
+ * Đồng bộ riêng phần thông tin user khi người dùng cập nhật hồ sơ ngay trên giao diện.
+ * Nhờ event auth bắn ra từ đây, Header sẽ đổi tên hiển thị ngay mà không cần tải lại trang.
+ */
+export function updateStoredUser(user) {
+  const currentAuth = getStoredAuth() || {};
+  setStoredAuth({
+    ...currentAuth,
+    user,
+  });
+}
+
+/**
  * Xóa trạng thái đăng nhập hiện tại.
  */
 export function clearStoredAuth() {

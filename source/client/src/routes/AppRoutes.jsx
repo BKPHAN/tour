@@ -6,14 +6,17 @@ import AdminLoginPage from '../pages/admin/AdminLoginPage.jsx';
 import AdminUserDetailPage from '../pages/admin/AdminUserDetailPage.jsx';
 import AdminUserListPage from '../pages/admin/AdminUserListPage.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
+import AccountProfilePage from '../pages/user/AccountProfilePage.jsx';
 import BookingDetailPage from '../pages/user/BookingDetailPage.jsx';
 import BookingHistoryPage from '../pages/user/BookingHistoryPage.jsx';
 import BookingPage from '../pages/user/BookingPage.jsx';
+import ChangePasswordPage from '../pages/user/ChangePasswordPage.jsx';
 import ForgotPasswordPage from '../pages/user/ForgotPasswordPage.jsx';
 import HomePage from '../pages/user/HomePage.jsx';
 import LoginPage from '../pages/user/LoginPage.jsx';
 import PaymentPage from '../pages/user/PaymentPage.jsx';
 import RegisterPage from '../pages/user/RegisterPage.jsx';
+import ResetPasswordPage from '../pages/user/ResetPasswordPage.jsx';
 import TourDetailPage from '../pages/user/TourDetailPage.jsx';
 import TourListPage from '../pages/user/TourListPage.jsx';
 import RequireAuth from '../components/RequireAuth.jsx';
@@ -40,7 +43,11 @@ function AppRoutes() {
         <Route element={<RegisterPage />} path="register" />
         <Route element={<LoginPage />} path="login" />
         <Route element={<ForgotPasswordPage />} path="forgot-password" />
+        <Route element={<ResetPasswordPage />} path="reset-password" />
         <Route element={<RequireAuth />}>
+          {/* Cụm route tài khoản được mở từ dropdown trên Header sau khi user đăng nhập. */}
+          <Route element={<AccountProfilePage />} path="account" />
+          <Route element={<ChangePasswordPage />} path="account/password" />
           <Route element={<BookingPage />} path="booking/:tourId" />
           <Route element={<PaymentPage />} path="payment/:bookingId" />
           <Route element={<BookingHistoryPage />} path="bookings" />
