@@ -138,13 +138,11 @@ Thư mục SQL hiện có tại:
 
 - [server/migrations/001_create_tour_db.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/001_create_tour_db.sql)
 - [server/migrations/002_data_seed.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/002_data_seed.sql)
-- [server/migrations/003_admin_user_mock_data.sql](/C:/Users/Lenovo/Desktop/tour/source/server/migrations/003_admin_user_mock_data.sql)
 
 Thứ tự chạy:
 
 1. Tạo database và bảng bằng `001_create_tour_db.sql`
 2. Seed dữ liệu mẫu bằng `002_data_seed.sql`
-3. Bổ sung role `admin/staff/user`, trạng thái `blocked`, cờ `delete_flg` và tài khoản mock admin bằng `003_admin_user_mock_data.sql`
 
 Database mẫu đang dùng tên:
 
