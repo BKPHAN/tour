@@ -1,5 +1,5 @@
 /**
- * Parse chuỗi JSON lấy từ MySQL JSON/TEXT về object JS, nếu lỗi thì trả về fallback.
+ * Phân tích chuỗi JSON lấy từ MySQL JSON/TEXT về object JS, nếu lỗi thì trả về fallback.
  */
 export function parseJsonValue(value, fallback) {
   if (value === null || value === undefined || value === '') {

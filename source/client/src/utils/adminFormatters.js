@@ -1,17 +1,17 @@
 const roleLabels = {
-  admin: 'Quan tri vien',
-  staff: 'Nhan vien',
-  user: 'Nguoi dung',
+  admin: 'Quản trị viên',
+  staff: 'Nhân viên',
+  user: 'Người dùng',
 };
 
 const statusLabels = {
-  active: 'Dang hoat dong',
-  inactive: 'Tam ngung',
-  blocked: 'Bi khoa',
+  active: 'Đang hoạt động',
+  inactive: 'Tạm ngưng',
+  blocked: 'Bị khóa',
 };
 
 /**
- * Dinh dang ngay gio cho cac man hinh quan tri can xem thong tin gan nhat.
+ * Định dạng ngày giờ cho các màn hình quản trị cần xem thông tin gần nhất.
  */
 export function formatDateTime(value) {
   return new Intl.DateTimeFormat('vi-VN', {
@@ -24,14 +24,14 @@ export function formatDateTime(value) {
 }
 
 /**
- * Tra ve nhan vai tro de bang va form quan tri hien thi de doc hon.
+ * Trả về nhãn vai trò để bảng và form quản trị hiển thị dễ đọc hơn.
  */
 export function getAdminRoleLabel(role) {
   return roleLabels[role] ?? role;
 }
 
 /**
- * Tra ve nhan trang thai tai khoan cho giao dien quan ly nguoi dung.
+ * Trả về nhãn trạng thái tài khoản cho giao diện quản lý người dùng.
  */
 export function getAdminUserStatusLabel(status) {
   return statusLabels[status] ?? status;

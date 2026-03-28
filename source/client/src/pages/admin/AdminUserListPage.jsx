@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../../components/SectionHeading.jsx';
 import { adminUserRoleOptions, adminUserStatusOptions } from '../../data/adminMockData.js';
-import { getAdminUsers, toggleAdminUserDeleteFlag, updateAdminUser } from '../../services/adminUserService.js';
+import { getAdminUsers, toggleAdminUserDeleteFlag, updateAdminUser } from '../../services/admin/adminUserService.js';
 import { formatCurrency } from '../../utils/formatters.js';
 import { formatDateTime, getAdminRoleLabel, getAdminUserStatusLabel } from '../../utils/adminFormatters.js';
 
 /**
- * Danh sach nguoi dung cho admin, gom loc nhanh va mot so thao tac co ban ngay tren bang.
+ * Danh sách người dùng cho admin, gồm lọc nhanh và một số thao tác cơ bản ngay trên bảng.
  */
 function AdminUserListPage() {
   const [userList, setUserList] = useState([]);
@@ -22,7 +22,7 @@ function AdminUserListPage() {
   }, []);
 
   /**
-   * Tai danh sach user tu mock service de list va detail dung chung du lieu.
+   * Tải danh sách user từ mock service để list và detail dùng chung dữ liệu.
    */
   async function loadUsers() {
     setIsLoading(true);
@@ -39,7 +39,7 @@ function AdminUserListPage() {
   }
 
   /**
-   * Cap nhat nhanh trang thai active/inactive ngay tren bang de admin thao tac nhanh.
+   * Cập nhật nhanh trạng thái active/inactive ngay trên bảng để admin thao tác nhanh.
    */
   async function handleQuickStatusChange(userId, currentStatus) {
     const nextStatus = currentStatus === 'active' ? 'inactive' : 'active';
@@ -56,11 +56,11 @@ function AdminUserListPage() {
   }
 
   /**
-   * Dao trang thai xoa mem de admin co the thu nghiem day du luong user management.
+   * Đảo trạng thái xóa mềm để admin có thể thử nghiệm đầy đủ luồng user management.
    */
   async function handleToggleDelete(userId, deleteFlg) {
     const shouldContinue = window.confirm(
-      deleteFlg ? 'Ban muon khoi phuc tai khoan nay?' : 'Ban muon danh dau xoa mem tai khoan nay?',
+      deleteFlg ? 'Bạn muốn khôi phục tài khoản này?' : 'Bạn muốn đánh dấu xóa mềm tài khoản này?',
     );
 
     if (!shouldContinue) {
@@ -78,7 +78,7 @@ function AdminUserListPage() {
     }
   }
 
-  // Giu bo loc o client de nguoi moi de theo doi luong xu ly ngay trong page.
+  // Giữ bộ lọc ở client để người mới dễ theo dõi luồng xử lý ngay trong page.
   const filteredUsers = useMemo(() => {
     const normalizedKeyword = searchKeyword.trim().toLowerCase();
 
@@ -101,22 +101,22 @@ function AdminUserListPage() {
       <section className="content-card">
         <SectionHeading
           eyebrow="User management"
-          title="Bang quan ly nguoi dung"
-          description="Trang nay mo phong dung luong admin xem danh sach, loc user, doi trang thai nhanh va di vao chi tiet."
+          title="Bảng quản lý người dùng"
+          description="Trang này mô phỏng đúng luồng admin xem danh sách, lọc user, đổi trạng thái nhanh và đi vào chi tiết."
         />
 
         <div className="admin-filter-grid">
           <label className="form-field">
-            <span>Tim theo ten, email hoac ma user</span>
+            <span>Tìm theo tên, email hoặc mã user</span>
             <input
-              placeholder="Vi du: chau@example.com hoac USR-001"
+              placeholder="Ví dụ: chau@example.com hoặc USR-001"
               value={searchKeyword}
               onChange={(event) => setSearchKeyword(event.target.value)}
             />
           </label>
 
           <label className="form-field">
-            <span>Loc theo vai tro</span>
+            <span>Lọc theo vai trò</span>
             <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
               {adminUserRoleOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -127,7 +127,7 @@ function AdminUserListPage() {
           </label>
 
           <label className="form-field">
-            <span>Loc theo trang thai</span>
+            <span>Lọc theo trạng thái</span>
             <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
               {adminUserStatusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -144,30 +144,30 @@ function AdminUserListPage() {
       <section className="content-card">
         <div className="section-heading-row admin-table-header">
           <div>
-            <h2>Danh sach ket qua</h2>
+            <h2>Danh sách kết quả</h2>
             <p className="helper-text">
-              Hien co {filteredUsers.length} user phu hop bo loc. Click vao chi tiet de xem day du luong cap nhat.
+              Hiện có {filteredUsers.length} user phù hợp bộ lọc. Click vào chi tiết để xem đầy đủ luồng cập nhật.
             </p>
           </div>
           <button className="button button-secondary" type="button" onClick={loadUsers}>
-            Tai lai mock data hien tai
+            Tải lại mock data hiện tại
           </button>
         </div>
 
         {isLoading ? (
-          <p className="helper-text">Dang tai danh sach nguoi dung...</p>
+          <p className="helper-text">Đang tải danh sách người dùng...</p>
         ) : filteredUsers.length ? (
           <div className="admin-table-shell">
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Nguoi dung</th>
-                  <th>Vai tro</th>
-                  <th>Trang thai</th>
+                  <th>Người dùng</th>
+                  <th>Vai trò</th>
+                  <th>Trạng thái</th>
                   <th>Booking</th>
-                  <th>Tong chi</th>
-                  <th>Lan dang nhap</th>
-                  <th>Thao tac</th>
+                  <th>Tổng chi</th>
+                  <th>Lần đăng nhập</th>
+                  <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -195,7 +195,7 @@ function AdminUserListPage() {
                                 : 'admin-badge-success'
                         }`}
                       >
-                        {user.deleteFlg ? 'Da xoa mem' : getAdminUserStatusLabel(user.status)}
+                        {user.deleteFlg ? 'Đã xóa mềm' : getAdminUserStatusLabel(user.status)}
                       </span>
                     </td>
                     <td>{user.bookingCount}</td>
@@ -204,21 +204,21 @@ function AdminUserListPage() {
                     <td>
                       <div className="admin-table-actions">
                         <Link className="button button-secondary" to={`/admin/users/${user.id}`}>
-                          Chi tiet
+                          Chi tiết
                         </Link>
                         <button
                           className="button button-ghost"
                           type="button"
                           onClick={() => handleQuickStatusChange(user.id, user.status)}
                         >
-                          {user.status === 'active' ? 'Tam ngung' : 'Kich hoat'}
+                          {user.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt'}
                         </button>
                         <button
                           className="button button-dark"
                           type="button"
                           onClick={() => handleToggleDelete(user.id, user.deleteFlg)}
                         >
-                          {user.deleteFlg ? 'Khoi phuc' : 'Xoa mem'}
+                          {user.deleteFlg ? 'Khôi phục' : 'Xóa mềm'}
                         </button>
                       </div>
                     </td>
@@ -229,8 +229,8 @@ function AdminUserListPage() {
           </div>
         ) : (
           <div className="admin-empty-state">
-            <h3>Khong co user nao phu hop bo loc</h3>
-            <p>Thu xoa tu khoa tim kiem hoac doi bo loc vai tro, trang thai de xem them du lieu.</p>
+            <h3>Không có user nào phù hợp bộ lọc</h3>
+            <p>Thử xóa từ khóa tìm kiếm hoặc đổi bộ lọc vai trò, trạng thái để xem thêm dữ liệu.</p>
           </div>
         )}
       </section>

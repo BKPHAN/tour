@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import SectionHeading from '../../components/SectionHeading.jsx';
-import { getTourDetail } from '../../services/tourService.js';
+import { getTourDetail } from '../../services/user/tourService.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
 import { handleTourImageError } from '../../utils/tourImageFallback.js';
 

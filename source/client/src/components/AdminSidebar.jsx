@@ -2,11 +2,11 @@ import { Link, NavLink } from 'react-router-dom';
 
 const adminNavItems = [
   { to: '/admin', label: 'Dashboard' },
-  { to: '/admin/users', label: 'Quan ly nguoi dung' },
+  { to: '/admin/users', label: 'Quản lý người dùng' },
 ];
 
 /**
- * Sidebar co dinh cho khu vuc admin, giu menu ngan gon de nguoi moi de theo doi.
+ * Sidebar cố định cho khu vực admin, giữ menu ngắn gọn để người mới dễ theo dõi.
  */
 function AdminSidebar({ currentAdmin }) {
   return (
@@ -16,14 +16,14 @@ function AdminSidebar({ currentAdmin }) {
           <span className="admin-brand-icon">TF</span>
           <span>
             <strong>TourFlow Admin</strong>
-            <span>Giai doan 2 frontend</span>
+            <span>Giai đoạn 2 frontend</span>
           </span>
         </Link>
 
         <div className="admin-profile-card">
-          <p className="section-eyebrow">Tai khoan hien tai</p>
+          <p className="section-eyebrow">Tài khoản hiện tại</p>
           <strong>{currentAdmin?.fullName ?? 'Admin demo'}</strong>
-          <span>{currentAdmin?.title ?? 'Quan tri he thong'}</span>
+          <span>{currentAdmin?.title ?? 'Quản trị hệ thống'}</span>
         </div>
       </div>
 
@@ -40,10 +40,10 @@ function AdminSidebar({ currentAdmin }) {
       </nav>
 
       <div className="admin-sidebar-note">
-        <p className="section-eyebrow">Pham vi hien tai</p>
+        <p className="section-eyebrow">Phạm vi hiện tại</p>
         <p>
-          Nhanh nay dang dung mock data de demo luong dang nhap admin, dashboard va danh sach chi tiet
-          nguoi dung theo ke hoach.
+          Nhánh này đang dùng mock data để demo luồng đăng nhập admin, dashboard và danh sách chi tiết
+          người dùng theo kế hoạch.
         </p>
       </div>
     </aside>

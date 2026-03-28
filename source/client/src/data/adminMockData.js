@@ -6,33 +6,33 @@ export const adminLoginAccounts = [
     loginId: 'admin',
     email: 'admin@tourflow.vn',
     password: 'admin123',
-    fullName: 'Tran Hai An',
+    fullName: 'Trần Hải An',
     role: 'admin',
-    title: 'Quan tri he thong',
+    title: 'Quản trị hệ thống',
   },
   {
     id: 'STF-001',
     loginId: 'staff',
     email: 'linh.ops@tourflow.vn',
     password: 'staff123',
-    fullName: 'Vo Khanh Linh',
+    fullName: 'Võ Khánh Linh',
     role: 'staff',
-    title: 'Nhan vien van hanh',
+    title: 'Nhân viên vận hành',
   },
 ];
 
 export const adminUserRoleOptions = [
-  { value: 'all', label: 'Tat ca vai tro' },
-  { value: 'admin', label: 'Quan tri vien' },
-  { value: 'staff', label: 'Nhan vien' },
-  { value: 'user', label: 'Nguoi dung' },
+  { value: 'all', label: 'Tất cả vai trò' },
+  { value: 'admin', label: 'Quản trị viên' },
+  { value: 'staff', label: 'Nhân viên' },
+  { value: 'user', label: 'Người dùng' },
 ];
 
 export const adminUserStatusOptions = [
-  { value: 'all', label: 'Tat ca trang thai' },
-  { value: 'active', label: 'Dang hoat dong' },
-  { value: 'inactive', label: 'Tam ngung' },
-  { value: 'blocked', label: 'Bi khoa' },
+  { value: 'all', label: 'Tất cả trạng thái' },
+  { value: 'active', label: 'Đang hoạt động' },
+  { value: 'inactive', label: 'Tạm ngưng' },
+  { value: 'blocked', label: 'Bị khóa' },
 ];
 
 export const editableUserRoleOptions = adminUserRoleOptions.filter((option) => option.value !== 'all');
@@ -41,7 +41,7 @@ export const editableUserStatusOptions = adminUserStatusOptions.filter((option) 
 const adminSeedUsers = [
   {
     id: 'USR-001',
-    fullName: 'Nguyen Minh Chau',
+    fullName: 'Nguyễn Minh Châu',
     email: 'chau@example.com',
     phone: '0908123456',
     role: 'user',
@@ -51,25 +51,25 @@ const adminSeedUsers = [
     lastLoginAt: '2026-03-25T20:15:00',
     bookingCount: 4,
     totalSpent: 23560000,
-    city: 'Ha Noi',
+    city: 'Hà Nội',
     loyaltyLevel: 'Gold',
-    internalNote: 'Thuong dat tour gia dinh va phan hoi nhanh qua email.',
+    internalNote: 'Thường đặt tour gia đình và phản hồi nhanh qua email.',
     recentActivities: [
       {
         time: '2026-03-25T20:15:00',
-        title: 'Dang nhap thanh cong',
-        detail: 'Nguoi dung vua dang nhap de xem lich su booking va tour sap toi.',
+        title: 'Đăng nhập thành công',
+        detail: 'Người dùng vừa đăng nhập để xem lịch sử booking và tour sắp tới.',
       },
       {
         time: '2026-03-14T09:24:00',
-        title: 'Thanh toan booking',
-        detail: 'Da thanh toan booking BK-2026-001 bang the noi dia.',
+        title: 'Thanh toán booking',
+        detail: 'Đã thanh toán booking BK-2026-001 bằng thẻ nội địa.',
       },
     ],
   },
   {
     id: 'USR-002',
-    fullName: 'Le Quoc Anh',
+    fullName: 'Lê Quốc Anh',
     email: 'anh@example.com',
     phone: '0911222333',
     role: 'user',
@@ -79,25 +79,25 @@ const adminSeedUsers = [
     lastLoginAt: '2026-03-18T11:12:00',
     bookingCount: 1,
     totalSpent: 13170000,
-    city: 'Da Nang',
+    city: 'Đà Nẵng',
     loyaltyLevel: 'Silver',
-    internalNote: 'Can goi nhac thanh toan booking dang cho xac nhan.',
+    internalNote: 'Cần gọi nhắc thanh toán booking đang chờ xác nhận.',
     recentActivities: [
       {
         time: '2026-03-18T11:12:00',
-        title: 'Cho thanh toan',
-        detail: 'He thong dang giu cho tam thoi cho booking BK-2026-002.',
+        title: 'Chờ thanh toán',
+        detail: 'Hệ thống đang giữ chỗ tạm thời cho booking BK-2026-002.',
       },
       {
         time: '2026-02-02T10:05:00',
-        title: 'Tao tai khoan moi',
-        detail: 'Dang ky bang email va so dien thoai ca nhan.',
+        title: 'Tạo tài khoản mới',
+        detail: 'Đăng ký bằng email và số điện thoại cá nhân.',
       },
     ],
   },
   {
     id: 'USR-003',
-    fullName: 'Pham Gia Huy',
+    fullName: 'Phạm Gia Huy',
     email: 'huy@example.com',
     phone: '0988777666',
     role: 'user',
@@ -107,25 +107,25 @@ const adminSeedUsers = [
     lastLoginAt: '2026-03-21T07:45:00',
     bookingCount: 6,
     totalSpent: 40280000,
-    city: 'Can Tho',
+    city: 'Cần Thơ',
     loyaltyLevel: 'Platinum',
-    internalNote: 'Nhom khach than thiet, uu tien goi y tour nghi duong.',
+    internalNote: 'Nhóm khách thân thiết, ưu tiên gợi ý tour nghỉ dưỡng.',
     recentActivities: [
       {
         time: '2026-03-21T07:45:00',
-        title: 'Xem tour moi',
-        detail: 'Da mo 3 trang tour bien nghi duong trong phien dang nhap gan nhat.',
+        title: 'Xem tour mới',
+        detail: 'Đã mở 3 trang tour biển nghỉ dưỡng trong phiên đăng nhập gần nhất.',
       },
       {
         time: '2026-03-02T08:45:00',
-        title: 'Thanh toan vi dien tu',
-        detail: 'Da thanh toan thanh cong booking BK-2026-003.',
+        title: 'Thanh toán ví điện tử',
+        detail: 'Đã thanh toán thành công booking BK-2026-003.',
       },
     ],
   },
   {
     id: 'USR-004',
-    fullName: 'Vo Khanh Linh',
+    fullName: 'Võ Khánh Linh',
     email: 'linh.ops@tourflow.vn',
     phone: '0933444555',
     role: 'staff',
@@ -135,25 +135,25 @@ const adminSeedUsers = [
     lastLoginAt: '2026-03-26T08:10:00',
     bookingCount: 0,
     totalSpent: 0,
-    city: 'Ho Chi Minh',
+    city: 'Hồ Chí Minh',
     loyaltyLevel: 'Internal',
-    internalNote: 'Nhan vien cham soc khach hang, phu trach xac nhan booking trong ngay.',
+    internalNote: 'Nhân viên chăm sóc khách hàng, phụ trách xác nhận booking trong ngày.',
     recentActivities: [
       {
         time: '2026-03-26T08:10:00',
-        title: 'Kiem tra danh sach booking',
-        detail: 'Nhan vien vua truy cap khu vuc quan tri de doi soat booking moi.',
+        title: 'Kiểm tra danh sách booking',
+        detail: 'Nhân viên vừa truy cập khu vực quản trị để đối soát booking mới.',
       },
       {
         time: '2026-03-24T16:40:00',
-        title: 'Cap nhat ghi chu noi bo',
-        detail: 'Da bo sung ghi chu uu tien lien he khach hang dang cho xac nhan.',
+        title: 'Cập nhật ghi chú nội bộ',
+        detail: 'Đã bổ sung ghi chú ưu tiên liên hệ khách hàng đang chờ xác nhận.',
       },
     ],
   },
   {
     id: 'USR-005',
-    fullName: 'Tran Bao Nam',
+    fullName: 'Trần Bảo Nam',
     email: 'nam.admin@tourflow.vn',
     phone: '0977555666',
     role: 'admin',
@@ -163,25 +163,25 @@ const adminSeedUsers = [
     lastLoginAt: '2026-03-26T07:40:00',
     bookingCount: 0,
     totalSpent: 0,
-    city: 'Ha Noi',
+    city: 'Hà Nội',
     loyaltyLevel: 'Internal',
-    internalNote: 'Tai khoan quan tri thu hai dung de doi soat he thong va phan quyen.',
+    internalNote: 'Tài khoản quản trị thứ hai dùng để đối soát hệ thống và phân quyền.',
     recentActivities: [
       {
         time: '2026-03-26T07:40:00',
-        title: 'Dang nhap khu quan tri',
-        detail: 'Da kiem tra dashboard va luong quan ly nguoi dung.',
+        title: 'Đăng nhập khu quản trị',
+        detail: 'Đã kiểm tra dashboard và luồng quản lý người dùng.',
       },
       {
         time: '2026-03-25T18:05:00',
-        title: 'Ra soat vai tro',
-        detail: 'Da kiem tra cac tai khoan staff va admin truoc khi trien khai giai doan 2.',
+        title: 'Rà soát vai trò',
+        detail: 'Đã kiểm tra các tài khoản staff và admin trước khi triển khai giai đoạn 2.',
       },
     ],
   },
   {
     id: 'USR-006',
-    fullName: 'Hoang Thu Trang',
+    fullName: 'Hoàng Thu Trang',
     email: 'trang@example.com',
     phone: '0899001122',
     role: 'user',
@@ -191,25 +191,25 @@ const adminSeedUsers = [
     lastLoginAt: '2026-03-20T19:05:00',
     bookingCount: 2,
     totalSpent: 9680000,
-    city: 'Hai Phong',
+    city: 'Hải Phòng',
     loyaltyLevel: 'Member',
-    internalNote: 'Tai khoan tam khoa de doi soat vi co nhieu lan nhap sai mat khau.',
+    internalNote: 'Tài khoản tạm khóa để đối soát vì có nhiều lần nhập sai mật khẩu.',
     recentActivities: [
       {
         time: '2026-03-20T19:05:00',
-        title: 'Nhap sai mat khau nhieu lan',
-        detail: 'He thong da tam khoa va chuyen sang hang doi can xu ly.',
+        title: 'Nhập sai mật khẩu nhiều lần',
+        detail: 'Hệ thống đã tạm khóa và chuyển sang hàng đợi cần xử lý.',
       },
       {
         time: '2026-03-01T15:22:00',
-        title: 'Yeu cau ho tro',
-        detail: 'Nguoi dung goi tong dai de nho xac minh email dang nhap.',
+        title: 'Yêu cầu hỗ trợ',
+        detail: 'Người dùng gọi tổng đài để nhờ xác minh email đăng nhập.',
       },
     ],
   },
   {
     id: 'USR-007',
-    fullName: 'Dang Hai Yen',
+    fullName: 'Đặng Hải Yến',
     email: 'yen@example.com',
     phone: '0866888999',
     role: 'user',
@@ -219,26 +219,26 @@ const adminSeedUsers = [
     lastLoginAt: '2026-01-11T09:55:00',
     bookingCount: 3,
     totalSpent: 15450000,
-    city: 'Hue',
+    city: 'Huế',
     loyaltyLevel: 'Silver',
-    internalNote: 'Tai khoan da duoc xoa mem theo yeu cau ngung su dung.',
+    internalNote: 'Tài khoản đã được xóa mềm theo yêu cầu ngừng sử dụng.',
     recentActivities: [
       {
         time: '2026-03-12T09:10:00',
-        title: 'Danh dau xoa mem',
-        detail: 'Admin da danh dau delete_flg de an tai khoan khoi danh sach van hanh.',
+        title: 'Đánh dấu xóa mềm',
+        detail: 'Admin đã đánh dấu delete_flg để ẩn tài khoản khỏi danh sách vận hành.',
       },
       {
         time: '2026-01-11T09:55:00',
-        title: 'Dang nhap gan cuoi',
-        detail: 'Nguoi dung da xem lich su booking truoc khi gui yeu cau dong tai khoan.',
+        title: 'Đăng nhập gần cuối',
+        detail: 'Người dùng đã xem lịch sử booking trước khi gửi yêu cầu đóng tài khoản.',
       },
     ],
   },
 ];
 
 /**
- * Chuan hoa role cu ve bo role moi de tranh dut luong khi localStorage con du lieu ban cu.
+ * Chuẩn hóa role cũ về bộ role mới để tránh đứt luồng khi localStorage còn dữ liệu bản cũ.
  */
 export function normalizeRole(role) {
   if (role === 'customer') {
@@ -253,7 +253,7 @@ export function normalizeRole(role) {
 }
 
 /**
- * Tao ban sao du lieu mock de frontend co the chinh sua ma khong lam thay doi seed goc.
+ * Tạo bản sao dữ liệu mock để frontend có thể chỉnh sửa mà không làm thay đổi seed gốc.
  */
 export function getInitialAdminUsers() {
   return adminSeedUsers.map((user) => ({

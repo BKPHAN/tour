@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import SectionHeading from '../../components/SectionHeading.jsx';
 import TourCard from '../../components/TourCard.jsx';
-import { getAllTours } from '../../services/tourService.js';
+import { getAllTours } from '../../services/user/tourService.js';
 
 function getItemsPerPage(width) {
   if (width >= 1180) {

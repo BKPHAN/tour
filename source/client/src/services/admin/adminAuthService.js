@@ -1,8 +1,8 @@
-import { adminLoginAccounts, adminPortalRoles, normalizeRole } from '../data/adminMockData.js';
+import { adminLoginAccounts, adminPortalRoles, normalizeRole } from '../../data/adminMockData.js';
 import { clearStoredAdminAuth, getStoredAdminAuth, setStoredAdminAuth } from './adminAuthStorage.js';
 
 /**
- * Tao do tre nho de form admin giong cam giac dang goi API that.
+ * Tạo độ trễ nhỏ để form admin giống cảm giác đang gọi API thật.
  */
 function wait(ms = 180) {
   return new Promise((resolve) => {
@@ -11,7 +11,7 @@ function wait(ms = 180) {
 }
 
 /**
- * Dang nhap admin bang tai khoan mock cua giai doan 2 frontend.
+ * Đăng nhập admin bằng tài khoản mock của giai đoạn 2 frontend.
  */
 export async function loginAdmin(payload) {
   await wait();
@@ -24,7 +24,7 @@ export async function loginAdmin(payload) {
   });
 
   if (!matchedAccount) {
-    const error = new Error('Thong tin dang nhap khong hop le hoac tai khoan khong co quyen vao trang quan ly.');
+    const error = new Error('Thông tin đăng nhập không hợp lệ hoặc tài khoản không có quyền vào trang quản lý.');
     error.status = 401;
     throw error;
   }
@@ -45,7 +45,7 @@ export async function loginAdmin(payload) {
 }
 
 /**
- * Kiem tra admin da co session dang nhap tren frontend hay chua.
+ * Kiểm tra admin đã có session đăng nhập trên frontend hay chưa.
  */
 export function isAdminAuthenticated() {
   const authData = getStoredAdminAuth();
@@ -54,7 +54,7 @@ export function isAdminAuthenticated() {
 }
 
 /**
- * Tra ve thong tin admin dang dang nhap de hien thi o layout.
+ * Trả về thông tin admin đang đăng nhập để hiển thị ở layout.
  */
 export function getStoredAdminUser() {
   const storedUser = getStoredAdminAuth()?.user;
@@ -70,7 +70,7 @@ export function getStoredAdminUser() {
 }
 
 /**
- * Xoa session admin hien tai.
+ * Xóa session admin hiện tại.
  */
 export function logoutAdmin() {
   clearStoredAdminAuth();

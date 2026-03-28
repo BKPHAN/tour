@@ -1,10 +1,10 @@
-import { getInitialAdminUsers, normalizeRole } from '../data/adminMockData.js';
-import { getAdminRoleLabel, getAdminUserStatusLabel } from '../utils/adminFormatters.js';
+import { getInitialAdminUsers, normalizeRole } from '../../data/adminMockData.js';
+import { getAdminRoleLabel, getAdminUserStatusLabel } from '../../utils/adminFormatters.js';
 
 const ADMIN_USERS_STORAGE_KEY = 'tourflow-admin-users';
 
 /**
- * Tao do tre nho de page admin mo phong luong goi API that.
+ * Tạo độ trễ nhỏ để page admin mô phỏng luồng gọi API thật.
  */
 function wait(ms = 140) {
   return new Promise((resolve) => {
@@ -13,7 +13,7 @@ function wait(ms = 140) {
 }
 
 /**
- * Tao object Error co kem status de page xu ly thong diep ro rang hon.
+ * Tạo object Error có kèm status để page xử lý thông điệp rõ ràng hơn.
  */
 function createServiceError(message, status) {
   const error = new Error(message);
@@ -22,7 +22,7 @@ function createServiceError(message, status) {
 }
 
 /**
- * Lay danh sach user mock tu localStorage, neu chua co thi seed du lieu ban dau.
+ * Lấy danh sách user mock từ localStorage, nếu chưa có thì seed dữ liệu ban đầu.
  */
 function getStoredAdminUsers() {
   const rawValue = window.localStorage.getItem(ADMIN_USERS_STORAGE_KEY);
@@ -46,32 +46,32 @@ function getStoredAdminUsers() {
 }
 
 /**
- * Luu lai danh sach user sau moi thao tac cap nhat de list va detail dung chung mot nguon du lieu.
+ * Lưu lại danh sách user sau mỗi thao tác cập nhật để list và detail dùng chung một nguồn dữ liệu.
  */
 function saveStoredAdminUsers(users) {
   window.localStorage.setItem(ADMIN_USERS_STORAGE_KEY, JSON.stringify(users));
 }
 
 /**
- * Gom nhung thay doi chinh thanh cau mo ta de dua vao lich su thao tac.
+ * Gom những thay đổi chính thành câu mô tả để đưa vào lịch sử thao tác.
  */
 function buildUpdateSummary(previousUser, nextUser) {
   const changedParts = [];
 
   if (previousUser.role !== nextUser.role) {
-    changedParts.push(`doi vai tro thanh ${getAdminRoleLabel(nextUser.role)}`);
+    changedParts.push(`đổi vai trò thành ${getAdminRoleLabel(nextUser.role)}`);
   }
 
   if (previousUser.status !== nextUser.status) {
-    changedParts.push(`doi trang thai thanh ${getAdminUserStatusLabel(nextUser.status)}`);
+    changedParts.push(`đổi trạng thái thành ${getAdminUserStatusLabel(nextUser.status)}`);
   }
 
   if (previousUser.deleteFlg !== nextUser.deleteFlg) {
-    changedParts.push(nextUser.deleteFlg ? 'danh dau xoa mem tai khoan' : 'khoi phuc tai khoan');
+    changedParts.push(nextUser.deleteFlg ? 'đánh dấu xóa mềm tài khoản' : 'khôi phục tài khoản');
   }
 
   if (previousUser.internalNote !== nextUser.internalNote) {
-    changedParts.push('cap nhat ghi chu noi bo');
+    changedParts.push('cập nhật ghi chú nội bộ');
   }
 
   if (
@@ -79,18 +79,18 @@ function buildUpdateSummary(previousUser, nextUser) {
     previousUser.phone !== nextUser.phone ||
     previousUser.fullName !== nextUser.fullName
   ) {
-    changedParts.push('chinh sua thong tin co ban');
+    changedParts.push('chỉnh sửa thông tin cơ bản');
   }
 
   if (!changedParts.length) {
-    return 'Luu lai ho so ma khong thay doi truong du lieu quan trong.';
+    return 'Lưu lại hồ sơ mà không thay đổi trường dữ liệu quan trọng.';
   }
 
-  return `Admin vua ${changedParts.join(', ')}.`;
+  return `Admin vừa ${changedParts.join(', ')}.`;
 }
 
 /**
- * Them mot moc lich su moi len dau danh sach de de theo doi luong admin thao tac.
+ * Thêm một mốc lịch sử mới lên đầu danh sách để dễ theo dõi luồng admin thao tác.
  */
 function prependActivity(user, title, detail) {
   return {
@@ -107,7 +107,7 @@ function prependActivity(user, title, detail) {
 }
 
 /**
- * Lay toan bo danh sach nguoi dung cho man hinh admin.
+ * Lấy toàn bộ danh sách người dùng cho màn hình admin.
  */
 export async function getAdminUsers() {
   await wait();
@@ -115,7 +115,7 @@ export async function getAdminUsers() {
 }
 
 /**
- * Lay chi tiet mot user theo id de dung cho man hinh detail va edit.
+ * Lấy chi tiết một user theo id để dùng cho màn hình detail và edit.
  */
 export async function getAdminUserDetail(userId) {
   await wait();
@@ -123,14 +123,14 @@ export async function getAdminUserDetail(userId) {
   const user = getStoredAdminUsers().find((item) => item.id === userId);
 
   if (!user) {
-    throw createServiceError('Khong tim thay nguoi dung can quan ly.', 404);
+    throw createServiceError('Không tìm thấy người dùng cần quản lý.', 404);
   }
 
   return user;
 }
 
 /**
- * Cap nhat ho so user ngay tren mock storage de frontend co the demo luong sua thong tin.
+ * Cập nhật hồ sơ user ngay trên mock storage để frontend có thể demo luồng sửa thông tin.
  */
 export async function updateAdminUser(userId, payload) {
   await wait();
@@ -150,12 +150,12 @@ export async function updateAdminUser(userId, payload) {
     };
     const activityDetail = buildUpdateSummary(user, mergedUser);
 
-    updatedUser = prependActivity(mergedUser, 'Ho so duoc cap nhat', activityDetail);
+    updatedUser = prependActivity(mergedUser, 'Hồ sơ được cập nhật', activityDetail);
     return updatedUser;
   });
 
   if (!updatedUser) {
-    throw createServiceError('Khong tim thay nguoi dung de cap nhat.', 404);
+    throw createServiceError('Không tìm thấy người dùng để cập nhật.', 404);
   }
 
   saveStoredAdminUsers(nextUsers);
@@ -163,7 +163,7 @@ export async function updateAdminUser(userId, payload) {
 }
 
 /**
- * Dao trang thai xoa mem de admin co the an hoac khoi phuc tai khoan ngay tren frontend.
+ * Đảo trạng thái xóa mềm để admin có thể ẩn hoặc khôi phục tài khoản ngay trên frontend.
  */
 export async function toggleAdminUserDeleteFlag(userId) {
   await wait();
@@ -172,7 +172,7 @@ export async function toggleAdminUserDeleteFlag(userId) {
   const currentUser = users.find((user) => user.id === userId);
 
   if (!currentUser) {
-    throw createServiceError('Khong tim thay nguoi dung de doi trang thai xoa mem.', 404);
+    throw createServiceError('Không tìm thấy người dùng để đổi trạng thái xóa mềm.', 404);
   }
 
   return updateAdminUser(userId, {
@@ -182,7 +182,7 @@ export async function toggleAdminUserDeleteFlag(userId) {
 }
 
 /**
- * Tong hop so lieu cho dashboard quan tri nguoi dung.
+ * Tổng hợp số liệu cho dashboard quản trị người dùng.
  */
 export async function getAdminDashboardSummary() {
   const users = await getAdminUsers();

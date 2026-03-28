@@ -1,23 +1,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import AdminSidebar from '../components/AdminSidebar.jsx';
-import { getStoredAdminUser, logoutAdmin } from '../services/adminAuthService.js';
-import { getAdminAuthEventName } from '../services/adminAuthStorage.js';
-import { applyTheme, DARK_THEME, getInitialTheme, LIGHT_THEME, saveTheme } from '../services/themeService.js';
+import { getStoredAdminUser, logoutAdmin } from '../services/admin/adminAuthService.js';
+import { getAdminAuthEventName } from '../services/admin/adminAuthStorage.js';
+import { applyTheme, DARK_THEME, getInitialTheme, LIGHT_THEME, saveTheme } from '../services/shared/themeService.js';
 
 const pageTitles = {
   '/admin': {
-    title: 'Dashboard quan tri',
-    description: 'Tong hop nhanh so lieu nguoi dung va cac muc can xu ly trong giai doan 2 frontend.',
+    title: 'Dashboard quản trị',
+    description: 'Tổng hợp nhanh số liệu người dùng và các mục cần xử lý trong giai đoạn 2 frontend.',
   },
   '/admin/users': {
-    title: 'Danh sach nguoi dung',
-    description: 'Tim kiem, loc va di vao trang chi tiet de chinh sua tai khoan.',
+    title: 'Danh sách người dùng',
+    description: 'Tìm kiếm, lọc và đi vào trang chi tiết để chỉnh sửa tài khoản.',
   },
 };
 
 /**
- * Layout rieng cho admin, tach biet voi giao dien user de luong dieu huong ro rang hon.
+ * Layout riêng cho admin, tách biệt với giao diện user để luồng điều hướng rõ ràng hơn.
  */
 function AdminLayout() {
   const location = useLocation();
@@ -27,14 +27,14 @@ function AdminLayout() {
   const isDarkMode = themeMode === DARK_THEME;
 
   useEffect(() => {
-    // Dung chung he thong theme voi phan user de toan app giu mot co che nhat quan.
+    // Dùng chung hệ thống theme với phần user để toàn app giữ một cơ chế nhất quán.
     applyTheme(themeMode);
     saveTheme(themeMode);
   }, [themeMode]);
 
   useEffect(() => {
     /**
-     * Dong bo thong tin admin khi localStorage thay doi sau dang nhap hoac dang xuat.
+     * Đồng bộ thông tin admin khi localStorage thay đổi sau đăng nhập hoặc đăng xuất.
      */
     function syncAdminSession() {
       setCurrentAdmin(getStoredAdminUser());
@@ -51,33 +51,33 @@ function AdminLayout() {
   }, []);
 
   /**
-   * Chuyen qua lai che do sang toi cho ca giao dien admin.
+   * Chuyển qua lại chế độ sáng tối cho cả giao diện admin.
    */
   function handleToggleTheme() {
     setThemeMode((currentTheme) => (currentTheme === DARK_THEME ? LIGHT_THEME : DARK_THEME));
   }
 
   /**
-   * Dang xuat khoi khu vuc admin va dua nguoi dung ve trang login admin.
+   * Đăng xuất khỏi khu vực admin và đưa người dùng về trang login admin.
    */
   function handleLogout() {
     logoutAdmin();
     navigate('/admin/login', { replace: true });
   }
 
-  // Doi title theo route hien tai de topbar luon giai thich admin dang o man hinh nao.
+  // Đổi title theo route hiện tại để topbar luôn giải thích admin đang ở màn hình nào.
   const currentPageMeta = useMemo(() => {
     if (location.pathname.startsWith('/admin/users/')) {
       return {
-        title: 'Chi tiet nguoi dung',
-        description: 'Cap nhat ho so, vai tro, trang thai va ghi chu noi bo cua tai khoan.',
+        title: 'Chi tiết người dùng',
+        description: 'Cập nhật hồ sơ, vai trò, trạng thái và ghi chú nội bộ của tài khoản.',
       };
     }
 
     return (
       pageTitles[location.pathname] ?? {
-        title: 'Quan tri he thong',
-        description: 'Man hinh dieu huong cho phan quan ly.',
+        title: 'Quản trị hệ thống',
+        description: 'Màn hình điều hướng cho phần quản lý.',
       }
     );
   }, [location.pathname]);
@@ -89,17 +89,17 @@ function AdminLayout() {
       <div className="admin-workspace">
         <header className="admin-topbar">
           <div>
-            <p className="section-eyebrow">Khu vuc quan ly</p>
+            <p className="section-eyebrow">Khu vực quản lý</p>
             <h1>{currentPageMeta.title}</h1>
             <p>{currentPageMeta.description}</p>
           </div>
 
           <div className="admin-topbar-actions">
             <Link className="button button-secondary" to="/">
-              Ve trang nguoi dung
+              Về trang người dùng
             </Link>
             <button
-              aria-label={isDarkMode ? 'Chuyen sang giao dien sang' : 'Chuyen sang giao dien toi'}
+              aria-label={isDarkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'}
               className="theme-toggle"
               type="button"
               onClick={handleToggleTheme}
@@ -109,7 +109,7 @@ function AdminLayout() {
               </span>
             </button>
             <button className="button button-dark" type="button" onClick={handleLogout}>
-              Dang xuat admin
+              Đăng xuất admin
             </button>
           </div>
         </header>

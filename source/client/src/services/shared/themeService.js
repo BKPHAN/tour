@@ -3,7 +3,7 @@ const LIGHT_THEME = 'light';
 const DARK_THEME = 'dark';
 
 /**
- * Read the theme persisted in localStorage, or fall back to the user's system preference.
+ * Đọc theme đã lưu trong localStorage, nếu chưa có thì rơi về thiết lập hệ thống của người dùng.
  */
 export function getInitialTheme() {
   if (typeof window === 'undefined') {
@@ -20,7 +20,7 @@ export function getInitialTheme() {
 }
 
 /**
- * Apply the active theme to the root document so CSS variables can react globally.
+ * Áp dụng theme hiện tại lên root document để toàn bộ CSS variables phản ứng đồng bộ.
  */
 export function applyTheme(theme) {
   if (typeof document === 'undefined') {
@@ -32,7 +32,7 @@ export function applyTheme(theme) {
 }
 
 /**
- * Persist the chosen theme to keep the same interface on the next visit.
+ * Lưu lại theme đã chọn để lần truy cập sau vẫn giữ nguyên giao diện.
  */
 export function saveTheme(theme) {
   if (typeof window === 'undefined') {

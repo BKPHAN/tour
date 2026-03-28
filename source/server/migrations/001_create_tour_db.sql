@@ -1,7 +1,7 @@
 -- ==================================================
 -- 001_create_tour_db.sql
 -- Tao database va cac bang chinh cho web dat tour
--- Database name dang dong bo voi source/.env
+-- Tên database đang đồng bộ với source/.env
 -- ==================================================
 
 CREATE DATABASE IF NOT EXISTS tour_db

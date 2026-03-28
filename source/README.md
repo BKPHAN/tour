@@ -22,6 +22,10 @@ source/
       pages/
         admin/
         user/
+      services/
+        admin/
+        shared/
+        user/
     index.html
   server/
     app.js
@@ -34,6 +38,9 @@ source/
 - `client`: frontend React + Vite + Tailwind CSS
 - `client/src/pages/user`: nhóm page giao diện người dùng
 - `client/src/pages/admin`: nhóm page giao diện quản trị admin/staff
+- `client/src/services/user`: nhóm service cho luồng người dùng và gọi API thật
+- `client/src/services/admin`: nhóm service cho luồng quản trị admin/staff
+- `client/src/services/shared`: service dùng chung như theme
 - `server`: backend Express + API người dùng + migrations SQL
 - `.env`: file biến môi trường dùng chung cho cả frontend và backend
 - `dist`: bản build frontend để backend serve ở môi trường production
@@ -165,6 +172,7 @@ Có sẵn tài khoản demo để kiểm tra nhanh các luồng chính:
 
 - Frontend người dùng đã có giao diện và đã nối với backend
 - Thư mục page frontend đã được tách rõ thành `client/src/pages/user` và `client/src/pages/admin`
+- Thư mục service frontend đã được tách rõ thành `client/src/services/user`, `client/src/services/admin` và `client/src/services/shared`
 - Backend đang chạy bằng Express và đọc dữ liệu người dùng trực tiếp từ MySQL theo cấu hình trong `.env`
 - Luồng chính đã có: đăng ký, đăng nhập, xem tour, xem chi tiết tour, đặt tour, thanh toán, lịch sử booking
 - Portal admin hiện vẫn là frontend mock cho các màn đăng nhập admin, dashboard và quản lý người dùng; chưa nối backend thật

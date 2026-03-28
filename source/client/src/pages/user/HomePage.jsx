@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../../components/SectionHeading.jsx';
 import TourCard from '../../components/TourCard.jsx';
-import { getFeaturedTours, getTestimonials } from '../../services/tourService.js';
+import { getFeaturedTours, getTestimonials } from '../../services/user/tourService.js';
 import { formatCurrency } from '../../utils/formatters.js';
 
 const fallbackSlides = [

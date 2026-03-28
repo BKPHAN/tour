@@ -3,22 +3,22 @@ import { Outlet } from 'react-router-dom';
 import AmbientEffect from '../components/AmbientEffect.jsx';
 import Footer from '../components/Footer.jsx';
 import Header from '../components/Header.jsx';
-import { applyTheme, DARK_THEME, getInitialTheme, LIGHT_THEME, saveTheme } from '../services/themeService.js';
+import { applyTheme, DARK_THEME, getInitialTheme, LIGHT_THEME, saveTheme } from '../services/shared/themeService.js';
 
 /**
- * Shared user layout that keeps the selected color theme in sync across the whole client.
+ * Layout dùng chung cho khu vực người dùng, giữ theme đã chọn đồng bộ trên toàn bộ client.
  */
 function UserLayout() {
   const [themeMode, setThemeMode] = useState(getInitialTheme);
 
   useEffect(() => {
-    // Apply and persist the active theme so every page shares the same visual mode.
+    // Áp dụng và lưu lại theme hiện tại để mọi trang dùng chung cùng một chế độ hiển thị.
     applyTheme(themeMode);
     saveTheme(themeMode);
   }, [themeMode]);
 
   /**
-   * Toggle between light mode and dark mode from the shared header control.
+   * Chuyển qua lại giữa giao diện sáng và tối từ nút điều khiển chung trên header.
    */
   function handleToggleTheme() {
     setThemeMode((currentTheme) => (currentTheme === DARK_THEME ? LIGHT_THEME : DARK_THEME));

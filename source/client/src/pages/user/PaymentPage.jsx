@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import BookingStatusPill from '../../components/BookingStatusPill.jsx';
 import FormField from '../../components/FormField.jsx';
-import { logout } from '../../services/authService.js';
-import { getPaymentDetail, payBooking } from '../../services/paymentService.js';
+import { logout } from '../../services/user/authService.js';
+import { getPaymentDetail, payBooking } from '../../services/user/paymentService.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
 /**

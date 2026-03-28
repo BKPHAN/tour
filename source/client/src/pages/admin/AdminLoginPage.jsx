@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
-import { loginAdmin } from '../../services/adminAuthService.js';
+import { loginAdmin } from '../../services/admin/adminAuthService.js';
 
 /**
- * Trang dang nhap rieng cho admin de tach biet voi luong dang nhap nguoi dung.
+ * Trang đăng nhập riêng cho admin để tách biệt với luồng đăng nhập người dùng.
  */
 function AdminLoginPage() {
   const location = useLocation();
@@ -17,7 +17,7 @@ function AdminLoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
-   * Cap nhat state cho 2 truong dang nhap va mat khau.
+   * Cập nhật state cho 2 trường đăng nhập và mật khẩu.
    */
   function handleChange(event) {
     const { name, value } = event.target;
@@ -25,7 +25,7 @@ function AdminLoginPage() {
   }
 
   /**
-   * Dang nhap admin xong thi quay lai trang dich, neu khong co thi ve dashboard.
+   * Đăng nhập admin xong thì quay lại trang đích, nếu không có thì về dashboard.
    */
   async function handleSubmit(event) {
     event.preventDefault();
@@ -45,42 +45,42 @@ function AdminLoginPage() {
   return (
     <div className="admin-login-shell">
       <section className="admin-login-panel admin-login-intro">
-        <p className="section-eyebrow">Giai doan 2 frontend</p>
-        <h1>Dang nhap khu quan tri de demo luong quan ly nguoi dung.</h1>
+        <p className="section-eyebrow">Giai đoạn 2 frontend</p>
+        <h1>Đăng nhập khu quản trị để demo luồng quản lý người dùng.</h1>
         <p>
-          Trang nay dung session mock rieng cho admin. Sau khi dang nhap, ban co the di qua dashboard, danh
-          sach user va trang chi tiet de xem toan bo flow quan tri.
+          Trang này dùng session mock riêng cho admin. Sau khi đăng nhập, bạn có thể đi qua dashboard, danh
+          sách user và trang chi tiết để xem toàn bộ flow quản trị.
         </p>
         <ul className="feature-list">
-          <li>Admin demo: `admin` hoac `admin@tourflow.vn` / `admin123`</li>
-          <li>Staff demo: `staff` hoac `linh.ops@tourflow.vn` / `staff123`</li>
-          <li>Chi role `admin` va `staff` moi vao duoc trang quan ly, role `user` chi dung cho khu vuc nguoi dung</li>
+          <li>Admin demo: `admin` hoặc `admin@tourflow.vn` / `admin123`</li>
+          <li>Staff demo: `staff` hoặc `linh.ops@tourflow.vn` / `staff123`</li>
+          <li>Chỉ role `admin` và `staff` mới vào được trang quản lý, role `user` chỉ dùng cho khu vực người dùng</li>
         </ul>
       </section>
 
       <section className="admin-login-panel">
         <form className="form-card" onSubmit={handleSubmit}>
           <FormField
-            label="Tai khoan admin"
+            label="Tài khoản admin"
             name="loginId"
             onChange={handleChange}
-            placeholder="Nhap username hoac email quan tri"
+            placeholder="Nhập username hoặc email quản trị"
             value={formData.loginId}
           />
           <FormField
-            label="Mat khau"
+            label="Mật khẩu"
             name="password"
             onChange={handleChange}
-            placeholder="Nhap mat khau admin"
+            placeholder="Nhập mật khẩu admin"
             type="password"
             value={formData.password}
           />
           <button className="button button-primary full-width" disabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Dang dang nhap...' : 'Vao khu quan tri'}
+            {isSubmitting ? 'Đang đăng nhập...' : 'Vào khu quản trị'}
           </button>
           {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
           <div className="inline-links">
-            <Link to="/">Ve website nguoi dung</Link>
+            <Link to="/">Về website người dùng</Link>
           </div>
         </form>
       </section>

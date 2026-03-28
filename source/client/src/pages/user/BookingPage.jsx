@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
-import { createBooking } from '../../services/bookingService.js';
-import { getStoredUser, logout } from '../../services/authService.js';
-import { getTourDetail } from '../../services/tourService.js';
+import { createBooking } from '../../services/user/bookingService.js';
+import { getStoredUser, logout } from '../../services/user/authService.js';
+import { getTourDetail } from '../../services/user/tourService.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
 /**

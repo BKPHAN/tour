@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { getStoredUser, logout } from '../services/authService.js';
-import { getAuthEventName } from '../services/authStorage.js';
-import { DARK_THEME } from '../services/themeService.js';
+import { getStoredUser, logout } from '../services/user/authService.js';
+import { getAuthEventName } from '../services/user/authStorage.js';
+import { DARK_THEME } from '../services/shared/themeService.js';
 
 const navItems = [
   { to: '/', label: 'Trang chủ' },
@@ -11,7 +11,7 @@ const navItems = [
 ];
 
 /**
- * Main header navigation for the user area, including auth state and the theme switch.
+ * Header điều hướng chính cho khu vực người dùng, gồm trạng thái đăng nhập và nút đổi theme.
  */
 function Header({ themeMode, onToggleTheme }) {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ function Header({ themeMode, onToggleTheme }) {
 
   useEffect(() => {
     /**
-     * Keep the header in sync when auth data changes in storage or inside the same tab.
+     * Giữ header luôn đồng bộ khi dữ liệu auth thay đổi trong storage hoặc ngay trong cùng tab.
      */
     function syncAuthState() {
       setCurrentUser(getStoredUser());
@@ -38,7 +38,7 @@ function Header({ themeMode, onToggleTheme }) {
   }, []);
 
   /**
-   * Log the user out on the client and send them back to the login page.
+   * Đăng xuất ở phía client và đưa người dùng trở về trang đăng nhập.
    */
   function handleLogout() {
     logout();
@@ -111,7 +111,7 @@ function Header({ themeMode, onToggleTheme }) {
         </button>
 
         <nav className={`main-nav ${isMenuOpen ? 'open' : ''}`}>
-          {/* Close the mobile navigation after a route is selected to keep the flow tidy. */}
+          {/* Đóng menu mobile sau khi chọn route để luồng điều hướng gọn gàng hơn. */}
           {navItems.map((item) => (
             <NavLink
               key={item.to}
