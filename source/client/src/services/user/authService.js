@@ -1,5 +1,7 @@
 import { apiRequest } from './apiClient.js';
 import { clearStoredAuth, getStoredAuth, setStoredAuth, updateStoredUser } from './authStorage.js';
+import { isAdminPortalRole, syncAdminSession } from '../admin/adminAuthService.js';
+import { clearStoredAdminAuth } from '../admin/adminAuthStorage.js';
 
 /**
  * Đăng nhập bằng email hoặc username và lưu phiên làm việc vào localStorage.
@@ -11,6 +13,7 @@ export async function login(payload) {
   });
 
   setStoredAuth(authData);
+  syncAdminSession(authData);
   return authData;
 }
 
@@ -24,6 +27,7 @@ export async function register(payload) {
   });
 
   setStoredAuth(authData);
+  syncAdminSession(authData);
   return authData;
 }
 
@@ -52,6 +56,26 @@ export async function resetPassword(payload) {
  */
 export async function getCurrentUser() {
   return apiRequest('/auth/me');
+}
+
+/**
+ * Khi app khởi động lại, gọi backend để nạp user mới nhất từ DB thay vì tin hoàn toàn vào localStorage.
+ */
+export async function syncCurrentSession() {
+  const currentAuth = getStoredAuth();
+
+  if (!currentAuth?.token) {
+    return null;
+  }
+
+  const user = await getCurrentUser();
+  updateStoredUser(user);
+  syncAdminSession({
+    ...currentAuth,
+    user,
+  });
+
+  return user;
 }
 
 /**
@@ -98,4 +122,12 @@ export function getStoredUser() {
  */
 export function logout() {
   clearStoredAuth();
+  clearStoredAdminAuth();
+}
+
+/**
+ * Kiểm tra user hiện tại có thuộc nhóm được dùng khu vực quản trị hay không.
+ */
+export function canAccessAdminPortal() {
+  return isAdminPortalRole(getStoredUser()?.role);
 }

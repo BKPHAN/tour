@@ -1,30 +1,43 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
-import { editableUserRoleOptions, editableUserStatusOptions } from '../../data/adminMockData.js';
+import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import { getAdminUserDetail, toggleAdminUserDeleteFlag, updateAdminUser } from '../../services/admin/adminUserService.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
-import { formatDateTime, getAdminRoleLabel, getAdminUserStatusLabel } from '../../utils/adminFormatters.js';
+import { formatDateTime, getAdminRoleLabel, getAdminUserBadgeClass, getAdminUserStatusLabel } from '../../utils/adminFormatters.js';
 
+const EMPTY_ADMIN_META = {
+  editableUserRoleOptions: [],
+  editableUserStatusOptions: [],
+};
+
+/**
+ * State form user detail giữ đúng các field admin được phép chỉnh sửa.
+ */
 function createFormState(user) {
   return {
-    fullName: user.fullName,
     email: user.email,
+    fullName: user.fullName,
     phone: user.phone,
     role: user.role,
     status: user.status,
-    city: user.city,
-    loyaltyLevel: user.loyaltyLevel,
-    internalNote: user.internalNote,
   };
 }
 
 /**
- * Trang chi tiết user giúp admin xem tổng hợp thông tin và chỉnh sửa từng trường quan trọng.
+ * Chuẩn hóa danh sách booking gần đây để phần render tránh phải kiểm tra null liên tục.
+ */
+function getRecentBookings(userDetail) {
+  return Array.isArray(userDetail?.recentBookings) ? userDetail.recentBookings : [];
+}
+
+/**
+ * Trang chi tiết người dùng giúp admin cập nhật hồ sơ và theo dõi booking gần đây.
  */
 function AdminUserDetailPage() {
   const { userId } = useParams();
   const [userDetail, setUserDetail] = useState(null);
+  const [adminMeta, setAdminMeta] = useState(EMPTY_ADMIN_META);
   const [formData, setFormData] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -32,13 +45,17 @@ function AdminUserDetailPage() {
 
   useEffect(() => {
     /**
-     * Mỗi khi đổi userId thì tải lại chi tiết để form luôn đúng ngữ cảnh.
+     * Tải lại chi tiết mỗi khi đổi id để form luôn bám đúng người dùng đang quản lý.
      */
     async function loadUserDetail() {
       try {
-        const user = await getAdminUserDetail(userId);
+        const [user, meta] = await Promise.all([getAdminUserDetail(userId), getAdminMeta()]);
         setUserDetail(user);
         setFormData(createFormState(user));
+        setAdminMeta({
+          editableUserRoleOptions: meta.editableUserRoleOptions ?? [],
+          editableUserStatusOptions: meta.editableUserStatusOptions ?? [],
+        });
         setErrorMessage('');
         setSuccessMessage('');
       } catch (error) {
@@ -58,7 +75,7 @@ function AdminUserDetailPage() {
   }
 
   /**
-   * Lưu thông tin user đã sửa vào mock storage để quay lại list vẫn thấy dữ liệu mới.
+   * Lưu thay đổi hồ sơ người dùng từ khu vực admin.
    */
   async function handleSubmit(event) {
     event.preventDefault();
@@ -67,7 +84,11 @@ function AdminUserDetailPage() {
     setSuccessMessage('');
 
     try {
-      const updatedUser = await updateAdminUser(userId, formData);
+      const updatedUser = await updateAdminUser(userId, {
+        ...formData,
+        deleteFlg: userDetail.deleteFlg,
+      });
+
       setUserDetail(updatedUser);
       setFormData(createFormState(updatedUser));
       setSuccessMessage('Đã lưu cập nhật cho tài khoản này.');
@@ -79,11 +100,11 @@ function AdminUserDetailPage() {
   }
 
   /**
-   * Xóa mềm hoặc khôi phục user ngay tại trang detail để demo đủ luồng quản trị.
+   * Xóa mềm hoặc khôi phục tài khoản ngay tại trang detail.
    */
   async function handleToggleDelete() {
     try {
-      const updatedUser = await toggleAdminUserDeleteFlag(userId);
+      const updatedUser = await toggleAdminUserDeleteFlag(userDetail);
       setUserDetail(updatedUser);
       setFormData(createFormState(updatedUser));
       setSuccessMessage(updatedUser.deleteFlg ? 'Tài khoản đã được đánh dấu xóa mềm.' : 'Tài khoản đã được khôi phục.');
@@ -96,7 +117,7 @@ function AdminUserDetailPage() {
   if (errorMessage && !userDetail) {
     return (
       <section className="content-card admin-empty-state">
-        <h2>Không tìm thấy user</h2>
+        <h2>Không tìm thấy tài khoản</h2>
         <p>{errorMessage}</p>
         <Link className="button button-primary" to="/admin/users">
           Quay lại danh sách
@@ -109,29 +130,21 @@ function AdminUserDetailPage() {
     return <p className="helper-text">Đang tải chi tiết người dùng...</p>;
   }
 
+  const recentBookings = getRecentBookings(userDetail);
+
   return (
     <div className="page-stack">
       <section className="content-card">
         <div className="section-heading-row">
           <div>
-            <p className="booking-id">{userDetail.id}</p>
+            <p className="booking-id">USER #{userDetail.id}</p>
             <h2>{userDetail.fullName}</h2>
             <p>{userDetail.email}</p>
           </div>
 
           <div className="chip-row">
             <span className="chip">{getAdminRoleLabel(userDetail.role)}</span>
-            <span
-              className={`admin-badge ${
-                userDetail.deleteFlg
-                  ? 'admin-badge-muted'
-                  : userDetail.status === 'blocked'
-                    ? 'admin-badge-danger'
-                    : userDetail.status === 'inactive'
-                      ? 'admin-badge-warning'
-                      : 'admin-badge-success'
-              }`}
-            >
+            <span className={getAdminUserBadgeClass(userDetail.status, userDetail.deleteFlg)}>
               {userDetail.deleteFlg ? 'Đã xóa mềm' : getAdminUserStatusLabel(userDetail.status)}
             </span>
           </div>
@@ -143,15 +156,15 @@ function AdminUserDetailPage() {
 
       <div className="admin-detail-grid">
         <section className="content-card">
-          <h2>Thông tin tổng quan</h2>
+          <h2>Tổng quan tài khoản</h2>
           <div className="admin-summary-grid">
             <article className="admin-mini-card">
               <span>Ngày tạo</span>
               <strong>{formatDate(userDetail.createdAt)}</strong>
             </article>
             <article className="admin-mini-card">
-              <span>Lần đăng nhập gần nhất</span>
-              <strong>{formatDateTime(userDetail.lastLoginAt)}</strong>
+              <span>Lần cập nhật gần nhất</span>
+              <strong>{formatDateTime(userDetail.updatedAt)}</strong>
             </article>
             <article className="admin-mini-card">
               <span>Số booking</span>
@@ -165,31 +178,30 @@ function AdminUserDetailPage() {
 
           <div className="admin-profile-summary">
             <p>
-              <strong>Thành phố:</strong> {userDetail.city}
-            </p>
-            <p>
-              <strong>Hạng thành viên:</strong> {userDetail.loyaltyLevel}
+              <strong>Tên đăng nhập:</strong> {userDetail.username}
             </p>
             <p>
               <strong>Số điện thoại:</strong> {userDetail.phone}
+            </p>
+            <p>
+              <strong>Vai trò hiện tại:</strong> {getAdminRoleLabel(userDetail.role)}
             </p>
           </div>
         </section>
 
         <section className="content-card">
           <form className="form-card" onSubmit={handleSubmit}>
-            <h2>Cập nhật hồ sơ</h2>
+            <h2>Cập nhật hồ sơ và phân quyền</h2>
             <div className="admin-form-grid">
               <FormField label="Họ và tên" name="fullName" onChange={handleChange} value={formData.fullName} />
               <FormField label="Email" name="email" onChange={handleChange} value={formData.email} />
               <FormField label="Số điện thoại" name="phone" onChange={handleChange} value={formData.phone} />
-              <FormField label="Thành phố" name="city" onChange={handleChange} value={formData.city} />
               <FormField
                 as="select"
                 label="Vai trò"
                 name="role"
                 onChange={handleChange}
-                options={editableUserRoleOptions}
+                options={adminMeta.editableUserRoleOptions}
                 value={formData.role}
               />
               <FormField
@@ -197,24 +209,11 @@ function AdminUserDetailPage() {
                 label="Trạng thái tài khoản"
                 name="status"
                 onChange={handleChange}
-                options={editableUserStatusOptions}
+                options={adminMeta.editableUserStatusOptions}
                 value={formData.status}
               />
-              <FormField
-                label="Hạng thành viên"
-                name="loyaltyLevel"
-                onChange={handleChange}
-                value={formData.loyaltyLevel}
-              />
             </div>
-            <FormField
-              as="textarea"
-              label="Ghi chú nội bộ"
-              name="internalNote"
-              onChange={handleChange}
-              placeholder="Mô tả lý do cần theo dõi tài khoản này"
-              value={formData.internalNote}
-            />
+
             <div className="admin-form-actions">
               <button className="button button-primary" disabled={isSubmitting} type="submit">
                 {isSubmitting ? 'Đang lưu...' : 'Lưu cập nhật'}
@@ -231,19 +230,28 @@ function AdminUserDetailPage() {
       </div>
 
       <section className="content-card">
-        <h2>Lịch sử thao tác</h2>
-        <div className="admin-activity-list">
-          {userDetail.recentActivities.map((activity) => (
-            <article className="admin-activity-card" key={`${activity.time}-${activity.title}`}>
-              <div className="timeline-dot" />
-              <div>
-                <strong>{activity.title}</strong>
-                <p>{activity.detail}</p>
-                <span>{formatDateTime(activity.time)}</span>
-              </div>
-            </article>
-          ))}
-        </div>
+        <h2>Booking gần đây</h2>
+        {recentBookings.length ? (
+          <div className="admin-list-stack">
+            {recentBookings.map((booking) => (
+              <article className="admin-list-item" key={booking.bookingCode}>
+                <div>
+                  <strong>{booking.bookingCode}</strong>
+                  <p className="helper-text">{booking.tourTitle}</p>
+                </div>
+                <div className="admin-list-item-side">
+                  <span className="chip">{formatDate(booking.departureDate)}</span>
+                  <span className="chip">{formatCurrency(booking.totalPrice)}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="admin-empty-state">
+            <h3>Tài khoản này chưa phát sinh booking gần đây</h3>
+            <p>Khi có booking mới, khu vực này sẽ hiển thị để bổ sung ngữ cảnh cho quá trình rà soát tài khoản.</p>
+          </div>
+        )}
       </section>
     </div>
   );

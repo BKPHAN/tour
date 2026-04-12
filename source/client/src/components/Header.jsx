@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { getStoredUser, logout } from '../services/user/authService.js';
+import { isAdminPortalRole } from '../services/admin/adminAuthService.js';
 import { getAuthEventName } from '../services/user/authStorage.js';
 import { DARK_THEME } from '../services/shared/themeService.js';
 
@@ -21,6 +22,7 @@ function Header({ themeMode, onToggleTheme }) {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(getStoredUser());
   const isDarkMode = themeMode === DARK_THEME;
+  const canReturnToAdmin = isAdminPortalRole(currentUser?.role);
 
   useEffect(() => {
     /**
@@ -183,6 +185,11 @@ function Header({ themeMode, onToggleTheme }) {
               {isAccountMenuOpen ? (
                 <div className="account-dropdown">
                   {/* Các route này đều nằm sau RequireAuth nên chỉ user đã đăng nhập mới truy cập được. */}
+                  {canReturnToAdmin ? (
+                    <Link className="account-dropdown-link" to="/admin">
+                      Trang quản lý
+                    </Link>
+                  ) : null}
                   <Link className="account-dropdown-link" to="/account">
                     Cài đặt tài khoản
                   </Link>

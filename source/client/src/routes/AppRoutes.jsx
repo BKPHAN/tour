@@ -1,8 +1,14 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import RequireAdminAuth from '../components/RequireAdminAuth.jsx';
 import AdminLayout from '../layouts/AdminLayout.jsx';
+import AdminBookingDetailPage from '../pages/admin/AdminBookingDetailPage.jsx';
+import AdminBookingListPage from '../pages/admin/AdminBookingListPage.jsx';
 import AdminDashboardPage from '../pages/admin/AdminDashboardPage.jsx';
 import AdminLoginPage from '../pages/admin/AdminLoginPage.jsx';
+import AdminPaymentDetailPage from '../pages/admin/AdminPaymentDetailPage.jsx';
+import AdminPaymentListPage from '../pages/admin/AdminPaymentListPage.jsx';
+import AdminTourFormPage from '../pages/admin/AdminTourFormPage.jsx';
+import AdminTourListPage from '../pages/admin/AdminTourListPage.jsx';
 import AdminUserDetailPage from '../pages/admin/AdminUserDetailPage.jsx';
 import AdminUserListPage from '../pages/admin/AdminUserListPage.jsx';
 import UserLayout from '../layouts/UserLayout.jsx';
@@ -22,7 +28,13 @@ import TourListPage from '../pages/user/TourListPage.jsx';
 import RequireAuth from '../components/RequireAuth.jsx';
 
 /**
- * Khai báo toàn bộ route người dùng của giai đoạn frontend, bao gồm cả route fallback.
+ * Khai báo toàn bộ route của ứng dụng:
+ * - khu người dùng ở `/`
+ * - khu quản trị ở `/admin`
+ *
+ * Convention tham số route:
+ * - `userId`, `tourId`: khóa số trong DB
+ * - `bookingCode`, `paymentCode`: mã nghiệp vụ hiển thị ra ngoài
  */
 function AppRoutes() {
   return (
@@ -33,6 +45,13 @@ function AppRoutes() {
           <Route index element={<AdminDashboardPage />} />
           <Route element={<AdminUserListPage />} path="users" />
           <Route element={<AdminUserDetailPage />} path="users/:userId" />
+          <Route element={<AdminTourListPage />} path="tours" />
+          <Route element={<AdminTourFormPage />} path="tours/new" />
+          <Route element={<AdminTourFormPage />} path="tours/:tourId/edit" />
+          <Route element={<AdminBookingListPage />} path="bookings" />
+          <Route element={<AdminBookingDetailPage />} path="bookings/:bookingCode" />
+          <Route element={<AdminPaymentListPage />} path="payments" />
+          <Route element={<AdminPaymentDetailPage />} path="payments/:paymentCode" />
         </Route>
       </Route>
 

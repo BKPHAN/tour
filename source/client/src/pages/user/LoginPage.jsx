@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
 import { login } from '../../services/user/authService.js';
+import { isAdminPortalRole } from '../../services/admin/adminAuthService.js';
 
 /**
  * Trang đăng nhập, gọi API xác thực thật và lưu phiên người dùng sau khi thành công.
@@ -33,9 +34,19 @@ function LoginPage() {
     setErrorMessage('');
 
     try {
-      await login(formData);
-      const redirectTo = location.state?.redirectTo || '/bookings';
-      navigate(redirectTo, { replace: true });
+      const authData = await login(formData);
+      const currentRole = authData?.user?.role;
+      const redirectTo = location.state?.redirectTo;
+
+      if (isAdminPortalRole(currentRole)) {
+        navigate(redirectTo || '/admin', { replace: true });
+        return;
+      }
+
+      const nextUserPath =
+        redirectTo && !redirectTo.startsWith('/admin') ? redirectTo : '/bookings';
+
+      navigate(nextUserPath, { replace: true });
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -47,13 +58,15 @@ function LoginPage() {
     <div className="auth-shell container">
       <section className="auth-panel auth-intro">
         <p className="section-eyebrow">Trang đăng nhập</p>
-        <h1>Quay lại tài khoản để tiếp tục chuyến đi đang dở.</h1>
+        <h1>Chào mừng bạn quay lại để tiếp tục hành trình đang chờ phía trước.</h1>
         <p>
-          Đăng nhập bằng tên đăng nhập hoặc email để xem booking, thanh toán và tiếp tục các hành trình đã chọn.
+          Đăng nhập để xem lại booking, theo dõi thanh toán và tiếp tục khám phá những chuyến đi phù hợp với bạn trên
+          TourFlow.
         </p>
         <ul className="feature-list">
           <li>Tài khoản trải nghiệm: `demo`</li>
           <li>Mật khẩu trải nghiệm: `123456`</li>
+          <li>Tài khoản admin demo: `admin01` / `123456`</li>
         </ul>
       </section>
 

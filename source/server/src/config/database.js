@@ -2,6 +2,7 @@ import { env } from './env.js';
 
 let mysqlModulePromise = null;
 let poolPromise = null;
+const UTF8_READY_FLAG = Symbol('utf8-ready');
 
 /**
  * Lazy-load `mysql2` để project vẫn parse được code ngay cả khi dependency chưa được cài.
@@ -34,7 +35,7 @@ async function createPool() {
   const mysql = mysqlModule.default;
 
   return mysql.createPool({
-    charset: 'utf8mb4',
+    charset: 'utf8mb4_unicode_ci',
     database: env.dbName,
     dateStrings: true,
     decimalNumbers: true,
@@ -59,33 +60,58 @@ export async function getPool() {
 }
 
 /**
- * Nếu đang nằm trong transaction thì ưu tiên dùng connection hiện tại,
- * nếu không thì query sẽ đi qua pool mặc định.
+ * Đảm bảo session hiện tại luôn dùng UTF-8 đầy đủ để dữ liệu tiếng Việt có dấu
+ * được đọc và ghi đúng trên mọi kết nối mới lấy từ pool.
  */
-async function getExecutor(connection) {
-  if (connection) {
+async function ensureUtf8Session(connection) {
+  if (connection[UTF8_READY_FLAG]) {
     return connection;
   }
 
-  return getPool();
+  await connection.query("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+  connection[UTF8_READY_FLAG] = true;
+  return connection;
+}
+
+/**
+ * Nếu đang ở trong transaction thì dùng connection hiện tại.
+ * Nếu không thì mượn tạm một connection từ pool, cấu hình UTF-8 rồi release sau khi query xong.
+ */
+async function useExecutor(connection, handler) {
+  if (connection) {
+    const preparedConnection = await ensureUtf8Session(connection);
+    return handler(preparedConnection);
+  }
+
+  const pool = await getPool();
+  const pooledConnection = await pool.getConnection();
+
+  try {
+    const preparedConnection = await ensureUtf8Session(pooledConnection);
+    return await handler(preparedConnection);
+  } finally {
+    pooledConnection.release();
+  }
 }
 
 /**
  * Chạy `SELECT` và trả về mảng rows đã được `mysql2` parse.
  */
 export async function select(sql, params = [], connection = null) {
-  const executor = await getExecutor(connection);
-  const [rows] = await executor.execute(sql, params);
-  return rows;
+  return useExecutor(connection, async (executor) => {
+    const [rows] = await executor.execute(sql, params);
+    return rows;
+  });
 }
 
 /**
  * Chạy `INSERT/UPDATE/DELETE` và trả về result object của MySQL.
  */
 export async function execute(sql, params = [], connection = null) {
-  const executor = await getExecutor(connection);
-  const [result] = await executor.execute(sql, params);
-  return result;
+  return useExecutor(connection, async (executor) => {
+    const [result] = await executor.execute(sql, params);
+    return result;
+  });
 }
 
 /**
@@ -96,6 +122,7 @@ export async function withTransaction(handler) {
   const connection = await pool.getConnection();
 
   try {
+    await ensureUtf8Session(connection);
     await connection.beginTransaction();
     const result = await handler(connection);
     await connection.commit();

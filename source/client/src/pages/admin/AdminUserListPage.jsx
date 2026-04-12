@@ -1,16 +1,62 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../../components/SectionHeading.jsx';
-import { adminUserRoleOptions, adminUserStatusOptions } from '../../data/adminMockData.js';
+import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import { getAdminUsers, toggleAdminUserDeleteFlag, updateAdminUser } from '../../services/admin/adminUserService.js';
 import { formatCurrency } from '../../utils/formatters.js';
-import { formatDateTime, getAdminRoleLabel, getAdminUserStatusLabel } from '../../utils/adminFormatters.js';
+import { formatDateTime, getAdminRoleLabel, getAdminUserBadgeClass, getAdminUserStatusLabel } from '../../utils/adminFormatters.js';
+
+const EMPTY_ADMIN_META = {
+  userRoleOptions: [],
+  userStatusOptions: [],
+};
 
 /**
- * Danh sách người dùng cho admin, gồm lọc nhanh và một số thao tác cơ bản ngay trên bảng.
+ * Lọc user theo từ khóa, vai trò và trạng thái đang chọn trên UI.
+ */
+function filterUsers(userList, searchKeyword, roleFilter, statusFilter) {
+  const normalizedKeyword = searchKeyword.trim().toLowerCase();
+
+  return userList.filter((user) => {
+    const matchesKeyword =
+      !normalizedKeyword ||
+      user.fullName.toLowerCase().includes(normalizedKeyword) ||
+      user.email.toLowerCase().includes(normalizedKeyword) ||
+      user.phone.includes(normalizedKeyword) ||
+      String(user.id).includes(normalizedKeyword);
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+
+    return matchesKeyword && matchesRole && matchesStatus;
+  });
+}
+
+/**
+ * Gom KPI người dùng để phần render chỉ còn hiển thị số liệu.
+ */
+function buildUserSummary(filteredUsers) {
+  const activeUsers = filteredUsers.filter((user) => user.status === 'active' && !user.deleteFlg);
+  const blockedUsers = filteredUsers.filter((user) => user.status === 'blocked');
+  const internalUsers = filteredUsers.filter((user) => user.role === 'admin' || user.role === 'staff');
+  const deletedUsers = filteredUsers.filter((user) => user.deleteFlg);
+
+  return {
+    activeUsers,
+    activeUsersPercent: Math.round((activeUsers.length / Math.max(filteredUsers.length, 1)) * 100),
+    blockedUsers,
+    deletedUsers,
+    filteredSpending: filteredUsers.reduce((sum, user) => sum + user.totalSpent, 0),
+    internalUsers,
+    usersWithBookings: filteredUsers.filter((user) => user.bookingCount > 0),
+  };
+}
+
+/**
+ * Danh sách người dùng cho admin, bám dữ liệu thật từ backend để lọc và cập nhật nhanh.
  */
 function AdminUserListPage() {
   const [userList, setUserList] = useState([]);
+  const [adminMeta, setAdminMeta] = useState(EMPTY_ADMIN_META);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -22,14 +68,18 @@ function AdminUserListPage() {
   }, []);
 
   /**
-   * Tải danh sách user từ mock service để list và detail dùng chung dữ liệu.
+   * Tải danh sách user để bảng và nhóm thống kê dùng chung một nguồn dữ liệu.
    */
   async function loadUsers() {
     setIsLoading(true);
 
     try {
-      const users = await getAdminUsers();
+      const [users, meta] = await Promise.all([getAdminUsers(), getAdminMeta()]);
       setUserList(users);
+      setAdminMeta({
+        userRoleOptions: meta.userRoleOptions ?? [],
+        userStatusOptions: meta.userStatusOptions ?? [],
+      });
       setErrorMessage('');
     } catch (error) {
       setErrorMessage(error.message);
@@ -39,16 +89,22 @@ function AdminUserListPage() {
   }
 
   /**
-   * Cập nhật nhanh trạng thái active/inactive ngay trên bảng để admin thao tác nhanh.
+   * Đổi nhanh trạng thái active hoặc inactive ngay trên danh sách.
    */
-  async function handleQuickStatusChange(userId, currentStatus) {
-    const nextStatus = currentStatus === 'active' ? 'inactive' : 'active';
+  async function handleQuickStatusChange(user) {
+    const nextStatus = user.status === 'active' ? 'inactive' : 'active';
 
     try {
-      const updatedUser = await updateAdminUser(userId, { status: nextStatus, deleteFlg: false });
-      setUserList((currentUsers) =>
-        currentUsers.map((user) => (user.id === userId ? updatedUser : user)),
-      );
+      const updatedUser = await updateAdminUser(user.id, {
+        deleteFlg: false,
+        email: user.email,
+        fullName: user.fullName,
+        phone: user.phone,
+        role: user.role,
+        status: nextStatus,
+      });
+
+      setUserList((currentUsers) => currentUsers.map((item) => (item.id === user.id ? updatedUser : item)));
       setErrorMessage('');
     } catch (error) {
       setErrorMessage(error.message);
@@ -56,11 +112,11 @@ function AdminUserListPage() {
   }
 
   /**
-   * Đảo trạng thái xóa mềm để admin có thể thử nghiệm đầy đủ luồng user management.
+   * Xóa mềm hoặc khôi phục tài khoản người dùng.
    */
-  async function handleToggleDelete(userId, deleteFlg) {
+  async function handleToggleDelete(user) {
     const shouldContinue = window.confirm(
-      deleteFlg ? 'Bạn muốn khôi phục tài khoản này?' : 'Bạn muốn đánh dấu xóa mềm tài khoản này?',
+      user.deleteFlg ? 'Bạn muốn khôi phục tài khoản này?' : 'Bạn muốn đánh dấu xóa mềm tài khoản này?',
     );
 
     if (!shouldContinue) {
@@ -68,57 +124,87 @@ function AdminUserListPage() {
     }
 
     try {
-      const updatedUser = await toggleAdminUserDeleteFlag(userId);
-      setUserList((currentUsers) =>
-        currentUsers.map((user) => (user.id === userId ? updatedUser : user)),
-      );
+      const updatedUser = await toggleAdminUserDeleteFlag(user);
+      setUserList((currentUsers) => currentUsers.map((item) => (item.id === user.id ? updatedUser : item)));
       setErrorMessage('');
     } catch (error) {
       setErrorMessage(error.message);
     }
   }
 
-  // Giữ bộ lọc ở client để người mới dễ theo dõi luồng xử lý ngay trong page.
-  const filteredUsers = useMemo(() => {
-    const normalizedKeyword = searchKeyword.trim().toLowerCase();
+  const filteredUsers = useMemo(
+    () => filterUsers(userList, searchKeyword, roleFilter, statusFilter),
+    [roleFilter, searchKeyword, statusFilter, userList],
+  );
 
-    return userList.filter((user) => {
-      const matchesKeyword =
-        !normalizedKeyword ||
-        user.fullName.toLowerCase().includes(normalizedKeyword) ||
-        user.email.toLowerCase().includes(normalizedKeyword) ||
-        user.phone.includes(normalizedKeyword) ||
-        user.id.toLowerCase().includes(normalizedKeyword);
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-      const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-
-      return matchesKeyword && matchesRole && matchesStatus;
-    });
-  }, [roleFilter, searchKeyword, statusFilter, userList]);
+  const { activeUsers, activeUsersPercent, blockedUsers, deletedUsers, filteredSpending, internalUsers, usersWithBookings } =
+    useMemo(() => buildUserSummary(filteredUsers), [filteredUsers]);
 
   return (
     <div className="page-stack">
-      <section className="content-card">
-        <SectionHeading
-          eyebrow="User management"
-          title="Bảng quản lý người dùng"
-          description="Trang này mô phỏng đúng luồng admin xem danh sách, lọc user, đổi trạng thái nhanh và đi vào chi tiết."
-        />
+      <section className="admin-toolbar-card">
+        <div className="admin-toolbar-head">
+          <SectionHeading
+            eyebrow="Người dùng"
+            title="Điều hành tài khoản, phân quyền và trạng thái người dùng"
+            description="Theo dõi vai trò, trạng thái sử dụng, mức chi tiêu và mức độ tương tác của từng tài khoản."
+          />
+          <button className="button button-secondary" type="button" onClick={loadUsers}>
+            Tải lại dữ liệu
+          </button>
+        </div>
+
+        <div className="admin-kpi-grid">
+          <article className="admin-kpi-card">
+            <span>Tổng tài khoản đang hiển thị</span>
+            <strong>{filteredUsers.length}</strong>
+            <div className="admin-kpi-meta">{userList.length} tài khoản trong nguồn dữ liệu</div>
+          </article>
+          <article className="admin-kpi-card">
+            <span>Đang hoạt động</span>
+            <strong>{activeUsers.length}</strong>
+            <div className="admin-kpi-meta">{activeUsersPercent}% trong bộ lọc hiện tại</div>
+          </article>
+          <article className="admin-kpi-card">
+            <span>Tài khoản nội bộ</span>
+            <strong>{internalUsers.length}</strong>
+            <div className="admin-kpi-meta">Admin và staff trong hệ thống</div>
+          </article>
+          <article className="admin-kpi-card">
+            <span>Tổng chi tiêu</span>
+            <strong>{formatCurrency(filteredSpending)}</strong>
+            <div className="admin-kpi-meta">{blockedUsers.length} tài khoản bị khóa cần rà soát</div>
+          </article>
+        </div>
+      </section>
+
+      <section className="admin-toolbar-card">
+        <div className="admin-toolbar-grid">
+          <div>
+            <h3>Bộ lọc và phạm vi thống kê</h3>
+            <p>Lọc theo vai trò, trạng thái hoặc từ khóa để tập trung vào đúng nhóm tài khoản cần rà soát.</p>
+          </div>
+          <div className="admin-results-meta">
+            <span className="chip">{activeUsers.length} hoạt động</span>
+            <span className="chip">{blockedUsers.length} bị khóa</span>
+            <span className="chip">{deletedUsers.length} xóa mềm</span>
+          </div>
+        </div>
 
         <div className="admin-filter-grid">
           <label className="form-field">
-            <span>Tìm theo tên, email hoặc mã user</span>
+            <span>Tìm theo tên, email, số điện thoại hoặc mã user</span>
             <input
-              placeholder="Ví dụ: chau@example.com hoặc USR-001"
+              placeholder="Ví dụ: chau@example.com hoặc 12"
               value={searchKeyword}
               onChange={(event) => setSearchKeyword(event.target.value)}
             />
           </label>
 
           <label className="form-field">
-            <span>Lọc theo vai trò</span>
+            <span>Vai trò</span>
             <select value={roleFilter} onChange={(event) => setRoleFilter(event.target.value)}>
-              {adminUserRoleOptions.map((option) => (
+              {adminMeta.userRoleOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -127,9 +213,9 @@ function AdminUserListPage() {
           </label>
 
           <label className="form-field">
-            <span>Lọc theo trạng thái</span>
+            <span>Trạng thái</span>
             <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-              {adminUserStatusOptions.map((option) => (
+              {adminMeta.userStatusOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -141,17 +227,16 @@ function AdminUserListPage() {
 
       {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
 
-      <section className="content-card">
-        <div className="section-heading-row admin-table-header">
+      <section className="admin-report-card">
+        <div className="admin-table-caption">
           <div>
-            <h2>Danh sách kết quả</h2>
-            <p className="helper-text">
-              Hiện có {filteredUsers.length} user phù hợp bộ lọc. Click vào chi tiết để xem đầy đủ luồng cập nhật.
-            </p>
+            <h2>Tài khoản</h2>
+            <p className="helper-text">Mở chi tiết để cập nhật hồ sơ, phân quyền và trạng thái vận hành của tài khoản.</p>
           </div>
-          <button className="button button-secondary" type="button" onClick={loadUsers}>
-            Tải lại mock data hiện tại
-          </button>
+          <div className="admin-results-meta">
+            <span className="chip">{filteredUsers.length} kết quả</span>
+            <span className="chip">{usersWithBookings.length} có booking</span>
+          </div>
         </div>
 
         {isLoading ? (
@@ -166,58 +251,40 @@ function AdminUserListPage() {
                   <th>Trạng thái</th>
                   <th>Booking</th>
                   <th>Tổng chi</th>
-                  <th>Lần đăng nhập</th>
+                  <th>Cập nhật</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((user) => (
                   <tr key={user.id}>
-                    <td>
+                    <td data-label="Người dùng">
                       <div className="admin-table-user">
                         <strong>{user.fullName}</strong>
-                        <span>{user.id}</span>
+                        <span>#{user.id}</span>
                         <p>{user.email}</p>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Vai trò">
                       <span className="chip">{getAdminRoleLabel(user.role)}</span>
                     </td>
-                    <td>
-                      <span
-                        className={`admin-badge ${
-                          user.deleteFlg
-                            ? 'admin-badge-muted'
-                            : user.status === 'blocked'
-                              ? 'admin-badge-danger'
-                              : user.status === 'inactive'
-                                ? 'admin-badge-warning'
-                                : 'admin-badge-success'
-                        }`}
-                      >
+                    <td data-label="Trạng thái">
+                      <span className={getAdminUserBadgeClass(user.status, user.deleteFlg)}>
                         {user.deleteFlg ? 'Đã xóa mềm' : getAdminUserStatusLabel(user.status)}
                       </span>
                     </td>
-                    <td>{user.bookingCount}</td>
-                    <td>{formatCurrency(user.totalSpent)}</td>
-                    <td>{formatDateTime(user.lastLoginAt)}</td>
-                    <td>
+                    <td data-label="Booking">{user.bookingCount}</td>
+                    <td data-label="Tổng chi">{formatCurrency(user.totalSpent)}</td>
+                    <td data-label="Cập nhật">{formatDateTime(user.updatedAt)}</td>
+                    <td data-label="Thao tác">
                       <div className="admin-table-actions">
                         <Link className="button button-secondary" to={`/admin/users/${user.id}`}>
                           Chi tiết
                         </Link>
-                        <button
-                          className="button button-ghost"
-                          type="button"
-                          onClick={() => handleQuickStatusChange(user.id, user.status)}
-                        >
+                        <button className="button button-ghost" type="button" onClick={() => handleQuickStatusChange(user)}>
                           {user.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt'}
                         </button>
-                        <button
-                          className="button button-dark"
-                          type="button"
-                          onClick={() => handleToggleDelete(user.id, user.deleteFlg)}
-                        >
+                        <button className="button button-dark" type="button" onClick={() => handleToggleDelete(user)}>
                           {user.deleteFlg ? 'Khôi phục' : 'Xóa mềm'}
                         </button>
                       </div>
@@ -229,8 +296,8 @@ function AdminUserListPage() {
           </div>
         ) : (
           <div className="admin-empty-state">
-            <h3>Không có user nào phù hợp bộ lọc</h3>
-            <p>Thử xóa từ khóa tìm kiếm hoặc đổi bộ lọc vai trò, trạng thái để xem thêm dữ liệu.</p>
+            <h3>Không có tài khoản phù hợp bộ lọc</h3>
+            <p>Thử nới rộng điều kiện tìm kiếm hoặc thay đổi vai trò, trạng thái để rà soát thêm dữ liệu.</p>
           </div>
         )}
       </section>

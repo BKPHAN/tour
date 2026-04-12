@@ -1,46 +1,72 @@
-import { adminLoginAccounts, adminPortalRoles, normalizeRole } from '../../data/adminMockData.js';
+import { apiRequest } from '../user/apiClient.js';
+import { clearStoredAuth, setStoredAuth } from '../user/authStorage.js';
 import { clearStoredAdminAuth, getStoredAdminAuth, setStoredAdminAuth } from './adminAuthStorage.js';
 
+const ADMIN_PORTAL_ROLES = ['admin', 'staff'];
+
 /**
- * Tạo độ trễ nhỏ để form admin giống cảm giác đang gọi API thật.
+ * Auth admin dùng chung payload login với khu user,
+ * nhưng giữ thêm một lớp session riêng cho route `/admin`
+ * để UI quản trị có thể kiểm soát guard và layout độc lập.
  */
-function wait(ms = 180) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
+
+/**
+ * Chuẩn hóa role cũ về bộ role mới để các session lưu từ bản trước không làm lệch route guard.
+ */
+function normalizeRole(role) {
+  if (role === 'customer') {
+    return 'user';
+  }
+
+  if (role === 'admin' || role === 'staff' || role === 'user') {
+    return role;
+  }
+
+  return 'user';
 }
 
 /**
- * Đăng nhập admin bằng tài khoản mock của giai đoạn 2 frontend.
+ * Kiểm tra một role có được phép đi vào khu vực quản trị hay không.
  */
-export async function loginAdmin(payload) {
-  await wait();
+export function isAdminPortalRole(role) {
+  return ADMIN_PORTAL_ROLES.includes(normalizeRole(role));
+}
 
-  const loginId = payload.loginId.trim().toLowerCase();
-  const password = payload.password.trim();
-  const matchedAccount = adminLoginAccounts.find((account) => {
-    const isMatchedLogin = loginId === account.loginId.toLowerCase() || loginId === account.email.toLowerCase();
-    return isMatchedLogin && password === account.password;
-  });
+/**
+ * Đồng bộ session admin từ auth payload thật của backend để route `/admin` dùng chung đúng token hiện tại.
+ */
+export function syncAdminSession(authData) {
+  const currentRole = normalizeRole(authData?.user?.role);
 
-  if (!matchedAccount) {
-    const error = new Error('Thông tin đăng nhập không hợp lệ hoặc tài khoản không có quyền vào trang quản lý.');
-    error.status = 401;
-    throw error;
+  if (!authData?.token || !isAdminPortalRole(currentRole)) {
+    clearStoredAdminAuth();
+    return null;
   }
 
-  const authData = {
-    token: `mock-${matchedAccount.role}-token`,
+  setStoredAdminAuth({
+    refreshToken: authData.refreshToken,
+    token: authData.token,
     user: {
-      id: matchedAccount.id,
-      fullName: matchedAccount.fullName,
-      email: matchedAccount.email,
-      role: normalizeRole(matchedAccount.role),
-      title: matchedAccount.title,
+      ...authData.user,
+      role: currentRole,
+      title: currentRole === 'admin' ? 'Quản trị hệ thống' : 'Nhân viên vận hành',
     },
-  };
+  });
 
-  setStoredAdminAuth(authData);
+  return authData;
+}
+
+/**
+ * Đăng nhập admin bằng tài khoản thật từ backend, sau đó đồng bộ cả phiên user và phiên admin.
+ */
+export async function loginAdmin(payload) {
+  const authData = await apiRequest('/auth/login', {
+    body: JSON.stringify(payload),
+    method: 'POST',
+  });
+
+  setStoredAuth(authData);
+  syncAdminSession(authData);
   return authData;
 }
 
@@ -50,7 +76,7 @@ export async function loginAdmin(payload) {
 export function isAdminAuthenticated() {
   const authData = getStoredAdminAuth();
   const currentRole = normalizeRole(authData?.user?.role);
-  return Boolean(authData?.token) && adminPortalRoles.includes(currentRole);
+  return Boolean(authData?.token) && isAdminPortalRole(currentRole);
 }
 
 /**
@@ -70,8 +96,9 @@ export function getStoredAdminUser() {
 }
 
 /**
- * Xóa session admin hiện tại.
+ * Xóa cả session admin và session auth chung khi đăng xuất khỏi khu vực quản trị.
  */
 export function logoutAdmin() {
   clearStoredAdminAuth();
+  clearStoredAuth();
 }

@@ -1,4 +1,5 @@
 import express from 'express';
+import adminRouter from './adminRoutes.js';
 import { getHealth } from '../controllers/healthController.js';
 import authRouter from './authRoutes.js';
 import bookingRouter from './bookingRoutes.js';
@@ -15,6 +16,7 @@ export function registerRoutes(app) {
 
   apiRouter.get('/health', getHealth);
   apiRouter.use('/auth', authRouter);
+  apiRouter.use('/admin', adminRouter);
   apiRouter.use('/tours', tourRouter);
   apiRouter.use('/bookings', bookingRouter);
   apiRouter.use('/payments', paymentRouter);

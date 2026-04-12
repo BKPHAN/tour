@@ -76,6 +76,25 @@ function hashResetToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+/**
+ * Chỉ cho phép tài khoản đang hoạt động đăng nhập và duy trì phiên làm việc.
+ */
+function assertUserCanUseSession(user) {
+  if (!user) {
+    throw new ApiError(401, 'Thông tin đăng nhập không chính xác.');
+  }
+
+  if (user.status === 'blocked') {
+    throw new ApiError(403, 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.');
+  }
+
+  if (user.status !== 'active') {
+    throw new ApiError(403, 'Tài khoản hiện không ở trạng thái hoạt động.');
+  }
+
+  return user;
+}
+
 function formatSqlDateTime(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -161,11 +180,7 @@ export async function loginUser(payload) {
     throw new ApiError(400, 'Vui lòng nhập tên đăng nhập/email và mật khẩu.');
   }
 
-  const user = await findUserByLoginId(loginId);
-
-  if (!user) {
-    throw new ApiError(401, 'Thông tin đăng nhập không chính xác.');
-  }
+  const user = assertUserCanUseSession(await findUserByLoginId(loginId));
 
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
@@ -186,7 +201,7 @@ export async function getCurrentUser(userId) {
     throw new ApiError(404, 'Không tìm thấy tài khoản.');
   }
 
-  return sanitizeUser(user);
+  return sanitizeUser(assertUserCanUseSession(user));
 }
 
 /**
@@ -242,11 +257,7 @@ export async function refreshUserSession(refreshToken) {
 
   try {
     const payload = jwt.verify(refreshToken, env.refreshTokenSecret);
-    const user = await findUserById(payload.userId);
-
-    if (!user) {
-      throw new ApiError(401, 'Tài khoản không tồn tại hoặc đã hết hiệu lực.');
-    }
+    const user = assertUserCanUseSession(await findUserById(payload.userId));
 
     return buildAuthPayload(user);
   } catch (error) {

@@ -150,9 +150,11 @@ export async function findFeaturedTours(limit = 3, connection = null) {
       FROM tours
       WHERE status = 'published'
       ORDER BY rating DESC, review_count DESC, id ASC
-      LIMIT ?
+      -- MySQL ở môi trường local hiện tại báo lỗi với prepared placeholder trong LIMIT.
+      -- Sau khi ép kiểu chặt về số nguyên dương, có thể nội suy trực tiếp mà vẫn an toàn.
+      LIMIT ${normalizedLimit}
     `,
-    [normalizedLimit],
+    [],
     connection,
   );
 

@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
-import { loginAdmin } from '../../services/admin/adminAuthService.js';
+import { isAdminPortalRole, loginAdmin } from '../../services/admin/adminAuthService.js';
+
+const ADMIN_DEMO_ACCOUNTS = [
+  'Tài khoản quản trị: `admin01` / `123456`',
+  'Tài khoản vận hành: `staff01` / `123456`',
+  'Role `admin` và `staff` được cấp quyền vào khu quản trị; role `user` sử dụng giao diện khách hàng',
+];
 
 /**
  * Trang đăng nhập riêng cho admin để tách biệt với luồng đăng nhập người dùng.
@@ -25,7 +31,7 @@ function AdminLoginPage() {
   }
 
   /**
-   * Đăng nhập admin xong thì quay lại trang đích, nếu không có thì về dashboard.
+   * Đăng nhập bằng tài khoản thật từ backend, sau đó điều hướng theo đúng role.
    */
   async function handleSubmit(event) {
     event.preventDefault();
@@ -33,8 +39,15 @@ function AdminLoginPage() {
     setErrorMessage('');
 
     try {
-      await loginAdmin(formData);
-      navigate(location.state?.redirectTo || '/admin', { replace: true });
+      const authData = await loginAdmin(formData);
+      const currentRole = authData?.user?.role;
+
+      if (isAdminPortalRole(currentRole)) {
+        navigate(location.state?.redirectTo || '/admin', { replace: true });
+        return;
+      }
+
+      navigate('/', { replace: true });
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -45,38 +58,38 @@ function AdminLoginPage() {
   return (
     <div className="admin-login-shell">
       <section className="admin-login-panel admin-login-intro">
-        <p className="section-eyebrow">Giai đoạn 2 frontend</p>
-        <h1>Đăng nhập khu quản trị để demo luồng quản lý người dùng.</h1>
+        <p className="section-eyebrow">Khu vực quản trị</p>
+        <h1>Đăng nhập khu vực quản trị</h1>
         <p>
-          Trang này dùng session mock riêng cho admin. Sau khi đăng nhập, bạn có thể đi qua dashboard, danh
-          sách user và trang chi tiết để xem toàn bộ flow quản trị.
+          Hệ thống sử dụng chung tài khoản xác thực với backend. Người dùng có role `admin` hoặc `staff` sẽ được chuyển
+          vào khu quản trị; role `user` sẽ sử dụng giao diện khách hàng.
         </p>
         <ul className="feature-list">
-          <li>Admin demo: `admin` hoặc `admin@tourflow.vn` / `admin123`</li>
-          <li>Staff demo: `staff` hoặc `linh.ops@tourflow.vn` / `staff123`</li>
-          <li>Chỉ role `admin` và `staff` mới vào được trang quản lý, role `user` chỉ dùng cho khu vực người dùng</li>
+          {ADMIN_DEMO_ACCOUNTS.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
         </ul>
       </section>
 
       <section className="admin-login-panel">
         <form className="form-card" onSubmit={handleSubmit}>
           <FormField
-            label="Tài khoản admin"
+            label="Tài khoản quản trị"
             name="loginId"
             onChange={handleChange}
-            placeholder="Nhập username hoặc email quản trị"
+            placeholder="Nhập username hoặc email"
             value={formData.loginId}
           />
           <FormField
             label="Mật khẩu"
             name="password"
             onChange={handleChange}
-            placeholder="Nhập mật khẩu admin"
+            placeholder="Nhập mật khẩu"
             type="password"
             value={formData.password}
           />
           <button className="button button-primary full-width" disabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Đang đăng nhập...' : 'Vào khu quản trị'}
+            {isSubmitting ? 'Đang đăng nhập...' : 'Vào hệ thống'}
           </button>
           {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
           <div className="inline-links">

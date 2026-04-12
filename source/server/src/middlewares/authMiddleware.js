@@ -23,6 +23,14 @@ export async function authenticate(req, res, next) {
       return next(new ApiError(401, 'Tài khoản không tồn tại hoặc đã hết hiệu lực.'));
     }
 
+    if (user.status === 'blocked') {
+      return next(new ApiError(403, 'Tài khoản đã bị khóa và không thể tiếp tục sử dụng phiên hiện tại.'));
+    }
+
+    if (user.status !== 'active') {
+      return next(new ApiError(403, 'Tài khoản hiện không ở trạng thái hoạt động.'));
+    }
+
     req.user = user;
     return next();
   } catch (error) {

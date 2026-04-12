@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
 import { register } from '../../services/user/authService.js';
+import { isAdminPortalRole } from '../../services/admin/adminAuthService.js';
 
 const initialForm = {
   fullName: '',
@@ -37,7 +38,13 @@ function RegisterPage() {
     setErrorMessage('');
 
     try {
-      await register(formData);
+      const authData = await register(formData);
+
+      if (isAdminPortalRole(authData?.user?.role)) {
+        navigate('/admin', { replace: true });
+        return;
+      }
+
       const redirectTo = location.state?.redirectTo || '/tours';
       navigate(redirectTo, { replace: true });
     } catch (error) {

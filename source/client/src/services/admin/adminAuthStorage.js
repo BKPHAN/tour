@@ -2,6 +2,11 @@ const ADMIN_AUTH_STORAGE_KEY = 'tourflow-admin-auth';
 const ADMIN_AUTH_EVENT_NAME = 'tourflow-admin-auth-changed';
 
 /**
+ * File này chỉ lo phần lưu/đọc session admin ở localStorage.
+ * Mọi rule về role và guard nằm ở `adminAuthService.js`.
+ */
+
+/**
  * Đọc session đăng nhập của admin từ localStorage.
  */
 export function getStoredAdminAuth() {
