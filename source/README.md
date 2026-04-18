@@ -167,8 +167,8 @@ Database mẫu đang dùng tên:
 Có sẵn tài khoản demo để kiểm tra nhanh các luồng chính:
 
 - Người dùng frontend: `demo` / `123456`
-- Admin portal mock: `admin` / `admin123`
-- Staff portal mock: `staff` / `staff123`
+- Admin portal: `admin` / `admin123`
+- Staff portal: `staff` / `staff123`
 
 Các luồng tài khoản người dùng hiện có:
 
@@ -179,6 +179,44 @@ Các luồng tài khoản người dùng hiện có:
 - Đổi mật khẩu khi đang đăng nhập
 - Đăng xuất từ menu tài khoản trên header
 
+## Phân quyền admin/staff
+
+Portal `/admin` hiện có 2 role nội bộ:
+
+- `admin`: toàn quyền khu vực quản trị
+- `staff`: quyền vận hành hằng ngày, không có quyền thao tác nhạy cảm
+
+Permission backend đang được chặn theo từng endpoint tại:
+
+- [server/src/routes/adminRoutes.js](/C:/Users/Lenovo/Desktop/tour/source/server/src/routes/adminRoutes.js)
+- [server/src/middlewares/adminMiddleware.js](/C:/Users/Lenovo/Desktop/tour/source/server/src/middlewares/adminMiddleware.js)
+
+Permission frontend đang được đồng bộ theo session admin tại:
+
+- [client/src/services/admin/adminAuthService.js](/C:/Users/Lenovo/Desktop/tour/source/client/src/services/admin/adminAuthService.js)
+
+Ma trận quyền theo từng trang đã làm trong code:
+
+| Trang | Route | Admin | Staff |
+|---|---|---|---|
+| Dashboard | `/admin` | Xem toàn bộ dashboard, KPI, booking gần đây, payment gần đây | Xem như admin |
+| Quản lý người dùng | `/admin/users` | Xem danh sách, vào chi tiết, đổi role, đổi status, khóa/mở, xóa mềm/khôi phục | Chỉ xem danh sách và vào trang chi tiết |
+| Chi tiết người dùng | `/admin/users/:userId` | Sửa hồ sơ, đổi role, đổi status, xóa mềm/khôi phục | Chỉ xem thông tin và booking gần đây |
+| Danh sách tour | `/admin/tours` | Xem, thêm tour, sửa tour, đổi trạng thái, xóa mềm/khôi phục | Xem, thêm tour, sửa tour, đổi trạng thái |
+| Tạo tour | `/admin/tours/new` | Được tạo tour mới | Được tạo tour mới |
+| Chỉnh sửa tour | `/admin/tours/:tourId/edit` | Sửa toàn bộ tour, itinerary, departures, xóa mềm/khôi phục | Sửa toàn bộ tour, itinerary, departures; không có nút xóa mềm |
+| Danh sách booking | `/admin/bookings` | Xem, vào chi tiết, cập nhật trạng thái, xóa mềm | Xem, vào chi tiết, cập nhật trạng thái |
+| Chi tiết booking | `/admin/bookings/:bookingCode` | Xem chi tiết, xem timeline, cập nhật trạng thái, xóa mềm | Xem chi tiết, xem timeline, cập nhật trạng thái |
+| Danh sách payment | `/admin/payments` | Xem, vào chi tiết, cập nhật trạng thái, hoàn tiền nhanh | Xem, vào chi tiết, cập nhật trạng thái; không hoàn tiền |
+| Chi tiết payment | `/admin/payments/:paymentCode` | Xem chi tiết, đổi trạng thái, hoàn tiền | Xem chi tiết, đổi trạng thái; không có nút hoàn tiền |
+
+Các nghiệp vụ nhạy cảm hiện chỉ `admin` mới có:
+
+- Quản lý role/status/xóa mềm user
+- Xóa mềm hoặc khôi phục tour
+- Xóa mềm booking
+- Hoàn tiền payment
+
 ## Tình trạng hiện tại
 
 - Frontend người dùng đã có giao diện và đã nối với backend
@@ -187,7 +225,7 @@ Các luồng tài khoản người dùng hiện có:
 - Backend đang chạy bằng Express và đọc dữ liệu người dùng trực tiếp từ MySQL theo cấu hình trong `.env`
 - Header người dùng đã dùng nút tài khoản dạng dropdown, dẫn tới trang cài đặt tài khoản, đổi mật khẩu và đăng xuất
 - Luồng chính đã có: đăng ký, đăng nhập, quên mật khẩu, đặt lại mật khẩu, cập nhật hồ sơ, đổi mật khẩu, xem tour, xem chi tiết tour, đặt tour, thanh toán, lịch sử booking
-- Portal admin hiện vẫn là frontend mock cho các màn đăng nhập admin, dashboard và quản lý người dùng; chưa nối backend thật
+- Portal admin đã nối backend thật cho dashboard, người dùng, tour, booking và payment
 
 ## Lệnh hay dùng
 

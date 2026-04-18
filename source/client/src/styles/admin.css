@@ -391,6 +391,11 @@
   margin: 0;
 }
 
+.admin-report-hero-copy .section-heading h2,
+.admin-report-hero-copy .section-heading p {
+  color: #10233c;
+}
+
 .admin-kpi-grid,
 .admin-report-grid,
 .admin-insight-grid,
@@ -852,6 +857,11 @@
   border-collapse: collapse;
 }
 
+.admin-table-users {
+  table-layout: fixed;
+  font-size: 0.9rem;
+}
+
 .admin-table th,
 .admin-table td {
   padding: 18px 14px;
@@ -867,6 +877,15 @@
   color: var(--ink-soft);
 }
 
+.admin-table-users th,
+.admin-table-users td {
+  padding: 14px 10px;
+}
+
+.admin-table-users th {
+  font-size: 0.72rem;
+}
+
 .admin-table-user {
   display: grid;
   gap: 4px;
@@ -874,6 +893,46 @@
 
 .admin-table-user strong {
   font-size: 0.94rem;
+}
+
+.admin-table-users .admin-table-user {
+  gap: 3px;
+}
+
+.admin-table-users .admin-table-user strong {
+  font-size: 0.88rem;
+  line-height: 1.2;
+}
+
+.admin-table-users .admin-table-user p,
+.admin-table-users .admin-table-user span {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.admin-table-users .chip,
+.admin-table-users .admin-badge {
+  font-size: 0.68rem;
+}
+
+.admin-table-users .admin-table-actions {
+  gap: 6px;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.admin-table-users .admin-table-actions .button {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.admin-table-users th:last-child,
+.admin-table-users td:last-child {
+  width: 118px;
 }
 
 .admin-table-meta,

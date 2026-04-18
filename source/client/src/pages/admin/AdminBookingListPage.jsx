@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../../components/SectionHeading.jsx';
+import { ADMIN_PERMISSION_KEYS, getStoredAdminUser, hasAdminPermission } from '../../services/admin/adminAuthService.js';
 import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import { getAdminBookings, toggleAdminBookingDeleteFlag, updateAdminBooking } from '../../services/admin/adminBookingService.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
@@ -74,6 +75,8 @@ function buildBookingSummary(filteredBookings) {
  * Danh sách booking cho admin theo dữ liệu thật, ưu tiên theo dõi pipeline vận hành.
  */
 function AdminBookingListPage() {
+  const currentAdmin = getStoredAdminUser();
+  const canDeleteBookings = hasAdminPermission(ADMIN_PERMISSION_KEYS.BOOKINGS_DELETE, currentAdmin);
   const [bookingList, setBookingList] = useState([]);
   const [adminMeta, setAdminMeta] = useState(EMPTY_ADMIN_META);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -318,8 +321,8 @@ function AdminBookingListPage() {
                               {quickAction.label}
                             </button>
                           ) : null}
-                          {!booking.deleteFlg ? (
-                            <button className="button button-dark" type="button" onClick={() => handleToggleDelete(booking)}>
+                          {canDeleteBookings && !booking.deleteFlg ? (
+                            <button className="button button-danger" type="button" onClick={() => handleToggleDelete(booking)}>
                               Xóa mềm
                             </button>
                           ) : null}

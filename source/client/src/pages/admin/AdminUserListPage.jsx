@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../../components/SectionHeading.jsx';
+import { ADMIN_PERMISSION_KEYS, getStoredAdminUser, hasAdminPermission } from '../../services/admin/adminAuthService.js';
 import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import { getAdminUsers, toggleAdminUserDeleteFlag, updateAdminUser } from '../../services/admin/adminUserService.js';
 import { formatCurrency } from '../../utils/formatters.js';
@@ -55,6 +56,8 @@ function buildUserSummary(filteredUsers) {
  * Danh sách người dùng cho admin, bám dữ liệu thật từ backend để lọc và cập nhật nhanh.
  */
 function AdminUserListPage() {
+  const currentAdmin = getStoredAdminUser();
+  const canManageUsers = hasAdminPermission(ADMIN_PERMISSION_KEYS.USERS_UPDATE, currentAdmin);
   const [userList, setUserList] = useState([]);
   const [adminMeta, setAdminMeta] = useState(EMPTY_ADMIN_META);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -112,12 +115,12 @@ function AdminUserListPage() {
   }
 
   /**
-   * Xóa mềm hoặc khôi phục tài khoản người dùng.
+   * Xóa hoặc khôi phục tài khoản người dùng.
    */
   async function handleToggleDelete(user) {
-    const shouldContinue = window.confirm(
-      user.deleteFlg ? 'Bạn muốn khôi phục tài khoản này?' : 'Bạn muốn đánh dấu xóa mềm tài khoản này?',
-    );
+    const shouldContinue = user.deleteFlg
+      ? window.confirm('Bạn muốn khôi phục tài khoản này?')
+      : window.confirm('Bạn có chắc muốn xóa tài khoản này không?');
 
     if (!shouldContinue) {
       return;
@@ -242,8 +245,8 @@ function AdminUserListPage() {
         {isLoading ? (
           <p className="helper-text">Đang tải danh sách người dùng...</p>
         ) : filteredUsers.length ? (
-          <div className="admin-table-shell">
-            <table className="admin-table">
+          <div className="admin-table-shell admin-table-shell-users">
+            <table className="admin-table admin-table-users">
               <thead>
                 <tr>
                   <th>Người dùng</th>
@@ -281,12 +284,20 @@ function AdminUserListPage() {
                         <Link className="button button-secondary" to={`/admin/users/${user.id}`}>
                           Chi tiết
                         </Link>
-                        <button className="button button-ghost" type="button" onClick={() => handleQuickStatusChange(user)}>
-                          {user.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt'}
-                        </button>
-                        <button className="button button-dark" type="button" onClick={() => handleToggleDelete(user)}>
-                          {user.deleteFlg ? 'Khôi phục' : 'Xóa mềm'}
-                        </button>
+                        {canManageUsers ? (
+                          <button className="button button-ghost" type="button" onClick={() => handleQuickStatusChange(user)}>
+                            {user.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt'}
+                          </button>
+                        ) : null}
+                        {canManageUsers ? (
+                          <button
+                            className={user.deleteFlg ? 'button button-success' : 'button button-danger'}
+                            type="button"
+                            onClick={() => handleToggleDelete(user)}
+                          >
+                            {user.deleteFlg ? 'Khôi phục' : 'Xóa'}
+                          </button>
+                        ) : null}
                       </div>
                     </td>
                   </tr>

@@ -3,6 +3,33 @@ import { clearStoredAuth, setStoredAuth } from '../user/authStorage.js';
 import { clearStoredAdminAuth, getStoredAdminAuth, setStoredAdminAuth } from './adminAuthStorage.js';
 
 const ADMIN_PORTAL_ROLES = ['admin', 'staff'];
+export const ADMIN_PERMISSION_KEYS = {
+  META_READ: 'admin.meta.read',
+  USERS_READ: 'admin.users.read',
+  USERS_UPDATE: 'admin.users.update',
+  USERS_DELETE: 'admin.users.delete',
+  TOURS_READ: 'admin.tours.read',
+  TOURS_CREATE: 'admin.tours.create',
+  TOURS_UPDATE: 'admin.tours.update',
+  TOURS_DELETE: 'admin.tours.delete',
+  BOOKINGS_READ: 'admin.bookings.read',
+  BOOKINGS_UPDATE_STATUS: 'admin.bookings.update_status',
+  BOOKINGS_DELETE: 'admin.bookings.delete',
+  PAYMENTS_READ: 'admin.payments.read',
+  PAYMENTS_UPDATE_STATUS: 'admin.payments.update_status',
+  PAYMENTS_REFUND: 'admin.payments.refund',
+};
+const STAFF_PERMISSIONS = [
+  ADMIN_PERMISSION_KEYS.META_READ,
+  ADMIN_PERMISSION_KEYS.USERS_READ,
+  ADMIN_PERMISSION_KEYS.TOURS_READ,
+  ADMIN_PERMISSION_KEYS.TOURS_CREATE,
+  ADMIN_PERMISSION_KEYS.TOURS_UPDATE,
+  ADMIN_PERMISSION_KEYS.BOOKINGS_READ,
+  ADMIN_PERMISSION_KEYS.BOOKINGS_UPDATE_STATUS,
+  ADMIN_PERMISSION_KEYS.PAYMENTS_READ,
+  ADMIN_PERMISSION_KEYS.PAYMENTS_UPDATE_STATUS,
+];
 
 /**
  * Auth admin dùng chung payload login với khu user,
@@ -32,6 +59,25 @@ export function isAdminPortalRole(role) {
   return ADMIN_PORTAL_ROLES.includes(normalizeRole(role));
 }
 
+export function getAdminPermissions(role) {
+  const normalizedRole = normalizeRole(role);
+
+  if (normalizedRole === 'admin') {
+    return ['*'];
+  }
+
+  if (normalizedRole === 'staff') {
+    return STAFF_PERMISSIONS;
+  }
+
+  return [];
+}
+
+export function hasAdminPermission(permission, adminUser = getStoredAdminUser()) {
+  const permissions = Array.isArray(adminUser?.permissions) ? adminUser.permissions : getAdminPermissions(adminUser?.role);
+  return permissions.includes('*') || permissions.includes(permission);
+}
+
 /**
  * Đồng bộ session admin từ auth payload thật của backend để route `/admin` dùng chung đúng token hiện tại.
  */
@@ -48,6 +94,7 @@ export function syncAdminSession(authData) {
     token: authData.token,
     user: {
       ...authData.user,
+      permissions: getAdminPermissions(currentRole),
       role: currentRole,
       title: currentRole === 'admin' ? 'Quản trị hệ thống' : 'Nhân viên vận hành',
     },
@@ -91,6 +138,7 @@ export function getStoredAdminUser() {
 
   return {
     ...storedUser,
+    permissions: Array.isArray(storedUser.permissions) ? storedUser.permissions : getAdminPermissions(storedUser.role),
     role: normalizeRole(storedUser.role),
   };
 }

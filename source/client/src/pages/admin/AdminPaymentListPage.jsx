@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../../components/SectionHeading.jsx';
+import { ADMIN_PERMISSION_KEYS, getStoredAdminUser, hasAdminPermission } from '../../services/admin/adminAuthService.js';
 import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import { getAdminPayments, refundAdminPayment, updateAdminPayment } from '../../services/admin/adminPaymentService.js';
 import { formatCurrency } from '../../utils/formatters.js';
@@ -57,6 +58,8 @@ function buildPaymentSummary(filteredPayments) {
  * Danh sách payment cho admin theo hướng gọn và phục vụ đối soát nhanh.
  */
 function AdminPaymentListPage() {
+  const currentAdmin = getStoredAdminUser();
+  const canRefundPayments = hasAdminPermission(ADMIN_PERMISSION_KEYS.PAYMENTS_REFUND, currentAdmin);
   const [paymentList, setPaymentList] = useState([]);
   const [adminMeta, setAdminMeta] = useState(EMPTY_ADMIN_META);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -98,7 +101,7 @@ function AdminPaymentListPage() {
       const updatedPayment =
         payment.status === 'waiting'
           ? await updateAdminPayment(payment.id, { status: 'paid' })
-          : payment.status === 'paid'
+          : payment.status === 'paid' && canRefundPayments
             ? await refundAdminPayment(payment.id)
             : null;
 
@@ -270,8 +273,12 @@ function AdminPaymentListPage() {
                           Chi tiết
                         </Link>
                         {/* Chỉ waiting và paid mới có thao tác nhanh, vì refunded/failed cần giữ nguyên lịch sử đối soát. */}
-                        {payment.status === 'waiting' || payment.status === 'paid' ? (
-                          <button className="button button-ghost" type="button" onClick={() => handleQuickPaymentAction(payment)}>
+                        {payment.status === 'waiting' || (payment.status === 'paid' && canRefundPayments) ? (
+                          <button
+                            className={payment.status === 'paid' ? 'button button-warning' : 'button button-ghost'}
+                            type="button"
+                            onClick={() => handleQuickPaymentAction(payment)}
+                          >
                             {payment.status === 'waiting' ? 'Xác nhận đã nhận tiền' : 'Hoàn tiền nhanh'}
                           </button>
                         ) : null}

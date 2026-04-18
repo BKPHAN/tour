@@ -12,6 +12,8 @@ function FormField({
   placeholder,
   as = 'input',
   options = [],
+  disabled = false,
+  readOnly = false,
 }) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const isPasswordField = as === 'input' && type === 'password';
@@ -22,7 +24,7 @@ function FormField({
     return (
       <label className="form-field">
         <span>{label}</span>
-        <select name={name} onChange={onChange} value={value}>
+        <select disabled={disabled} name={name} onChange={onChange} value={value}>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -38,7 +40,15 @@ function FormField({
     return (
       <label className="form-field">
         <span>{label}</span>
-        <textarea name={name} onChange={onChange} placeholder={placeholder} rows="4" value={value} />
+        <textarea
+          disabled={disabled}
+          name={name}
+          onChange={onChange}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          rows="4"
+          value={value}
+        />
       </label>
     );
   }
@@ -47,9 +57,17 @@ function FormField({
     <label className="form-field">
       <span>{label}</span>
       <div className={isPasswordField ? 'input-shell input-shell-password' : 'input-shell'}>
-        <input name={name} onChange={onChange} placeholder={placeholder} type={inputType} value={value} />
+        <input
+          disabled={disabled}
+          name={name}
+          onChange={onChange}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          type={inputType}
+          value={value}
+        />
         {/* Chỉ hiển thị nút con mắt khi field thật sự là password để tránh nhiễu UI. */}
-        {isPasswordField ? (
+        {isPasswordField && !disabled ? (
           <button
             aria-label={isPasswordVisible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
             className="password-toggle"

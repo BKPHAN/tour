@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
+import { ADMIN_PERMISSION_KEYS, getStoredAdminUser, hasAdminPermission } from '../../services/admin/adminAuthService.js';
 import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import { getAdminUserDetail, toggleAdminUserDeleteFlag, updateAdminUser } from '../../services/admin/adminUserService.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
@@ -36,6 +37,8 @@ function getRecentBookings(userDetail) {
  */
 function AdminUserDetailPage() {
   const { userId } = useParams();
+  const currentAdmin = getStoredAdminUser();
+  const canManageUsers = hasAdminPermission(ADMIN_PERMISSION_KEYS.USERS_UPDATE, currentAdmin);
   const [userDetail, setUserDetail] = useState(null);
   const [adminMeta, setAdminMeta] = useState(EMPTY_ADMIN_META);
   const [formData, setFormData] = useState(null);
@@ -79,6 +82,11 @@ function AdminUserDetailPage() {
    */
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (!canManageUsers) {
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage('');
     setSuccessMessage('');
@@ -100,14 +108,26 @@ function AdminUserDetailPage() {
   }
 
   /**
-   * Xóa mềm hoặc khôi phục tài khoản ngay tại trang detail.
+   * Xóa hoặc khôi phục tài khoản ngay tại trang detail.
    */
   async function handleToggleDelete() {
+    if (!canManageUsers) {
+      return;
+    }
+
+    const shouldContinue = userDetail.deleteFlg
+      ? window.confirm('Bạn muốn khôi phục tài khoản này?')
+      : window.confirm('Bạn có chắc muốn xóa tài khoản này không?');
+
+    if (!shouldContinue) {
+      return;
+    }
+
     try {
       const updatedUser = await toggleAdminUserDeleteFlag(userDetail);
       setUserDetail(updatedUser);
       setFormData(createFormState(updatedUser));
-      setSuccessMessage(updatedUser.deleteFlg ? 'Tài khoản đã được đánh dấu xóa mềm.' : 'Tài khoản đã được khôi phục.');
+      setSuccessMessage(updatedUser.deleteFlg ? 'Tài khoản đã được xóa.' : 'Tài khoản đã được khôi phục.');
       setErrorMessage('');
     } catch (error) {
       setErrorMessage(error.message);
@@ -192,12 +212,16 @@ function AdminUserDetailPage() {
         <section className="content-card">
           <form className="form-card" onSubmit={handleSubmit}>
             <h2>Cập nhật hồ sơ và phân quyền</h2>
+            {!canManageUsers ? (
+              <p className="helper-text">Tài khoản staff chỉ có quyền xem thông tin người dùng. Cập nhật hồ sơ, đổi vai trò và xóa mềm cần tài khoản admin.</p>
+            ) : null}
             <div className="admin-form-grid">
-              <FormField label="Họ và tên" name="fullName" onChange={handleChange} value={formData.fullName} />
-              <FormField label="Email" name="email" onChange={handleChange} value={formData.email} />
-              <FormField label="Số điện thoại" name="phone" onChange={handleChange} value={formData.phone} />
+              <FormField disabled={!canManageUsers} label="Họ và tên" name="fullName" onChange={handleChange} value={formData.fullName} />
+              <FormField disabled={!canManageUsers} label="Email" name="email" onChange={handleChange} value={formData.email} />
+              <FormField disabled={!canManageUsers} label="Số điện thoại" name="phone" onChange={handleChange} value={formData.phone} />
               <FormField
                 as="select"
+                disabled={!canManageUsers}
                 label="Vai trò"
                 name="role"
                 onChange={handleChange}
@@ -206,6 +230,7 @@ function AdminUserDetailPage() {
               />
               <FormField
                 as="select"
+                disabled={!canManageUsers}
                 label="Trạng thái tài khoản"
                 name="status"
                 onChange={handleChange}
@@ -215,12 +240,20 @@ function AdminUserDetailPage() {
             </div>
 
             <div className="admin-form-actions">
-              <button className="button button-primary" disabled={isSubmitting} type="submit">
-                {isSubmitting ? 'Đang lưu...' : 'Lưu cập nhật'}
-              </button>
-              <button className="button button-dark" type="button" onClick={handleToggleDelete}>
-                {userDetail.deleteFlg ? 'Khôi phục tài khoản' : 'Đánh dấu xóa mềm'}
-              </button>
+              {canManageUsers ? (
+                <button className="button button-primary" disabled={isSubmitting} type="submit">
+                  {isSubmitting ? 'Đang lưu...' : 'Lưu cập nhật'}
+                </button>
+              ) : null}
+              {canManageUsers ? (
+                <button
+                  className={userDetail.deleteFlg ? 'button button-success' : 'button button-danger'}
+                  type="button"
+                  onClick={handleToggleDelete}
+                >
+                  {userDetail.deleteFlg ? 'Khôi phục tài khoản' : 'Xóa'}
+                </button>
+              ) : null}
               <Link className="button button-secondary" to="/admin/users">
                 Về danh sách
               </Link>

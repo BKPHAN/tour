@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
+import { ADMIN_PERMISSION_KEYS, getStoredAdminUser, hasAdminPermission } from '../../services/admin/adminAuthService.js';
 import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import {
   createAdminTour,
@@ -194,6 +195,8 @@ function updateItemAtIndex(items, targetIndex, updater) {
  */
 function AdminTourFormPage() {
   const { tourId } = useParams();
+  const currentAdmin = getStoredAdminUser();
+  const canDeleteTours = hasAdminPermission(ADMIN_PERMISSION_KEYS.TOURS_DELETE, currentAdmin);
   const navigate = useNavigate();
   const location = useLocation();
   const isEditMode = Boolean(tourId);
@@ -381,7 +384,7 @@ function AdminTourFormPage() {
    * Xóa mềm hoặc khôi phục tour ngay tại form chỉnh sửa.
    */
   async function handleToggleDelete() {
-    if (!tourDetail) {
+    if (!tourDetail || !canDeleteTours) {
       return;
     }
 
@@ -432,8 +435,12 @@ function AdminTourFormPage() {
             <Link className="button button-secondary" to="/admin/tours">
               Về danh sách tour
             </Link>
-            {isEditMode ? (
-              <button className="button button-dark" type="button" onClick={handleToggleDelete}>
+            {isEditMode && canDeleteTours ? (
+              <button
+                className={tourDetail?.deleteFlg ? 'button button-success' : 'button button-danger'}
+                type="button"
+                onClick={handleToggleDelete}
+              >
                 {tourDetail?.deleteFlg ? 'Khôi phục tour' : 'Đánh dấu xóa mềm'}
               </button>
             ) : null}

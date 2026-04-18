@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../../components/SectionHeading.jsx';
+import { ADMIN_PERMISSION_KEYS, getStoredAdminUser, hasAdminPermission } from '../../services/admin/adminAuthService.js';
 import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import { getAdminTours, toggleAdminTourDeleteFlag, updateAdminTourStatus } from '../../services/admin/adminTourService.js';
 import { formatCurrency } from '../../utils/formatters.js';
@@ -72,6 +73,8 @@ function buildTourListSummary(filteredTours) {
  * Danh sách tour cho admin, tập trung vào danh mục bán hàng và tình trạng lịch khởi hành.
  */
 function AdminTourListPage() {
+  const currentAdmin = getStoredAdminUser();
+  const canDeleteTours = hasAdminPermission(ADMIN_PERMISSION_KEYS.TOURS_DELETE, currentAdmin);
   const [tourList, setTourList] = useState([]);
   const [adminMeta, setAdminMeta] = useState(EMPTY_ADMIN_META);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -314,9 +317,15 @@ function AdminTourListPage() {
                           <button className="button button-ghost" type="button" onClick={() => handleQuickStatusChange(tour)}>
                             {quickAction.label}
                           </button>
-                          <button className="button button-dark" type="button" onClick={() => handleToggleDelete(tour)}>
-                            {tour.deleteFlg ? 'Khôi phục' : 'Xóa mềm'}
-                          </button>
+                          {canDeleteTours ? (
+                            <button
+                              className={tour.deleteFlg ? 'button button-success' : 'button button-danger'}
+                              type="button"
+                              onClick={() => handleToggleDelete(tour)}
+                            >
+                              {tour.deleteFlg ? 'Khôi phục' : 'Xóa mềm'}
+                            </button>
+                          ) : null}
                         </div>
                       </td>
                     </tr>

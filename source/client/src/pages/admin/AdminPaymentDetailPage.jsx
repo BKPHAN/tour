@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
+import { ADMIN_PERMISSION_KEYS, getStoredAdminUser, hasAdminPermission } from '../../services/admin/adminAuthService.js';
 import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import { getAdminPaymentDetail, refundAdminPayment, updateAdminPayment } from '../../services/admin/adminPaymentService.js';
 import { formatCurrency } from '../../utils/formatters.js';
@@ -28,6 +29,8 @@ function createFormState(payment) {
  */
 function AdminPaymentDetailPage() {
   const { paymentCode } = useParams();
+  const currentAdmin = getStoredAdminUser();
+  const canRefundPayments = hasAdminPermission(ADMIN_PERMISSION_KEYS.PAYMENTS_REFUND, currentAdmin);
   const [paymentDetail, setPaymentDetail] = useState(null);
   const [adminMeta, setAdminMeta] = useState({
     paymentStatusOptions: [],
@@ -92,6 +95,10 @@ function AdminPaymentDetailPage() {
    * Hoàn tiền payment đã thanh toán.
    */
   async function handleRefund() {
+    if (!canRefundPayments) {
+      return;
+    }
+
     try {
       const updatedPayment = await refundAdminPayment(paymentCode);
       setPaymentDetail(updatedPayment);
@@ -234,8 +241,8 @@ function AdminPaymentDetailPage() {
               <button className="button button-primary" disabled={isSubmitting || paymentDetail.status === 'refunded'} type="submit">
                 {isSubmitting ? 'Đang lưu...' : 'Lưu cập nhật'}
               </button>
-              {paymentDetail.status === 'paid' ? (
-                <button className="button button-dark" type="button" onClick={handleRefund}>
+              {canRefundPayments && paymentDetail.status === 'paid' ? (
+                <button className="button button-warning" type="button" onClick={handleRefund}>
                   Hoàn tiền
                 </button>
               ) : null}

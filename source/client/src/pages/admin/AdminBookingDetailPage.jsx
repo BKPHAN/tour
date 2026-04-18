@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
+import { ADMIN_PERMISSION_KEYS, getStoredAdminUser, hasAdminPermission } from '../../services/admin/adminAuthService.js';
 import { getAdminMeta } from '../../services/admin/adminMetaService.js';
 import { getAdminBookingDetail, toggleAdminBookingDeleteFlag, updateAdminBooking } from '../../services/admin/adminBookingService.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
@@ -38,6 +39,8 @@ function getBookingTimeline(bookingDetail) {
  */
 function AdminBookingDetailPage() {
   const { bookingCode } = useParams();
+  const currentAdmin = getStoredAdminUser();
+  const canDeleteBookings = hasAdminPermission(ADMIN_PERMISSION_KEYS.BOOKINGS_DELETE, currentAdmin);
   const [bookingDetail, setBookingDetail] = useState(null);
   const [adminMeta, setAdminMeta] = useState(EMPTY_ADMIN_META);
   const [formData, setFormData] = useState(null);
@@ -100,6 +103,10 @@ function AdminBookingDetailPage() {
    * Đánh dấu xóa mềm booking ngay tại trang detail.
    */
   async function handleToggleDelete() {
+    if (!canDeleteBookings) {
+      return;
+    }
+
     try {
       const updatedBooking = await toggleAdminBookingDeleteFlag(bookingCode);
       setBookingDetail(updatedBooking);
@@ -226,8 +233,8 @@ function AdminBookingDetailPage() {
               <button className="button button-primary" disabled={isSubmitting} type="submit">
                 {isSubmitting ? 'Đang lưu...' : 'Lưu cập nhật'}
               </button>
-              {!bookingDetail.deleteFlg ? (
-                <button className="button button-dark" type="button" onClick={handleToggleDelete}>
+              {canDeleteBookings && !bookingDetail.deleteFlg ? (
+                <button className="button button-danger" type="button" onClick={handleToggleDelete}>
                   Đánh dấu xóa mềm
                 </button>
               ) : null}
