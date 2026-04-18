@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { getStoredUser, logout } from '../services/user/authService.js';
 import { isAdminPortalRole } from '../services/admin/adminAuthService.js';
 import { getAuthEventName } from '../services/user/authStorage.js';
+import { getStoredUser, logout } from '../services/user/authService.js';
 import { DARK_THEME } from '../services/shared/themeService.js';
 
 const navItems = [
@@ -15,7 +15,7 @@ const navItems = [
  * Header điều hướng chính cho khu vực người dùng, gồm trạng thái đăng nhập và nút đổi theme.
  */
 function Header({ themeMode, onToggleTheme }) {
-  const accountMenuRef = useRef(null);
+  const menuRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -44,7 +44,7 @@ function Header({ themeMode, onToggleTheme }) {
 
   useEffect(() => {
     /**
-     * Mỗi lần đổi route thì đóng menu mobile và dropdown tài khoản để header không giữ trạng thái cũ.
+     * Mỗi lần đổi route thì đóng menu mobile và dropdown để header không giữ trạng thái cũ.
      */
     setIsMenuOpen(false);
     setIsAccountMenuOpen(false);
@@ -52,10 +52,10 @@ function Header({ themeMode, onToggleTheme }) {
 
   useEffect(() => {
     /**
-     * Đóng dropdown tài khoản khi người dùng bấm ra ngoài vùng menu để thao tác tự nhiên hơn.
+     * Đóng dropdown khi người dùng bấm ra ngoài vùng menu để thao tác tự nhiên hơn.
      */
     function handleClickOutside(event) {
-      if (!accountMenuRef.current?.contains(event.target)) {
+      if (!menuRef.current?.contains(event.target)) {
         setIsAccountMenuOpen(false);
       }
     }
@@ -81,7 +81,7 @@ function Header({ themeMode, onToggleTheme }) {
     <header className="site-header">
       <div className="container header-shell">
         <Link className="brand-mark" to="/">
-          <span className="brand-emblem" aria-hidden="true">
+          <span aria-hidden="true" className="brand-emblem">
             <svg fill="none" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
               <defs>
                 <linearGradient id="tourflow-brand-gradient" x1="12" x2="52" y1="10" y2="54" gradientUnits="userSpaceOnUse">
@@ -95,28 +95,14 @@ function Header({ themeMode, onToggleTheme }) {
                 </linearGradient>
               </defs>
               <rect fill="url(#tourflow-brand-gradient)" height="48" rx="18" width="48" x="8" y="8" />
-              <path
-                d="M32 18.5V41.7"
-                stroke="rgba(255,255,255,0.98)"
-                strokeLinecap="round"
-                strokeWidth="2.4"
-              />
-              <path
-                d="M32 20.6L44.2 33.9H32V20.6Z"
-                fill="url(#tourflow-sail-highlight)"
-              />
-              <path
-                d="M31 24.6L23.1 33.8H31V24.6Z"
-                fill="rgba(255,255,255,0.88)"
-              />
+              <path d="M32 18.5V41.7" stroke="rgba(255,255,255,0.98)" strokeLinecap="round" strokeWidth="2.4" />
+              <path d="M32 20.6L44.2 33.9H32V20.6Z" fill="url(#tourflow-sail-highlight)" />
+              <path d="M31 24.6L23.1 33.8H31V24.6Z" fill="rgba(255,255,255,0.88)" />
               <path
                 d="M16.8 39.2C21.9 38 27.7 37.4 34 37.4C38.9 37.4 43.5 37.8 47.2 38.8L43.1 45.2H21L16.8 39.2Z"
                 fill="rgba(255,255,255,0.96)"
               />
-              <path
-                d="M22.2 38.5H41.9L39.4 42H24.5L22.2 38.5Z"
-                fill="rgba(255,255,255,0.8)"
-              />
+              <path d="M22.2 38.5H41.9L39.4 42H24.5L22.2 38.5Z" fill="rgba(255,255,255,0.8)" />
               <path
                 d="M18.8 47.2C22.1 45.9 25.1 45.9 28.4 47.2C31.7 48.5 34.6 48.5 38 47.2C41.3 45.9 44.3 45.9 47.6 47.2"
                 stroke="rgba(255,255,255,0.72)"
@@ -162,13 +148,13 @@ function Header({ themeMode, onToggleTheme }) {
             type="button"
             onClick={onToggleTheme}
           >
-            <span className="theme-toggle-icon" aria-hidden="true">
+            <span aria-hidden="true" className="theme-toggle-icon">
               {isDarkMode ? '☀' : '☾'}
             </span>
           </button>
 
           {currentUser ? (
-            <div className="account-menu" ref={accountMenuRef}>
+            <div className="account-menu" ref={menuRef}>
               {/* Nút tài khoản thay cho câu "Xin chào ...", mở ra các thao tác quản lý hồ sơ. */}
               <button
                 aria-expanded={isAccountMenuOpen}
@@ -204,9 +190,31 @@ function Header({ themeMode, onToggleTheme }) {
             </div>
           ) : (
             <>
-              <Link className="button button-ghost" to="/login">
-                Đăng nhập
-              </Link>
+              <div className="account-menu" ref={menuRef}>
+                <button
+                  aria-expanded={isAccountMenuOpen}
+                  className="button button-primary"
+                  type="button"
+                  onClick={() => setIsAccountMenuOpen((current) => !current)}
+                >
+                  <span>Đăng nhập</span>
+                  <span aria-hidden="true" className={`account-menu-caret ${isAccountMenuOpen ? 'open' : ''}`}>
+                    ▾
+                  </span>
+                </button>
+
+                {isAccountMenuOpen ? (
+                  <div className="account-dropdown">
+                    <Link className="account-dropdown-link" to="/login">
+                      Đăng nhập người dùng
+                    </Link>
+                    <Link className="account-dropdown-link" to="/admin/login">
+                      Đăng nhập quản trị
+                    </Link>
+                  </div>
+                ) : null}
+              </div>
+
               <Link className="button button-primary" to="/register">
                 Đăng ký
               </Link>
