@@ -205,6 +205,12 @@ function AdminLayout() {
 
               {isAccountMenuOpen ? (
                 <div className="account-dropdown">
+                  <Link className="account-dropdown-link" to="/account">
+                    Cài đặt tài khoản
+                  </Link>
+                  <Link className="account-dropdown-link" to="/account/password">
+                    Đổi mật khẩu
+                  </Link>
                   <Link className="account-dropdown-link" to="/">
                     Trang người dùng
                   </Link>

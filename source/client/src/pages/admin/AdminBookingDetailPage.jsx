@@ -107,11 +107,17 @@ function AdminBookingDetailPage() {
       return;
     }
 
+    const shouldContinue = window.confirm('Bạn có chắc muốn xóa booking này không?');
+
+    if (!shouldContinue) {
+      return;
+    }
+
     try {
       const updatedBooking = await toggleAdminBookingDeleteFlag(bookingCode);
       setBookingDetail(updatedBooking);
       setFormData(createFormState(updatedBooking));
-      setSuccessMessage('Booking đã được đánh dấu xóa mềm.');
+      setSuccessMessage('Booking đã được xóa.');
       setErrorMessage('');
     } catch (error) {
       setErrorMessage(error.message);
@@ -235,7 +241,7 @@ function AdminBookingDetailPage() {
               </button>
               {canDeleteBookings && !bookingDetail.deleteFlg ? (
                 <button className="button button-danger" type="button" onClick={handleToggleDelete}>
-                  Đánh dấu xóa mềm
+                  Xóa
                 </button>
               ) : null}
               <Link className="button button-secondary" to="/admin/bookings">

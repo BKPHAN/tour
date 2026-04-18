@@ -138,7 +138,7 @@ function AdminBookingListPage() {
    * Xóa mềm booking khỏi danh sách vận hành.
    */
   async function handleToggleDelete(booking) {
-    const shouldContinue = window.confirm('Bạn muốn đánh dấu xóa mềm booking này?');
+    const shouldContinue = window.confirm('Bạn có chắc muốn xóa booking này không?');
 
     if (!shouldContinue) {
       return;
@@ -265,8 +265,8 @@ function AdminBookingListPage() {
         {isLoading ? (
           <p className="helper-text">Đang tải danh sách booking...</p>
         ) : filteredBookings.length ? (
-          <div className="admin-table-shell">
-            <table className="admin-table">
+          <div className="admin-table-shell admin-table-shell-bookings">
+            <table className="admin-table admin-table-bookings">
               <thead>
                 <tr>
                   <th>Booking</th>
@@ -323,7 +323,7 @@ function AdminBookingListPage() {
                           ) : null}
                           {canDeleteBookings && !booking.deleteFlg ? (
                             <button className="button button-danger" type="button" onClick={() => handleToggleDelete(booking)}>
-                              Xóa mềm
+                              Xóa
                             </button>
                           ) : null}
                         </div>

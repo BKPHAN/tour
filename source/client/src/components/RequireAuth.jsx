@@ -4,6 +4,10 @@ import { getStoredUser, isAuthenticated } from '../services/user/authService.js'
 import { isAdminPortalRole } from '../services/admin/adminAuthService.js';
 import { getAuthEventName } from '../services/user/authStorage.js';
 
+function isSharedAccountPage(pathname) {
+  return pathname === '/account' || pathname === '/account/password';
+}
+
 /**
  * Chặn các route cần đăng nhập và chuyển người dùng về trang login nếu chưa có token.
  */
@@ -35,7 +39,7 @@ function RequireAuth() {
   }
 
   // Nếu đang là admin hoặc staff thì điều hướng sang khu quản lý thay vì ở lại các trang nghiệp vụ người dùng.
-  if (isAdminPortalRole(currentUser?.role)) {
+  if (isAdminPortalRole(currentUser?.role) && !isSharedAccountPage(location.pathname)) {
     return <Navigate replace to="/admin" />;
   }
 
