@@ -8,7 +8,7 @@ function Footer() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div>
-          <p className="footer-kicker">TourFlow</p>
+          <p className="footer-kicker">Chill n Free</p>
           <h3>Lên kế hoạch chuyến đi gọn gàng, dễ chọn và dễ đặt hơn.</h3>
           <p>
             Khám phá điểm đến nổi bật, so sánh lịch khởi hành và hoàn tất đặt tour trong cùng một hành trình trực quan, rõ ràng.

@@ -14,7 +14,7 @@ const appUrl = `http://localhost:${port}`;
 export const env = {
   accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN || '7h',
   appEnv: process.env.APP_ENV || 'development',
-  appName: process.env.APP_NAME || 'TourFlow',
+  appName: process.env.APP_NAME || 'Website bán gói tour du lịch Chill n Free',
   appPort: port,
   appUrl,
   dbHost: process.env.DB_HOST || 'localhost',

@@ -1,4 +1,4 @@
-# TourFlow
+# Website bán gói tour du lịch Chill n Free
 
 Website đặt tour du lịch với cấu trúc `client/server`, dùng chung `package.json`, `node_modules` và file `.env` tại thư mục `source`.
 
@@ -101,11 +101,11 @@ Project dùng chung:
 Các nhóm biến chính:
 
 ```env
-APP_NAME=TourFlow
+APP_NAME=Website bán gói tour du lịch Chill n Free
 APP_ENV=development
 
 PORT=4000
-VITE_APP_NAME=TourFlow
+VITE_APP_NAME=Website bán gói tour du lịch Chill n Free
 VITE_HERO_EFFECT=leaves
 VITE_HERO_EFFECT_COUNT=18
 VITE_HERO_EFFECT_SPEED=1

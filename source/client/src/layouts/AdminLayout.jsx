@@ -167,11 +167,11 @@ function AdminLayout() {
         <div className="admin-topbar-shell">
           <div className="admin-topbar-copy">
             <div className="admin-topbar-title-row">
-              <span className="admin-page-icon" role="img" title="TourFlow Admin">
+              <span className="admin-page-icon" role="img" title="Chill n Free Admin">
                 <img alt="" src="/favicon.svg" />
               </span>
               <div className="admin-header-brand">
-                <strong>TourFlow Admin</strong>
+                <strong>Chill n Free Admin</strong>
                 <span>Điều phối vận hành</span>
               </div>
               <span className="chip">{currentAdmin?.title ?? 'Quản trị hệ thống'}</span>

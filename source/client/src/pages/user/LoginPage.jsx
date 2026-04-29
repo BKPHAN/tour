@@ -61,7 +61,7 @@ function LoginPage() {
         <h1>Chào mừng bạn quay lại để tiếp tục hành trình đang chờ phía trước.</h1>
         <p>
           Đăng nhập để xem lại booking, theo dõi thanh toán và tiếp tục khám phá những chuyến đi phù hợp với bạn trên
-          TourFlow.
+          Chill n Free.
         </p>
         <ul className="feature-list">
           <li>Tài khoản trải nghiệm: `demo`</li>

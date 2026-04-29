@@ -118,8 +118,8 @@ function Header({ themeMode, onToggleTheme }) {
             </svg>
           </span>
           <span className="brand-wordmark">
-            <strong>TourFlow</strong>
-            <span>Đặt tour truyền cảm hứng</span>
+            <strong>Chill n Free</strong>
+            <span>Website bán gói tour du lịch</span>
           </span>
         </Link>
 
