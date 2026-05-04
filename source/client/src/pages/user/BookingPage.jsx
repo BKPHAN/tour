@@ -18,6 +18,7 @@ function BookingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isApplyingPromotion, setIsApplyingPromotion] = useState(false);
   const [promotionMessage, setPromotionMessage] = useState('');
+  const [promotionMessageType, setPromotionMessageType] = useState('success');
   const [priceQuote, setPriceQuote] = useState(null);
   const [formData, setFormData] = useState({
     fullName: storedUser?.fullName || '',
@@ -78,6 +79,7 @@ function BookingPage() {
     if (['travelerCount', 'departureId', 'promotionCode'].includes(name)) {
       setPriceQuote(null);
       setPromotionMessage('');
+      setPromotionMessageType('success');
     }
   }
 
@@ -91,6 +93,7 @@ function BookingPage() {
     if (!normalizedPromotionCode) {
       setPriceQuote(null);
       setPromotionMessage('Nhập mã khuyến mãi nếu bạn có mã.');
+      setPromotionMessageType('error');
       setErrorMessage('');
       return;
     }
@@ -98,6 +101,7 @@ function BookingPage() {
     setIsApplyingPromotion(true);
     setErrorMessage('');
     setPromotionMessage('');
+    setPromotionMessageType('success');
 
     try {
       const quote = await quoteBooking({
@@ -109,6 +113,7 @@ function BookingPage() {
 
       setPriceQuote(quote);
       setPromotionMessage(quote.message);
+      setPromotionMessageType('success');
     } catch (error) {
       setPriceQuote(null);
 
@@ -118,7 +123,8 @@ function BookingPage() {
         return;
       }
 
-      setErrorMessage(error.message);
+      setPromotionMessage(error.message);
+      setPromotionMessageType('error');
     } finally {
       setIsApplyingPromotion(false);
     }
@@ -214,7 +220,9 @@ function BookingPage() {
               {isApplyingPromotion ? 'Đang kiểm tra...' : 'Áp dụng'}
             </button>
           </div>
-          {promotionMessage ? <p className="success-message">{promotionMessage}</p> : null}
+          {promotionMessage ? (
+            <p className={promotionMessageType === 'error' ? 'error-message' : 'success-message'}>{promotionMessage}</p>
+          ) : null}
           <FormField
             as="textarea"
             label="Ghi chú thêm"
