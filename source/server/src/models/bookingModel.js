@@ -25,7 +25,10 @@ function mapBookingRow(row, includeInternal = false) {
     notes: row.notes || 'Không có ghi chú thêm.',
     paymentMethod: row.payment_method || 'Chưa thanh toán',
     paymentStatus: row.payment_status,
+    discountAmount: toNumber(row.discount_amount),
+    promotionCode: row.promotion_code || null,
     status: row.status,
+    subtotalPrice: toNumber(row.subtotal_price || row.total_price),
     timeline: parseJsonValue(row.timeline_json, []),
     totalPrice: toNumber(row.total_price),
     tourId: toNumber(row.tour_id, null),
@@ -58,6 +61,9 @@ function getBookingSelectSql() {
       b.customer_email,
       b.customer_phone,
       b.travelers_count,
+      b.subtotal_price,
+      b.discount_amount,
+      b.promotion_code,
       b.total_price,
       b.status,
       b.payment_status,
@@ -147,6 +153,9 @@ export async function createBooking(payload, connection = null) {
         customer_email,
         customer_phone,
         travelers_count,
+        subtotal_price,
+        discount_amount,
+        promotion_code,
         total_price,
         status,
         payment_status,
@@ -154,7 +163,7 @@ export async function createBooking(payload, connection = null) {
         notes,
         timeline_json
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       bookingCode,
@@ -165,6 +174,9 @@ export async function createBooking(payload, connection = null) {
       payload.customerEmail,
       payload.customerPhone,
       payload.travelers,
+      payload.subtotalPrice,
+      payload.discountAmount,
+      payload.promotionCode,
       payload.totalPrice,
       payload.status,
       payload.paymentStatus,

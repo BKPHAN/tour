@@ -1,4 +1,5 @@
 import { apiRequest } from '../user/apiClient.js';
+import { getAccessToken } from '../user/authStorage.js';
 
 /**
  * Backend tour update hiện nhận payload đầy đủ của tour.
@@ -44,6 +45,37 @@ export function getAdminTourDetail(tourId) {
 export function createAdminTour(payload) {
   return apiRequest('/admin/tours', {
     body: JSON.stringify(payload),
+    method: 'POST',
+  });
+}
+
+/**
+ * Tải file Excel mẫu từ backend. Dùng fetch riêng vì response là blob, không phải JSON.
+ */
+export async function downloadTourImportTemplate() {
+  const response = await fetch(`${__API_BASE_URL__}/admin/tours/import/template`, {
+    headers: {
+      Authorization: `Bearer ${getAccessToken()}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Không thể tải file mẫu.' }));
+    throw new Error(errorData.message || 'Không thể tải file mẫu.');
+  }
+
+  return response.blob();
+}
+
+/**
+ * Upload file Excel import tour. Backend nhận field `file` trong FormData.
+ */
+export function importAdminToursFromExcel(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  return apiRequest('/admin/tours/import', {
+    body: formData,
     method: 'POST',
   });
 }

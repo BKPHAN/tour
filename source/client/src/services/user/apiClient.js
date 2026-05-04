@@ -46,7 +46,8 @@ export async function apiRequest(path, options = {}) {
   const token = getAccessToken();
   const headers = new Headers(requestOptions.headers || {});
 
-  if (!headers.has('Content-Type') && requestOptions.body) {
+  // FormData cần để browser tự gắn multipart boundary; nếu set JSON thủ công thì upload file sẽ hỏng.
+  if (!headers.has('Content-Type') && requestOptions.body && !(requestOptions.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
 

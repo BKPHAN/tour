@@ -102,6 +102,8 @@ function BookingDetailPage() {
             <li>Ngày khởi hành: {formatDate(booking.departureDate)}</li>
             <li>Số hành khách: {booking.travelers}</li>
             <li>Phương thức thanh toán: {booking.paymentMethod}</li>
+            <li>Tạm tính: {formatCurrency(booking.subtotalPrice ?? booking.totalPrice)}</li>
+            <li>Khuyến mãi: {booking.promotionCode ? `${booking.promotionCode} - ` : ''}{formatCurrency(booking.discountAmount ?? 0)}</li>
             <li>Tổng tiền: {formatCurrency(booking.totalPrice)}</li>
             <li>Ghi chú: {booking.notes}</li>
           </ul>

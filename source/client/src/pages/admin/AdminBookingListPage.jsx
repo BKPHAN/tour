@@ -299,7 +299,12 @@ function AdminBookingListPage() {
                         </div>
                       </td>
                       <td data-label="Số khách">{booking.travelers}</td>
-                      <td data-label="Tổng tiền">{formatCurrency(booking.totalPrice)}</td>
+                      <td data-label="Tổng tiền">
+                        <div className="admin-table-meta">
+                          <span>{formatCurrency(booking.totalPrice)}</span>
+                          {booking.discountAmount ? <span>Giảm {formatCurrency(booking.discountAmount)}</span> : null}
+                        </div>
+                      </td>
                       <td data-label="Trạng thái">
                         <div className="admin-status-stack">
                           <span className={getAdminBookingBadgeClass(booking.status, booking.deleteFlg)}>

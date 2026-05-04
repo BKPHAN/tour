@@ -1,6 +1,8 @@
 import { Router } from 'express';
+import multer from 'multer';
 import {
   createAdminTour,
+  downloadAdminTourImportTemplate,
   getAdminMeta,
   getAdminBooking,
   getAdminPayment,
@@ -10,6 +12,7 @@ import {
   listAdminPayments,
   listAdminTours,
   listAdminUsers,
+  importAdminTours,
   refundAdminPayment,
   removeAdminBooking,
   removeAdminTour,
@@ -23,6 +26,12 @@ import { authorizeAdmin, authorizeAdminPermission } from '../middlewares/adminMi
 import { authenticate } from '../middlewares/authMiddleware.js';
 
 const adminRouter = Router();
+const uploadExcel = multer({
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+  storage: multer.memoryStorage(),
+});
 
 /**
  * Toàn bộ route trong file này đều yêu cầu:
@@ -42,6 +51,13 @@ adminRouter.delete('/users/:userId', authorizeAdminPermission('admin.users.delet
 
 // Tour
 adminRouter.get('/tours', authorizeAdminPermission('admin.tours.read'), listAdminTours);
+adminRouter.get('/tours/import/template', authorizeAdminPermission('admin.tours.create'), downloadAdminTourImportTemplate);
+adminRouter.post(
+  '/tours/import',
+  authorizeAdminPermission('admin.tours.create'),
+  uploadExcel.single('file'),
+  importAdminTours,
+);
 adminRouter.get('/tours/:tourId', authorizeAdminPermission('admin.tours.read'), getAdminTour);
 adminRouter.post('/tours', authorizeAdminPermission('admin.tours.create'), createAdminTour);
 adminRouter.put('/tours/:tourId', authorizeAdminPermission('admin.tours.update'), updateAdminTour);

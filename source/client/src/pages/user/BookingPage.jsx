@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import FormField from '../../components/FormField.jsx';
-import { createBooking } from '../../services/user/bookingService.js';
+import { createBooking, quoteBooking } from '../../services/user/bookingService.js';
 import { getStoredUser, logout } from '../../services/user/authService.js';
 import { getTourDetail } from '../../services/user/tourService.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
@@ -16,12 +16,16 @@ function BookingPage() {
   const [tour, setTour] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isApplyingPromotion, setIsApplyingPromotion] = useState(false);
+  const [promotionMessage, setPromotionMessage] = useState('');
+  const [priceQuote, setPriceQuote] = useState(null);
   const [formData, setFormData] = useState({
     fullName: storedUser?.fullName || '',
     email: storedUser?.email || '',
     phone: storedUser?.phone || '',
     travelerCount: '2',
     departureId: '',
+    promotionCode: '',
     note: '',
   });
 
@@ -55,7 +59,13 @@ function BookingPage() {
   }, [formData.departureId, tour]);
 
   // Tổng tiền tạm tính được suy ra trực tiếp từ số khách và giá của lịch đang chọn.
-  const totalPrice = Number(formData.travelerCount || 0) * (selectedDeparture?.price ?? 0);
+  const fallbackSubtotalPrice = Number(formData.travelerCount || 0) * (selectedDeparture?.price ?? 0);
+  const priceSummary = priceQuote ?? {
+    discountAmount: 0,
+    promotionCode: null,
+    subtotalPrice: fallbackSubtotalPrice,
+    totalPrice: fallbackSubtotalPrice,
+  };
 
   /**
    * Đồng bộ giá trị input vào form state để dùng lại cho bước thanh toán.
@@ -63,6 +73,55 @@ function BookingPage() {
   function handleChange(event) {
     const { name, value } = event.target;
     setFormData((current) => ({ ...current, [name]: value }));
+
+    // Khi đổi số khách, lịch đi hoặc mã, kết quả quote cũ không còn chắc đúng nữa.
+    if (['travelerCount', 'departureId', 'promotionCode'].includes(name)) {
+      setPriceQuote(null);
+      setPromotionMessage('');
+    }
+  }
+
+  /**
+   * Gọi backend để kiểm tra mã khuyến mãi.
+   * Backend sẽ quyết định mã có hợp lệ không và trả về tổng tiền sau giảm.
+   */
+  async function handleApplyPromotion() {
+    const normalizedPromotionCode = formData.promotionCode.trim();
+
+    if (!normalizedPromotionCode) {
+      setPriceQuote(null);
+      setPromotionMessage('Nhập mã khuyến mãi nếu bạn có mã.');
+      setErrorMessage('');
+      return;
+    }
+
+    setIsApplyingPromotion(true);
+    setErrorMessage('');
+    setPromotionMessage('');
+
+    try {
+      const quote = await quoteBooking({
+        departureId: formData.departureId,
+        promotionCode: normalizedPromotionCode,
+        tourId,
+        travelers: Number(formData.travelerCount),
+      });
+
+      setPriceQuote(quote);
+      setPromotionMessage(quote.message);
+    } catch (error) {
+      setPriceQuote(null);
+
+      if (error.status === 401) {
+        logout();
+        navigate('/login', { replace: true, state: { redirectTo: `/booking/${tourId}` } });
+        return;
+      }
+
+      setErrorMessage(error.message);
+    } finally {
+      setIsApplyingPromotion(false);
+    }
   }
 
   /**
@@ -80,6 +139,7 @@ function BookingPage() {
         fullName: formData.fullName,
         note: formData.note,
         phone: formData.phone,
+        promotionCode: formData.promotionCode.trim(),
         tourId,
         travelers: Number(formData.travelerCount),
       });
@@ -142,6 +202,19 @@ function BookingPage() {
             }))}
             value={formData.departureId}
           />
+          <div className="promotion-box">
+            <FormField
+              label="Mã khuyến mãi"
+              name="promotionCode"
+              onChange={handleChange}
+              placeholder="TOURGROUP10"
+              value={formData.promotionCode}
+            />
+            <button className="button button-secondary" disabled={isApplyingPromotion} type="button" onClick={handleApplyPromotion}>
+              {isApplyingPromotion ? 'Đang kiểm tra...' : 'Áp dụng'}
+            </button>
+          </div>
+          {promotionMessage ? <p className="success-message">{promotionMessage}</p> : null}
           <FormField
             as="textarea"
             label="Ghi chú thêm"
@@ -167,7 +240,15 @@ function BookingPage() {
           </ul>
           <div className="summary-total">
             <span>Tổng tạm tính</span>
-            <strong>{formatCurrency(totalPrice)}</strong>
+            <strong>{formatCurrency(priceSummary.subtotalPrice)}</strong>
+          </div>
+          <div className="summary-total summary-total-muted">
+            <span>Khuyến mãi{priceSummary.promotionCode ? ` (${priceSummary.promotionCode})` : ''}</span>
+            <strong>-{formatCurrency(priceSummary.discountAmount)}</strong>
+          </div>
+          <div className="summary-total">
+            <span>Tổng thanh toán</span>
+            <strong>{formatCurrency(priceSummary.totalPrice)}</strong>
           </div>
           <p className="helper-text">Thông tin của bạn sẽ được dùng để giữ chỗ, xác nhận lịch khởi hành và hỗ trợ trước chuyến đi.</p>
         </aside>

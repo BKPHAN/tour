@@ -3,6 +3,7 @@ import {
   createUserBooking,
   getUserBookingDetail,
   getUserBookings,
+  quoteUserBooking,
 } from '../services/bookingService.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 
@@ -37,6 +38,18 @@ export async function createBooking(req, res, next) {
   try {
     const booking = await createUserBooking(req.user, req.body);
     return sendSuccess(res, booking, 'Tạo booking thành công.', 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * `POST /bookings/quote`
+ */
+export async function quoteBooking(req, res, next) {
+  try {
+    const quote = await quoteUserBooking(req.body);
+    return sendSuccess(res, quote, 'Tính giá booking thành công.');
   } catch (error) {
     return next(error);
   }

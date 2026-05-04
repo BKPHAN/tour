@@ -15,6 +15,16 @@ export function getBookingDetail(bookingId) {
 }
 
 /**
+ * Goi backend tinh thu tong tien booking, gom ca tien giam neu co ma khuyen mai.
+ */
+export function quoteBooking(payload) {
+  return apiRequest('/bookings/quote', {
+    body: JSON.stringify(payload),
+    method: 'POST',
+  });
+}
+
+/**
  * Tạo booking mới từ form đặt tour.
  */
 export function createBooking(payload) {

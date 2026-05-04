@@ -12,6 +12,7 @@ import {
 } from '../models/tourModel.js';
 import { withTransaction } from '../config/database.js';
 import { ApiError } from '../utils/apiError.js';
+import { calculateBookingPrice } from './promotionService.js';
 
 /**
  * Tạo 2 mốc timeline đầu tiên ngay khi booking vừa được tạo.
@@ -54,6 +55,34 @@ export async function getUserBookingDetail(userId, bookingId) {
 }
 
 /**
+ * Tính thử giá booking trước khi tạo booking thật.
+ * Frontend gọi API quote để hiển thị đúng tiền giảm, nhưng backend vẫn là nơi tính giá cuối cùng.
+ */
+export async function quoteUserBooking(payload) {
+  const { departureId, promotionCode, tourId, travelers } = payload;
+  const normalizedTourId = Number(tourId);
+  const normalizedDepartureId = String(departureId || '').trim();
+  const travelerCount = Number(travelers);
+
+  if (!normalizedTourId || !normalizedDepartureId || !travelerCount || travelerCount < 1) {
+    throw new ApiError(400, 'Vui lòng chọn tour, lịch khởi hành và số lượng hành khách hợp lệ.');
+  }
+
+  const tour = await findTourById(normalizedTourId);
+  const departure = await findDepartureById(normalizedTourId, normalizedDepartureId);
+
+  if (!tour || !departure) {
+    throw new ApiError(404, 'Tour hoặc lịch khởi hành không tồn tại.');
+  }
+
+  return calculateBookingPrice({
+    promotionCode,
+    travelerCount,
+    unitPrice: departure.price,
+  });
+}
+
+/**
  * Luồng tạo booking:
  * 1. validate input
  * 2. mở transaction
@@ -62,7 +91,7 @@ export async function getUserBookingDetail(userId, bookingId) {
  * 5. tạo booking
  */
 export async function createUserBooking(user, payload) {
-  const { departureId, email, fullName, note, paymentMethod, phone, tourId, travelers } = payload;
+  const { departureId, email, fullName, note, paymentMethod, phone, promotionCode, tourId, travelers } = payload;
   const normalizedTourId = Number(tourId);
   const normalizedDepartureId = String(departureId || '').trim();
   const travelerCount = Number(travelers);
@@ -98,18 +127,29 @@ export async function createUserBooking(user, payload) {
       throw new ApiError(400, 'Số chỗ còn lại vừa thay đổi. Vui lòng thử lại.');
     }
 
+    // Giá tiền được tính trong transaction để booking lưu đúng giá tại thời điểm giữ chỗ.
+    const priceQuote = await calculateBookingPrice({
+      connection,
+      promotionCode,
+      travelerCount,
+      unitPrice: departure.price,
+    });
+
     return createBooking(
       {
         customerEmail: (email || user.email).trim().toLowerCase(),
         customerName: (fullName || user.fullName).trim(),
         customerPhone: (phone || user.phone).trim(),
         departureDbId: departure._departureDbId,
+        discountAmount: priceQuote.discountAmount,
         notes: (note || '').trim() || 'Không có ghi chú thêm.',
         paymentMethod: paymentMethod || 'Chưa thanh toán',
         paymentStatus: 'waiting',
+        promotionCode: priceQuote.promotionCode,
         status: 'pending',
+        subtotalPrice: priceQuote.subtotalPrice,
         timeline: createInitialTimeline(travelerCount),
-        totalPrice: departure.price * travelerCount,
+        totalPrice: priceQuote.totalPrice,
         tourId: normalizedTourId,
         travelers: travelerCount,
         userId: user.id,

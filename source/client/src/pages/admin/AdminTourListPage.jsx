@@ -1,9 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import SectionHeading from '../../components/SectionHeading.jsx';
 import { ADMIN_PERMISSION_KEYS, getStoredAdminUser, hasAdminPermission } from '../../services/admin/adminAuthService.js';
 import { getAdminMeta } from '../../services/admin/adminMetaService.js';
-import { getAdminTours, toggleAdminTourDeleteFlag, updateAdminTourStatus } from '../../services/admin/adminTourService.js';
+import {
+  downloadTourImportTemplate,
+  getAdminTours,
+  importAdminToursFromExcel,
+  toggleAdminTourDeleteFlag,
+  updateAdminTourStatus,
+} from '../../services/admin/adminTourService.js';
 import { formatCurrency } from '../../utils/formatters.js';
 import { getAdminTourBadgeClass, getAdminTourStatusLabel } from '../../utils/adminFormatters.js';
 
@@ -74,6 +80,7 @@ function buildTourListSummary(filteredTours) {
  */
 function AdminTourListPage() {
   const currentAdmin = getStoredAdminUser();
+  const canCreateTours = hasAdminPermission(ADMIN_PERMISSION_KEYS.TOURS_CREATE, currentAdmin);
   const canDeleteTours = hasAdminPermission(ADMIN_PERMISSION_KEYS.TOURS_DELETE, currentAdmin);
   const [tourList, setTourList] = useState([]);
   const [adminMeta, setAdminMeta] = useState(EMPTY_ADMIN_META);
@@ -81,11 +88,27 @@ function AdminTourListPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [importErrorMessage, setImportErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const importFileInputRef = useRef(null);
 
   useEffect(() => {
     loadTours();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('modal-scroll-locked', isImportModalOpen);
+    document.body.classList.toggle('modal-scroll-locked', isImportModalOpen);
+
+    return () => {
+      document.documentElement.classList.remove('modal-scroll-locked');
+      document.body.classList.remove('modal-scroll-locked');
+    };
+  }, [isImportModalOpen]);
 
   /**
    * Tải danh sách tour để KPI và bảng luôn dùng cùng một nguồn dữ liệu.
@@ -101,6 +124,7 @@ function AdminTourListPage() {
         tourStatusOptions: meta.tourStatusOptions ?? [],
       });
       setErrorMessage('');
+      setSuccessMessage('');
     } catch (error) {
       setErrorMessage(error.message);
     } finally {
@@ -118,6 +142,7 @@ function AdminTourListPage() {
       const updatedTour = await updateAdminTourStatus(tour.id, quickAction.nextStatus);
       setTourList((currentTours) => currentTours.map((item) => (item.id === tour.id ? updatedTour : item)));
       setErrorMessage('');
+      setSuccessMessage('');
     } catch (error) {
       setErrorMessage(error.message);
     }
@@ -139,8 +164,73 @@ function AdminTourListPage() {
       const updatedTour = await toggleAdminTourDeleteFlag(tour.id);
       setTourList((currentTours) => currentTours.map((item) => (item.id === tour.id ? updatedTour : item)));
       setErrorMessage('');
+      setSuccessMessage('');
     } catch (error) {
       setErrorMessage(error.message);
+    }
+  }
+
+  /**
+   * Tải file Excel mẫu và tạo link download tạm thời trên trình duyệt.
+   */
+  async function handleDownloadTemplate() {
+    try {
+      const blob = await downloadTourImportTemplate();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = 'mau_import_tour.xlsx';
+      link.click();
+      window.URL.revokeObjectURL(url);
+      setErrorMessage('');
+    } catch (error) {
+      setErrorMessage(error.message);
+    }
+  }
+
+  /**
+   * Trước khi gửi file lên backend, hỏi xác nhận để tránh admin import nhầm file.
+   */
+  async function handleImportExcel() {
+    if (!importFile) {
+      setImportErrorMessage('Vui lòng chọn file Excel trước khi import.');
+      return;
+    }
+
+    const shouldImport = window.confirm(`Bạn có chắc muốn import file "${importFile.name}" không?`);
+
+    if (!shouldImport) {
+      return;
+    }
+
+    setIsImporting(true);
+    setImportErrorMessage('');
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      const result = await importAdminToursFromExcel(importFile);
+      setImportFile(null);
+      setIsImportModalOpen(false);
+      await loadTours();
+      setSuccessMessage(`Import thành công ${result.importedCount} tour.`);
+    } catch (error) {
+      setImportErrorMessage(error.message);
+    } finally {
+      setIsImporting(false);
+    }
+  }
+
+  /**
+   * Xóa file đã chọn khi admin upload nhầm, đồng thời reset input để chọn lại file cũ vẫn kích hoạt onChange.
+   */
+  function handleClearImportFile() {
+    setImportFile(null);
+    setImportErrorMessage('');
+
+    if (importFileInputRef.current) {
+      importFileInputRef.current.value = '';
     }
   }
 
@@ -166,6 +256,11 @@ function AdminTourListPage() {
             <button className="button button-secondary" type="button" onClick={loadTours}>
               Tải lại dữ liệu
             </button>
+            {canCreateTours ? (
+              <button className="button button-secondary" type="button" onClick={() => setIsImportModalOpen(true)}>
+                Import Excel
+              </button>
+            ) : null}
             <Link className="button button-primary" to="/admin/tours/new">
               Thêm tour mới
             </Link>
@@ -244,6 +339,74 @@ function AdminTourListPage() {
       </section>
 
       {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
+      {successMessage ? <p className="success-message">{successMessage}</p> : null}
+
+      {isImportModalOpen ? (
+        <div className="admin-modal-overlay" role="presentation">
+          <section className="admin-modal admin-import-modal" aria-modal="true" role="dialog">
+            <div className="admin-import-modal-head">
+              <div>
+                <p className="section-eyebrow">Import Excel</p>
+                <h2>Import nhiều gói tour</h2>
+                <p>Tải file mẫu, nhập dữ liệu tour rồi upload lại để import vào hệ thống.</p>
+              </div>
+            </div>
+
+            <button className="button button-secondary admin-import-template-button" type="button" onClick={handleDownloadTemplate}>
+              Tải file mẫu
+            </button>
+
+            <label className="admin-import-upload-panel" htmlFor="tour-import-excel-file">
+              <div className="admin-import-upload-icon">XLSX</div>
+              <div>
+                <h3>Upload file Excel</h3>
+                <p>File cần có 3 sheet: Tours, Departures và Itineraries.</p>
+                <input
+                  accept=".xlsx,.xls"
+                  className="admin-import-file-input"
+                  id="tour-import-excel-file"
+                  ref={importFileInputRef}
+                  type="file"
+                  onChange={(event) => {
+                    setImportFile(event.target.files?.[0] ?? null);
+                    setImportErrorMessage('');
+                  }}
+                />
+              </div>
+            </label>
+
+            <div className={importFile ? 'admin-import-file-card is-ready' : 'admin-import-file-card'}>
+              <div>
+                <span>{importFile ? 'File đã chọn' : 'Chưa chọn file'}</span>
+                <strong>{importFile?.name || 'Chọn file .xlsx hoặc .xls để import'}</strong>
+              </div>
+              {importFile ? (
+                <button
+                  aria-label="Xóa file đã chọn"
+                  className="admin-import-clear-file"
+                  title="Xóa file đã chọn"
+                  type="button"
+                  onClick={handleClearImportFile}
+                >
+                  ×
+                </button>
+              ) : null}
+            </div>
+
+            {importErrorMessage ? <p className="error-message">{importErrorMessage}</p> : null}
+
+            <div className="admin-form-actions">
+              <button className="button button-primary" disabled={isImporting} type="button" onClick={handleImportExcel}>
+                {isImporting ? 'Đang import...' : 'Import'}
+              </button>
+              <button className="button button-secondary" type="button" onClick={() => setIsImportModalOpen(false)}>
+                Hủy
+              </button>
+            </div>
+
+          </section>
+        </div>
+      ) : null}
 
       <section className="admin-report-card">
         <div className="admin-table-caption">

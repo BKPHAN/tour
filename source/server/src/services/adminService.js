@@ -1,4 +1,5 @@
 import { withTransaction } from '../config/database.js';
+import xlsx from 'xlsx';
 import {
   createAdminTourRecord,
   findAdminBookingByCode,
@@ -36,6 +37,30 @@ const BOOKING_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'];
 const PAYMENT_STATUSES = ['waiting', 'paid', 'refunded', 'failed'];
 const DEPARTURE_STATUSES = ['open', 'nearly_full', 'closed', 'completed'];
 const PAYMENT_METHODS = ['card', 'bank_transfer', 'ewallet', 'cash'];
+const TOUR_IMPORT_SHEET_NAME = 'Tours';
+const TOUR_IMPORT_DEPARTURES_SHEET_NAME = 'Departures';
+const TOUR_IMPORT_ITINERARY_SHEET_NAME = 'Itineraries';
+const TOUR_IMPORT_COLUMNS = {
+  category: ['Nhóm tour', 'Loại tour', 'Danh mục tour', 'category'],
+  departureCode: ['Mã lịch khởi hành', 'Mã khởi hành', 'Mã lịch', 'departureCode'],
+  departureDate: ['Ngày khởi hành', 'Ngày đi', 'departureDate'],
+  departurePoint: ['Điểm khởi hành', 'Điểm xuất phát', 'Nơi khởi hành', 'departurePoint'],
+  description: ['Mô tả', 'Mô tả tour', 'Nội dung mô tả', 'description'],
+  durationDays: ['Số ngày', 'Số ngày tour', 'Thời lượng ngày', 'durationDays'],
+  highlights: ['Điểm nổi bật', 'Điểm nhấn', 'highlights'],
+  imageUrl: ['Ảnh tour', 'Hình ảnh', 'Link ảnh', 'imageUrl'],
+  inclusions: ['Dịch vụ bao gồm', 'Bao gồm', 'inclusions'],
+  itineraryDayNumber: ['Ngày thứ', 'Ngày', 'Thứ tự ngày', 'dayNumber'],
+  itineraryTitle: ['Tiêu đề', 'Tiêu đề lịch trình', 'Tên lịch trình', 'title'],
+  labelText: ['Nhãn hiển thị', 'Tên lịch khởi hành', 'labelText'],
+  location: ['Địa điểm', 'Điểm đến', 'Địa điểm tour', 'location'],
+  price: ['Giá', 'Giá tour', 'Đơn giá', 'price'],
+  seatsRemaining: ['Số chỗ còn lại', 'Chỗ còn lại', 'seatsRemaining'],
+  seatsTotal: ['Tổng số chỗ', 'Số chỗ', 'Số lượng chỗ', 'seatsTotal'],
+  status: ['Trạng thái', 'Tình trạng', 'status'],
+  title: ['Tên tour', 'Tên gói tour', 'Tên chương trình', 'title'],
+  tourCode: ['Mã tour', 'Mã gói tour', 'Mã chương trình', 'tourCode'],
+};
 
 const ROLE_LABELS = {
   admin: 'Quản trị viên',
@@ -243,6 +268,218 @@ function normalizeDepartureList(tourId, departures, fallbackPrice) {
       };
     })
     .filter((departure) => departure.departureDate);
+}
+
+/**
+ * Đọc một sheet Excel thành mảng object. `defval: ''` giúp ô trống vẫn có key,
+ * nhờ vậy thông báo lỗi import sẽ dễ hiểu hơn cho admin.
+ */
+function readExcelSheet(workbook, sheetName) {
+  const sheet = workbook.Sheets[sheetName];
+
+  if (!sheet) {
+    return [];
+  }
+
+  return xlsx.utils.sheet_to_json(sheet, {
+    defval: '',
+    raw: true,
+  });
+}
+
+function normalizeExcelKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function getExcelValue(row, fieldNames) {
+  const candidates = Array.isArray(fieldNames) ? fieldNames : [fieldNames];
+  const normalizedRow = Object.fromEntries(
+    Object.entries(row || {}).map(([key, value]) => [normalizeExcelKey(key), value]),
+  );
+
+  for (const fieldName of candidates) {
+    if (row?.[fieldName] !== undefined) {
+      return row[fieldName];
+    }
+
+    const normalizedFieldName = normalizeExcelKey(fieldName);
+
+    if (normalizedRow[normalizedFieldName] !== undefined) {
+      return normalizedRow[normalizedFieldName];
+    }
+  }
+
+  return '';
+}
+
+function normalizeImportText(value) {
+  return String(value ?? '').trim();
+}
+
+function normalizeImportNumber(value, fallback = 0) {
+  const normalized = Number(value);
+  return Number.isFinite(normalized) ? normalized : fallback;
+}
+
+function normalizeImportStatus(value, allowedStatuses, fallback) {
+  const status = normalizeImportText(value) || fallback;
+  return allowedStatuses.includes(status) ? status : fallback;
+}
+
+function splitImportList(value) {
+  return normalizeImportText(value)
+    .split(';')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Excel có thể trả ngày dạng Date, serial number hoặc chuỗi yyyy-mm-dd.
+ * Hàm này gom các kiểu đó về format DATE mà MySQL đang dùng.
+ */
+function normalizeImportDate(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value === 'number') {
+    const parsedDate = xlsx.SSF.parse_date_code(value);
+
+    if (parsedDate) {
+      const month = String(parsedDate.m).padStart(2, '0');
+      const day = String(parsedDate.d).padStart(2, '0');
+      return `${parsedDate.y}-${month}-${day}`;
+    }
+  }
+
+  const textValue = normalizeImportText(value);
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(textValue)) {
+    return textValue;
+  }
+
+  const date = new Date(textValue);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10);
+}
+
+function requireImportValue(value, fieldName, rowIndex, sheetName) {
+  const normalized = normalizeImportText(value);
+
+  if (!normalized) {
+    throw new ApiError(400, `Sheet ${sheetName}, dòng ${rowIndex}: thiếu ${fieldName}.`);
+  }
+
+  return normalized;
+}
+
+/**
+ * Chuyển workbook Excel sang danh sách payload tour giống form admin.
+ * Mẫu dùng tourCode để liên kết 3 sheet: Tours, Departures và Itineraries.
+ */
+function parseTourImportWorkbook(fileBuffer) {
+  const workbook = xlsx.read(fileBuffer, {
+    cellDates: true,
+    type: 'buffer',
+  });
+  const tourRows = readExcelSheet(workbook, TOUR_IMPORT_SHEET_NAME);
+  const departureRows = readExcelSheet(workbook, TOUR_IMPORT_DEPARTURES_SHEET_NAME);
+  const itineraryRows = readExcelSheet(workbook, TOUR_IMPORT_ITINERARY_SHEET_NAME);
+
+  if (!tourRows.length) {
+    throw new ApiError(400, `File Excel cần có sheet ${TOUR_IMPORT_SHEET_NAME} và ít nhất một tour.`);
+  }
+
+  return tourRows.map((row, index) => {
+    const rowNumber = index + 2;
+    const tourCode = requireImportValue(getExcelValue(row, TOUR_IMPORT_COLUMNS.tourCode), 'Mã tour', rowNumber, TOUR_IMPORT_SHEET_NAME);
+    const title = requireImportValue(getExcelValue(row, TOUR_IMPORT_COLUMNS.title), 'Tên tour', rowNumber, TOUR_IMPORT_SHEET_NAME);
+    const location = requireImportValue(getExcelValue(row, TOUR_IMPORT_COLUMNS.location), 'Địa điểm', rowNumber, TOUR_IMPORT_SHEET_NAME);
+    const departurePoint = requireImportValue(
+      getExcelValue(row, TOUR_IMPORT_COLUMNS.departurePoint),
+      'Điểm khởi hành',
+      rowNumber,
+      TOUR_IMPORT_SHEET_NAME,
+    );
+    const category = requireImportValue(getExcelValue(row, TOUR_IMPORT_COLUMNS.category), 'Nhóm tour', rowNumber, TOUR_IMPORT_SHEET_NAME);
+    const description = requireImportValue(
+      getExcelValue(row, TOUR_IMPORT_COLUMNS.description),
+      'Mô tả',
+      rowNumber,
+      TOUR_IMPORT_SHEET_NAME,
+    );
+    const durationDays = normalizeImportNumber(getExcelValue(row, TOUR_IMPORT_COLUMNS.durationDays));
+    const price = normalizeImportNumber(getExcelValue(row, TOUR_IMPORT_COLUMNS.price));
+
+    if (!Number.isInteger(durationDays) || durationDays < 1) {
+      throw new ApiError(400, `Sheet ${TOUR_IMPORT_SHEET_NAME}, dòng ${rowNumber}: Số ngày phải là số nguyên lớn hơn 0.`);
+    }
+
+    if (price <= 0) {
+      throw new ApiError(400, `Sheet ${TOUR_IMPORT_SHEET_NAME}, dòng ${rowNumber}: Giá phải lớn hơn 0.`);
+    }
+
+    const tourDepartures = departureRows
+      .filter((departureRow) => normalizeImportText(getExcelValue(departureRow, TOUR_IMPORT_COLUMNS.tourCode)) === tourCode)
+      .map((departureRow, departureIndex) => {
+        const departureRowNumber = departureIndex + 2;
+        const departureDate = normalizeImportDate(getExcelValue(departureRow, TOUR_IMPORT_COLUMNS.departureDate));
+        const seatsTotal = normalizeImportNumber(getExcelValue(departureRow, TOUR_IMPORT_COLUMNS.seatsTotal));
+        const seatsRemaining = normalizeImportNumber(getExcelValue(departureRow, TOUR_IMPORT_COLUMNS.seatsRemaining), seatsTotal);
+
+        if (!departureDate) {
+          throw new ApiError(400, `Sheet ${TOUR_IMPORT_DEPARTURES_SHEET_NAME}, dòng ${departureRowNumber}: Ngày khởi hành không hợp lệ.`);
+        }
+
+        if (seatsTotal < 1) {
+          throw new ApiError(400, `Sheet ${TOUR_IMPORT_DEPARTURES_SHEET_NAME}, dòng ${departureRowNumber}: Tổng số chỗ phải lớn hơn 0.`);
+        }
+
+        return {
+          date: departureDate,
+          departureCode: normalizeImportText(getExcelValue(departureRow, TOUR_IMPORT_COLUMNS.departureCode)),
+          labelText: normalizeImportText(getExcelValue(departureRow, TOUR_IMPORT_COLUMNS.labelText)),
+          price: normalizeImportNumber(getExcelValue(departureRow, TOUR_IMPORT_COLUMNS.price), price),
+          seatsRemaining,
+          seatsTotal,
+          status: normalizeImportStatus(getExcelValue(departureRow, TOUR_IMPORT_COLUMNS.status), DEPARTURE_STATUSES, 'open'),
+        };
+      });
+
+    if (!tourDepartures.length) {
+      throw new ApiError(400, `Tour ${tourCode} cần ít nhất một dòng trong sheet ${TOUR_IMPORT_DEPARTURES_SHEET_NAME}.`);
+    }
+
+    const tourItinerary = itineraryRows
+      .filter((itineraryRow) => normalizeImportText(getExcelValue(itineraryRow, TOUR_IMPORT_COLUMNS.tourCode)) === tourCode)
+      .map((itineraryRow, itineraryIndex) => ({
+        dayNumber: normalizeImportNumber(getExcelValue(itineraryRow, TOUR_IMPORT_COLUMNS.itineraryDayNumber), itineraryIndex + 1),
+        description: normalizeImportText(getExcelValue(itineraryRow, TOUR_IMPORT_COLUMNS.description)),
+        title: normalizeImportText(getExcelValue(itineraryRow, TOUR_IMPORT_COLUMNS.itineraryTitle)),
+      }));
+
+    return {
+      category,
+      departurePoint,
+      departures: tourDepartures,
+      description,
+      durationDays,
+      highlights: splitImportList(getExcelValue(row, TOUR_IMPORT_COLUMNS.highlights)),
+      imageUrl: normalizeImportText(getExcelValue(row, TOUR_IMPORT_COLUMNS.imageUrl)),
+      inclusions: splitImportList(getExcelValue(row, TOUR_IMPORT_COLUMNS.inclusions)),
+      itinerary: tourItinerary,
+      location,
+      price,
+      status: normalizeImportStatus(getExcelValue(row, TOUR_IMPORT_COLUMNS.status), TOUR_STATUSES, 'draft'),
+      title,
+      tourCode,
+    };
+  });
 }
 
 /**
@@ -529,6 +766,109 @@ export async function deleteTourByAdmin(tourId) {
   }
 
   return softDeleteAdminTourById(tourId);
+}
+
+/**
+ * Tạo file Excel mẫu ngay trên backend để frontend luôn tải được đúng format mới nhất.
+ */
+export function createTourImportTemplateBuffer() {
+  const workbook = xlsx.utils.book_new();
+  const tourSheet = xlsx.utils.aoa_to_sheet([
+    [
+      'Mã tour',
+      'Tên tour',
+      'Địa điểm',
+      'Điểm khởi hành',
+      'Nhóm tour',
+      'Số ngày',
+      'Giá',
+      'Ảnh tour',
+      'Mô tả',
+      'Điểm nổi bật',
+      'Dịch vụ bao gồm',
+      'Trạng thái',
+    ],
+    [
+      'TOUR001',
+      'Khám phá Đà Lạt 3 ngày',
+      'Đà Lạt',
+      'TP. Hồ Chí Minh',
+      'Nghỉ dưỡng',
+      3,
+      3200000,
+      'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+      'Tour nghỉ dưỡng, tham quan các điểm nổi bật tại Đà Lạt.',
+      'Thung lũng Tình Yêu; Hồ Tuyền Lâm; Chợ đêm Đà Lạt',
+      'Xe đưa đón; Khách sạn; Vé tham quan; Hướng dẫn viên',
+      'published',
+    ],
+  ]);
+  const departureSheet = xlsx.utils.aoa_to_sheet([
+    ['Mã tour', 'Ngày khởi hành', 'Mã lịch khởi hành', 'Tổng số chỗ', 'Số chỗ còn lại', 'Giá', 'Nhãn hiển thị', 'Trạng thái'],
+    ['TOUR001', '2026-06-15', 'DL-20260615', 30, 30, 3200000, 'Khởi hành giữa tháng 6', 'open'],
+    ['TOUR001', '2026-07-01', 'DL-20260701', 25, 25, 3400000, 'Lịch hè tháng 7', 'open'],
+  ]);
+  const itinerarySheet = xlsx.utils.aoa_to_sheet([
+    ['Mã tour', 'Ngày thứ', 'Tiêu đề', 'Mô tả'],
+    ['TOUR001', 1, 'Di chuyển đến Đà Lạt', 'Đón khách, tham quan quảng trường Lâm Viên và nhận phòng khách sạn.'],
+    ['TOUR001', 2, 'Khám phá thành phố', 'Tham quan Hồ Tuyền Lâm, Thiền viện Trúc Lâm và chợ đêm Đà Lạt.'],
+    ['TOUR001', 3, 'Mua sắm và trở về', 'Tự do mua đặc sản, trả phòng và khởi hành về điểm đón ban đầu.'],
+  ]);
+  const noteSheet = xlsx.utils.aoa_to_sheet([
+    ['Cột', 'Ý nghĩa'],
+    ['Mã tour', 'Mã tạm trong file Excel, dùng để liên kết tour với Departures và Itineraries.'],
+    ['Trạng thái', 'Tour: draft/published/archived. Departure: open/nearly_full/closed/completed.'],
+    ['Điểm nổi bật, Dịch vụ bao gồm', 'Nhập nhiều ý bằng dấu chấm phẩy ;'],
+    ['Ngày khởi hành', 'Định dạng yyyy-mm-dd, ví dụ 2026-06-15.'],
+  ]);
+
+  tourSheet['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 18 }, { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 14 }, { wch: 70 }, { wch: 55 }, { wch: 45 }, { wch: 45 }, { wch: 14 }];
+  departureSheet['!cols'] = [{ wch: 14 }, { wch: 16 }, { wch: 18 }, { wch: 12 }, { wch: 16 }, { wch: 14 }, { wch: 32 }, { wch: 14 }];
+  itinerarySheet['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 30 }, { wch: 70 }];
+  noteSheet['!cols'] = [{ wch: 24 }, { wch: 90 }];
+
+  xlsx.utils.book_append_sheet(workbook, tourSheet, TOUR_IMPORT_SHEET_NAME);
+  xlsx.utils.book_append_sheet(workbook, departureSheet, TOUR_IMPORT_DEPARTURES_SHEET_NAME);
+  xlsx.utils.book_append_sheet(workbook, itinerarySheet, TOUR_IMPORT_ITINERARY_SHEET_NAME);
+  xlsx.utils.book_append_sheet(workbook, noteSheet, 'Notes');
+
+  return xlsx.write(workbook, {
+    bookType: 'xlsx',
+    type: 'buffer',
+  });
+}
+
+/**
+ * Import nhiều tour từ Excel. Toàn bộ file được xử lý trong một transaction:
+ * nếu một dòng lỗi thì rollback, tránh tình trạng import nửa chừng.
+ */
+export async function importToursByAdmin(fileBuffer) {
+  const tourPayloads = parseTourImportWorkbook(fileBuffer);
+
+  try {
+    return await withTransaction(async (connection) => {
+      const importedTours = [];
+
+      for (const tourPayload of tourPayloads) {
+        const normalizedTour = normalizeTourPayload(tourPayload);
+        const tourId = await createAdminTourRecord(normalizedTour, connection);
+        const departureList = normalizeDepartureList(tourId, tourPayload.departures, normalizedTour.price);
+        const itineraryList = normalizeItineraryList(tourPayload.itinerary);
+
+        await replaceAdminTourItineraries(tourId, itineraryList, connection);
+        await replaceAdminTourDepartures(tourId, departureList, connection);
+
+        importedTours.push(await findAdminTourById(tourId, connection));
+      }
+
+      return {
+        importedCount: importedTours.length,
+        tours: importedTours,
+      };
+    });
+  } catch (error) {
+    mapDuplicateWriteError(error);
+  }
 }
 
 /**

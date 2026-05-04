@@ -1,5 +1,6 @@
 import {
   createTourByAdmin as createTourByAdminService,
+  createTourImportTemplateBuffer,
   deleteAdminUser as deleteAdminUserService,
   deleteBookingByAdmin as deleteBookingByAdminService,
   deleteTourByAdmin as deleteTourByAdminService,
@@ -13,11 +14,13 @@ import {
   getAdminTourList as getAdminTourListService,
   getAdminUserDetail as getAdminUserDetailService,
   getAdminUserList as getAdminUserListService,
+  importToursByAdmin as importToursByAdminService,
   refundPaymentByAdmin as refundPaymentByAdminService,
   updateBookingStatusByAdmin as updateBookingStatusByAdminService,
   updatePaymentStatusByAdmin as updatePaymentStatusByAdminService,
   updateTourByAdmin as updateTourByAdminService,
 } from '../services/adminService.js';
+import { ApiError } from '../utils/apiError.js';
 import { sendSuccess } from '../utils/apiResponse.js';
 
 /**
@@ -120,6 +123,37 @@ export async function createAdminTour(req, res, next) {
   try {
     const tour = await createTourByAdminService(req.body);
     return sendSuccess(res, tour, 'Tạo tour thành công.', 201);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * Trả file Excel mẫu để admin tải về trước khi import nhiều tour.
+ */
+export function downloadAdminTourImportTemplate(req, res, next) {
+  try {
+    const fileBuffer = createTourImportTemplateBuffer();
+
+    res.setHeader('Content-Disposition', 'attachment; filename="mau_import_tour.xlsx"');
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    return res.status(200).send(fileBuffer);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
+ * Nhận file Excel từ popup import và tạo nhiều tour trong một lần.
+ */
+export async function importAdminTours(req, res, next) {
+  try {
+    if (!req.file?.buffer) {
+      return next(new ApiError(400, 'Vui lòng chọn file Excel để import.'));
+    }
+
+    const result = await importToursByAdminService(req.file.buffer);
+    return sendSuccess(res, result, `Import thành công ${result.importedCount} tour.`, 201);
   } catch (error) {
     return next(error);
   }

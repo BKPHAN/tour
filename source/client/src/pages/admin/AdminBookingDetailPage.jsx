@@ -186,9 +186,19 @@ function AdminBookingDetailPage() {
               <span>Tổng tiền</span>
               <strong>{formatCurrency(bookingDetail.totalPrice)}</strong>
             </article>
+            <article className="admin-mini-card">
+              <span>Khuyến mãi</span>
+              <strong>{bookingDetail.promotionCode || 'Không áp dụng'}</strong>
+            </article>
           </div>
 
           <div className="admin-list-stack">
+            <article className="admin-mini-card">
+              <span>Tạm tính / giảm giá</span>
+              <strong>
+                {formatCurrency(bookingDetail.subtotalPrice ?? bookingDetail.totalPrice)} / -{formatCurrency(bookingDetail.discountAmount ?? 0)}
+              </strong>
+            </article>
             <article className="admin-mini-card">
               <span>Khách hàng</span>
               <strong>{bookingDetail.customerEmail}</strong>

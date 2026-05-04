@@ -63,6 +63,9 @@ function PaymentPage() {
       departureDate: booking?.departureDate || '',
       paymentStatus: booking?.paymentStatus || 'waiting',
       status: booking?.status || 'pending',
+      discountAmount: booking?.discountAmount || 0,
+      promotionCode: booking?.promotionCode || null,
+      subtotalPrice: booking?.subtotalPrice || booking?.totalPrice || 0,
       totalPrice: booking?.totalPrice || 0,
       travelers: booking?.travelers || 0,
     };
@@ -162,6 +165,14 @@ function PaymentPage() {
             <li>Ngày khởi hành: {draftSummary.departureDate ? formatDate(draftSummary.departureDate) : 'Đang cập nhật'}</li>
             <li>Phương thức gần nhất: {payment?.method || booking.paymentMethod}</li>
           </ul>
+          <div className="summary-total summary-total-muted">
+            <span>Tạm tính</span>
+            <strong>{formatCurrency(draftSummary.subtotalPrice)}</strong>
+          </div>
+          <div className="summary-total summary-total-muted">
+            <span>Khuyến mãi{draftSummary.promotionCode ? ` (${draftSummary.promotionCode})` : ''}</span>
+            <strong>-{formatCurrency(draftSummary.discountAmount)}</strong>
+          </div>
           <div className="summary-total">
             <span>Tổng thanh toán</span>
             <strong>{formatCurrency(draftSummary.totalPrice)}</strong>

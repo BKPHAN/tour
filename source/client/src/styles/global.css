@@ -91,6 +91,12 @@ body {
   transition: background 0.35s ease, color 0.35s ease;
 }
 
+html.modal-scroll-locked,
+body.modal-scroll-locked {
+  height: 100%;
+  overflow: hidden;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -453,6 +459,18 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
+}
+
+.summary-total-muted {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.promotion-box {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: end;
 }
 
 .tour-card-topline span,
@@ -1003,6 +1021,10 @@ button {
 
   .pagination-bar {
     justify-content: center;
+  }
+
+  .promotion-box {
+    grid-template-columns: 1fr;
   }
 }
 
