@@ -42,7 +42,23 @@ export function getPaymentLabel(status) {
     paid: 'Đã thanh toán',
     waiting: 'Chờ thanh toán',
     refunded: 'Đã hoàn tiền',
+    failed: 'Thanh toán thất bại',
   };
 
   return labels[status] ?? status;
+}
+
+export function getPayosStatusLabel(status) {
+  const normalizedStatus = String(status || '').trim().toUpperCase();
+  const labels = {
+    CANCELLED: 'Đã hủy thanh toán',
+    EXPIRED: 'Mã QR đã hết hạn',
+    FAILED: 'Thanh toán thất bại',
+    PAID: 'Đã thanh toán',
+    PENDING: 'Chờ thanh toán',
+    PROCESSING: 'Đang xử lý',
+    UNDERPAID: 'Thanh toán thiếu',
+  };
+
+  return labels[normalizedStatus] ?? status;
 }
