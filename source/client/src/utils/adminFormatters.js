@@ -37,6 +37,7 @@ const paymentStatusLabels = {
 };
 
 const paymentMethodLabels = {
+  payos: 'PayOS',
   card: 'Thẻ nội địa / quốc tế',
   bank_transfer: 'Chuyển khoản',
   ewallet: 'Ví điện tử',

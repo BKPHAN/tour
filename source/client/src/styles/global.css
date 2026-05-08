@@ -656,6 +656,53 @@ button {
   color: #1a6759;
 }
 
+.payos-status-panel {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid rgba(16, 35, 60, 0.08);
+  border-radius: 18px;
+  background: var(--surface-soft);
+}
+
+.payos-status-panel span,
+.payos-status-panel p {
+  color: var(--ink-soft);
+}
+
+.payos-status-panel strong {
+  color: var(--ink-strong);
+}
+
+.payos-status-panel p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.payos-qr-panel {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(16, 35, 60, 0.08);
+  border-radius: 18px;
+  background: var(--surface-strong);
+  text-align: center;
+}
+
+.payos-qr-panel img {
+  width: min(100%, 280px);
+  aspect-ratio: 1;
+  padding: 12px;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.payos-qr-panel p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
 .error-message {
   margin: 0;
   padding: 14px 16px;

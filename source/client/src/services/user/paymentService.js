@@ -16,3 +16,9 @@ export function payBooking(payload) {
     method: 'POST',
   });
 }
+
+export function syncPaymentStatus(bookingId) {
+  return apiRequest(`/payments/${bookingId}/sync`, {
+    method: 'POST',
+  });
+}

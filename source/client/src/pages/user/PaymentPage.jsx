@@ -1,46 +1,53 @@
+import QRCode from 'qrcode';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import BookingStatusPill from '../../components/BookingStatusPill.jsx';
-import FormField from '../../components/FormField.jsx';
 import { logout } from '../../services/user/authService.js';
-import { getPaymentDetail, payBooking } from '../../services/user/paymentService.js';
-import { formatCurrency, formatDate } from '../../utils/formatters.js';
+import { getPaymentDetail, payBooking, syncPaymentStatus } from '../../services/user/paymentService.js';
+import { formatCurrency, formatDate, getPayosStatusLabel } from '../../utils/formatters.js';
 
-/**
- * Trang thanh toán, lấy dữ liệu booking thật từ backend và xác nhận thanh toán qua API.
- */
+function isImageSource(value) {
+  return /^data:image\//.test(value) || /^https?:\/\//.test(value);
+}
+
 function PaymentPage() {
   const { bookingId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const payosResult = searchParams.get('payos');
   const [booking, setBooking] = useState(null);
   const [tour, setTour] = useState(null);
   const [payment, setPayment] = useState(null);
+  const [qrImageUrl, setQrImageUrl] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentData, setPaymentData] = useState({
-    cardName: '',
-    cardNumber: '',
-    method: 'Thẻ nội địa',
-  });
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
-    /**
-     * Nạp dữ liệu thanh toán thật theo booking id, đồng thời xử lý token hết hạn nếu backend trả 401.
-     */
     async function loadPaymentData() {
+      setIsSyncing(payosResult === 'return');
+
       try {
-        const result = await getPaymentDetail(bookingId);
+        const result =
+          payosResult === 'return'
+            ? await syncPaymentStatus(bookingId)
+            : await getPaymentDetail(bookingId);
+
         setBooking(result.booking);
         setTour(result.tour);
         setPayment(result.payment);
         setErrorMessage('');
 
-        if (result.booking?.paymentMethod && result.booking.paymentMethod !== 'Chưa thanh toán') {
-          setPaymentData((current) => ({
-            ...current,
-            method: result.booking.paymentMethod,
-          }));
+        if (payosResult === 'return') {
+          setSuccessMessage(
+            result.booking?.paymentStatus === 'paid'
+              ? 'PayOS đã xác nhận thanh toán thành công.'
+              : 'Thanh toán đang chờ PayOS xác nhận. Bạn có thể tải lại trạng thái sau ít phút.',
+          );
+        } else if (payosResult === 'cancel') {
+          setSuccessMessage('');
+          setErrorMessage('Bạn đã hủy phiên thanh toán PayOS. Booking vẫn đang chờ thanh toán.');
         }
       } catch (error) {
         if (error.status === 401) {
@@ -50,56 +57,76 @@ function PaymentPage() {
         }
 
         setErrorMessage(error.message);
+      } finally {
+        setIsSyncing(false);
       }
     }
 
     loadPaymentData();
-  }, [bookingId, navigate]);
+  }, [bookingId, navigate, payosResult]);
 
-  // Tạo object summary thống nhất để sidebar luôn dựa trên dữ liệu booking mới nhất.
+  useEffect(() => {
+    let isActive = true;
+
+    async function renderQrImage() {
+      if (!payment?.qrCode) {
+        setQrImageUrl('');
+        return;
+      }
+
+      try {
+        const nextQrImageUrl = isImageSource(payment.qrCode)
+          ? payment.qrCode
+          : await QRCode.toDataURL(payment.qrCode, {
+              errorCorrectionLevel: 'M',
+              margin: 2,
+              scale: 8,
+            });
+
+        if (isActive) {
+          setQrImageUrl(nextQrImageUrl);
+        }
+      } catch (error) {
+        if (isActive) {
+          setQrImageUrl('');
+          setErrorMessage('Không thể hiển thị mã QR PayOS. Bạn có thể mở trang PayOS để thanh toán.');
+        }
+      }
+    }
+
+    renderQrImage();
+
+    return () => {
+      isActive = false;
+    };
+  }, [payment?.qrCode]);
+
   const draftSummary = useMemo(() => {
     return {
       customerName: booking?.customerName || 'Đang cập nhật',
       departureDate: booking?.departureDate || '',
-      paymentStatus: booking?.paymentStatus || 'waiting',
-      status: booking?.status || 'pending',
       discountAmount: booking?.discountAmount || 0,
+      paymentStatus: booking?.paymentStatus || 'waiting',
       promotionCode: booking?.promotionCode || null,
+      status: booking?.status || 'pending',
       subtotalPrice: booking?.subtotalPrice || booking?.totalPrice || 0,
       totalPrice: booking?.totalPrice || 0,
       travelers: booking?.travelers || 0,
     };
   }, [booking]);
 
-  /**
-   * Cập nhật dữ liệu form thanh toán mỗi khi người dùng đổi thông tin thẻ hoặc phương thức.
-   */
-  function handleChange(event) {
-    const { name, value } = event.target;
-    setPaymentData((current) => ({ ...current, [name]: value }));
-  }
-
-  /**
-   * Gọi backend xác nhận thanh toán rồi cập nhật lại booking và payment trên giao diện.
-   */
-  async function handleSubmit(event) {
-    event.preventDefault();
+  async function handleCreatePayosPayment() {
     setIsSubmitting(true);
     setErrorMessage('');
     setSuccessMessage('');
 
     try {
-      const result = await payBooking({
-        bookingId,
-        cardName: paymentData.cardName,
-        cardNumber: paymentData.cardNumber,
-        method: paymentData.method,
-      });
+      const result = await payBooking({ bookingId });
 
       setBooking(result.booking);
       setPayment(result.payment);
       setTour(result.tour);
-      setSuccessMessage('Thanh toán thành công. Booking của bạn đã được xác nhận.');
+      setSuccessMessage('Đã tạo mã QR PayOS. Vui lòng quét mã để thanh toán.');
     } catch (error) {
       if (error.status === 401) {
         logout();
@@ -110,6 +137,27 @@ function PaymentPage() {
       setErrorMessage(error.message);
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleSyncPaymentStatus() {
+    setIsSyncing(true);
+    setErrorMessage('');
+
+    try {
+      const result = await syncPaymentStatus(bookingId);
+      setBooking(result.booking);
+      setPayment(result.payment);
+      setTour(result.tour);
+      setSuccessMessage(
+        result.booking?.paymentStatus === 'paid'
+          ? 'PayOS đã xác nhận thanh toán thành công.'
+          : 'Giao dịch vẫn đang chờ xác nhận từ PayOS.',
+      );
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setIsSyncing(false);
     }
   }
 
@@ -124,35 +172,80 @@ function PaymentPage() {
     );
   }
 
+  const isPaid = booking.paymentStatus === 'paid';
+  const hasCheckoutUrl = Boolean(payment?.checkoutUrl);
+  const hasPayosSession = Boolean(payment?.providerOrderCode);
+
   return (
     <div className="container page-stack">
       <section className="page-banner">
         <p className="section-eyebrow">Trang thanh toán</p>
-        <h1>Hoàn tất thanh toán để khóa chỗ chính thức.</h1>
+        <h1>Hoàn tất thanh toán qua PayOS để khóa chỗ chính thức.</h1>
       </section>
 
       <div className="booking-grid">
-        <form className="form-card" onSubmit={handleSubmit}>
-          <FormField label="Tên chủ thẻ" name="cardName" onChange={handleChange} placeholder="NGUYEN VAN A" value={paymentData.cardName} />
-          <FormField label="Số thẻ / mã ví" name="cardNumber" onChange={handleChange} placeholder="9704 xxxx xxxx xxxx" value={paymentData.cardNumber} />
-          <FormField
-            as="select"
-            label="Phương thức thanh toán"
-            name="method"
-            onChange={handleChange}
-            options={[
-              { value: 'Thẻ nội địa', label: 'Thẻ nội địa' },
-              { value: 'Chuyển khoản ngân hàng', label: 'Chuyển khoản ngân hàng' },
-              { value: 'Ví điện tử', label: 'Ví điện tử' },
-            ]}
-            value={paymentData.method}
-          />
-          <button className="button button-primary full-width" disabled={isSubmitting} type="submit">
-            {isSubmitting ? 'Đang xử lý thanh toán...' : 'Xác nhận thanh toán'}
-          </button>
+        <section className="form-card">
+          <div>
+            <p className="section-eyebrow">PayOS QR</p>
+            <h2>{isPaid ? 'Thanh toán đã hoàn tất' : 'Quét mã để thanh toán'}</h2>
+            <p className="helper-text">
+              Booking chỉ được xác nhận sau khi PayOS gửi webhook hoặc API đồng bộ trả về trạng thái
+              thành công.
+            </p>
+          </div>
+
+          <div className="payos-status-panel">
+            <span>Trạng thái PayOS</span>
+            <strong>{getPayosStatusLabel(payment?.providerStatus || (isPaid ? 'PAID' : '')) || 'Chưa tạo phiên'}</strong>
+            {payment?.providerOrderCode ? <p>Mã thanh toán: {payment.providerOrderCode}</p> : null}
+          </div>
+
+          {!isPaid && qrImageUrl ? (
+            <div className="payos-qr-panel">
+              <img alt="Mã QR thanh toán PayOS" src={qrImageUrl} />
+              <p>Quét mã bằng ứng dụng ngân hàng hoặc ví điện tử hỗ trợ VietQR.</p>
+            </div>
+          ) : null}
+
+          {isPaid ? (
+            <Link className="button button-primary full-width" to="/bookings">
+              Xem lịch sử booking
+            </Link>
+          ) : (
+            <>
+              <button
+                className="button button-primary full-width"
+                disabled={isSubmitting}
+                type="button"
+                onClick={handleCreatePayosPayment}
+              >
+                {isSubmitting
+                  ? 'Đang tạo mã QR PayOS...'
+                  : hasPayosSession
+                    ? 'Tạo lại mã QR PayOS'
+                    : 'Tạo mã QR PayOS'}
+              </button>
+
+              {hasCheckoutUrl ? (
+                <a className="button button-secondary full-width" href={payment.checkoutUrl}>
+                  Mở trang PayOS
+                </a>
+              ) : null}
+
+              <button
+                className="button button-ghost full-width"
+                disabled={isSyncing || !payment?.providerOrderCode}
+                type="button"
+                onClick={handleSyncPaymentStatus}
+              >
+                {isSyncing ? 'Đang đồng bộ...' : 'Tải lại trạng thái thanh toán'}
+              </button>
+            </>
+          )}
+
           {successMessage ? <p className="success-message">{successMessage}</p> : null}
           {errorMessage ? <p className="error-message">{errorMessage}</p> : null}
-        </form>
+        </section>
 
         <aside className="summary-card">
           <p className="section-eyebrow">Đơn hàng</p>
@@ -162,7 +255,10 @@ function PaymentPage() {
             <li>Mã booking: {booking.id}</li>
             <li>Khách hàng: {draftSummary.customerName}</li>
             <li>Số khách: {draftSummary.travelers}</li>
-            <li>Ngày khởi hành: {draftSummary.departureDate ? formatDate(draftSummary.departureDate) : 'Đang cập nhật'}</li>
+            <li>
+              Ngày khởi hành:{' '}
+              {draftSummary.departureDate ? formatDate(draftSummary.departureDate) : 'Đang cập nhật'}
+            </li>
             <li>Phương thức gần nhất: {payment?.method || booking.paymentMethod}</li>
           </ul>
           <div className="summary-total summary-total-muted">
@@ -177,7 +273,10 @@ function PaymentPage() {
             <span>Tổng thanh toán</span>
             <strong>{formatCurrency(draftSummary.totalPrice)}</strong>
           </div>
-          <p className="helper-text">Sau khi thanh toán thành công, bạn có thể xem lại trạng thái đơn và thông tin chuyến đi trong mục lịch sử booking.</p>
+          <p className="helper-text">
+            Sau khi thanh toán thành công, bạn có thể xem lại trạng thái đơn và thông tin chuyến đi
+            trong mục lịch sử booking.
+          </p>
           <div className="inline-links">
             <Link to="/bookings">Xem lịch sử booking</Link>
             <Link to={`/tours/${tour.id}`}>Quay lại chi tiết tour</Link>

@@ -36,7 +36,7 @@ const TOUR_STATUSES = ['draft', 'published', 'archived'];
 const BOOKING_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'];
 const PAYMENT_STATUSES = ['waiting', 'paid', 'refunded', 'failed'];
 const DEPARTURE_STATUSES = ['open', 'nearly_full', 'closed', 'completed'];
-const PAYMENT_METHODS = ['card', 'bank_transfer', 'ewallet', 'cash'];
+const PAYMENT_METHODS = ['payos', 'card', 'bank_transfer', 'ewallet', 'cash'];
 const TOUR_IMPORT_SHEET_NAME = 'Tours';
 const TOUR_IMPORT_DEPARTURES_SHEET_NAME = 'Departures';
 const TOUR_IMPORT_ITINERARY_SHEET_NAME = 'Itineraries';
@@ -95,6 +95,7 @@ const PAYMENT_STATUS_LABELS = {
 };
 
 const PAYMENT_METHOD_LABELS = {
+  payos: 'PayOS',
   bank_transfer: 'Chuyển khoản',
   card: 'Thẻ nội địa / quốc tế',
   cash: 'Tiền mặt',

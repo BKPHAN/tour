@@ -24,6 +24,12 @@ export const env = {
   dbUser: process.env.DB_USER || 'root',
   jwtSecret: process.env.JWT_SECRET || 'change_me_for_real_project',
   passwordResetExpiresMinutes: Number(process.env.PASSWORD_RESET_EXPIRES_MINUTES || 30),
+  payosApiKey: process.env.PAYOS_API_KEY || '',
+  payosCancelUrl: process.env.PAYOS_CANCEL_URL || '',
+  payosChecksumKey: process.env.PAYOS_CHECKSUM_KEY || '',
+  payosClientId: process.env.PAYOS_CLIENT_ID || '',
+  payosReturnUrl: process.env.PAYOS_RETURN_URL || '',
+  payosWebhookUrl: process.env.PAYOS_WEBHOOK_URL || `${appUrl}/api/payments/payos/webhook`,
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN || '1d',
   refreshTokenSecret:
     process.env.REFRESH_TOKEN_SECRET || 'change_me_for_real_project_refresh',

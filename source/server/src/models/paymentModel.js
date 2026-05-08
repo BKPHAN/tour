@@ -22,9 +22,15 @@ function mapPaymentRow(row, includeInternal = false) {
     amount: toNumber(row.amount),
     cardLast4: row.card_last4,
     cardName: row.card_name,
+    checkoutUrl: row.checkout_url,
     id: row.payment_code,
     method: row.method,
     paidAt: row.paid_at,
+    provider: row.provider,
+    providerOrderCode: toNumber(row.provider_order_code, null),
+    providerPaymentLinkId: row.provider_payment_link_id,
+    providerStatus: row.provider_status,
+    qrCode: row.qr_code,
     status: row.status,
   };
 
@@ -53,7 +59,13 @@ export async function findPaymentByBookingId(bookingId, connection = null, optio
         status,
         card_name,
         card_last4,
-        paid_at
+        paid_at,
+        provider,
+        provider_order_code,
+        provider_payment_link_id,
+        checkout_url,
+        qr_code,
+        provider_status
       FROM payments
       WHERE booking_id = ?
       LIMIT 1
@@ -68,7 +80,7 @@ export async function findPaymentByBookingId(bookingId, connection = null, optio
 /**
  * Tạo bản ghi payment mới khi booking thanh toán lần đầu.
  */
-export async function createPayment(payload, connection = null) {
+export async function createPayment(payload, connection = null, options = {}) {
   const paymentCode = generatePaymentCode();
   const result = await execute(
     `
@@ -81,9 +93,15 @@ export async function createPayment(payload, connection = null) {
         status,
         card_name,
         card_last4,
-        paid_at
+        paid_at,
+        provider,
+        provider_order_code,
+        provider_payment_link_id,
+        checkout_url,
+        qr_code,
+        provider_status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       paymentCode,
@@ -92,14 +110,20 @@ export async function createPayment(payload, connection = null) {
       payload.amount,
       payload.method,
       payload.status,
-      payload.cardName,
-      payload.cardLast4,
-      payload.paidAt,
+      payload.cardName ?? null,
+      payload.cardLast4 ?? null,
+      payload.paidAt ?? null,
+      payload.provider ?? null,
+      payload.providerOrderCode ?? null,
+      payload.providerPaymentLinkId ?? null,
+      payload.checkoutUrl ?? null,
+      payload.qrCode ?? null,
+      payload.providerStatus ?? null,
     ],
     connection,
   );
 
-  return findPaymentByRecordId(result.insertId, connection);
+  return findPaymentByRecordId(result.insertId, connection, options);
 }
 
 /**
@@ -118,7 +142,13 @@ export async function findPaymentByRecordId(paymentDbId, connection = null, opti
         status,
         card_name,
         card_last4,
-        paid_at
+        paid_at,
+        provider,
+        provider_order_code,
+        provider_payment_link_id,
+        checkout_url,
+        qr_code,
+        provider_status
       FROM payments
       WHERE id = ?
       LIMIT 1
@@ -133,7 +163,7 @@ export async function findPaymentByRecordId(paymentDbId, connection = null, opti
 /**
  * Cập nhật giao dịch hiện có nếu booking được thanh toán lại trên cùng bản ghi.
  */
-export async function updatePayment(paymentDbId, updates, connection = null) {
+export async function updatePayment(paymentDbId, updates, connection = null, options = {}) {
   const assignments = [];
   const params = [];
 
@@ -167,8 +197,38 @@ export async function updatePayment(paymentDbId, updates, connection = null) {
     params.push(updates.paidAt);
   }
 
+  if (updates.provider !== undefined) {
+    assignments.push('provider = ?');
+    params.push(updates.provider);
+  }
+
+  if (updates.providerOrderCode !== undefined) {
+    assignments.push('provider_order_code = ?');
+    params.push(updates.providerOrderCode);
+  }
+
+  if (updates.providerPaymentLinkId !== undefined) {
+    assignments.push('provider_payment_link_id = ?');
+    params.push(updates.providerPaymentLinkId);
+  }
+
+  if (updates.checkoutUrl !== undefined) {
+    assignments.push('checkout_url = ?');
+    params.push(updates.checkoutUrl);
+  }
+
+  if (updates.qrCode !== undefined) {
+    assignments.push('qr_code = ?');
+    params.push(updates.qrCode);
+  }
+
+  if (updates.providerStatus !== undefined) {
+    assignments.push('provider_status = ?');
+    params.push(updates.providerStatus);
+  }
+
   if (!assignments.length) {
-    return findPaymentByRecordId(paymentDbId, connection);
+    return findPaymentByRecordId(paymentDbId, connection, options);
   }
 
   await execute(
@@ -181,5 +241,36 @@ export async function updatePayment(paymentDbId, updates, connection = null) {
     connection,
   );
 
-  return findPaymentByRecordId(paymentDbId, connection);
+  return findPaymentByRecordId(paymentDbId, connection, options);
+}
+
+export async function findPaymentByProviderOrderCode(providerOrderCode, connection = null, options = {}) {
+  const rows = await select(
+    `
+      SELECT
+        id AS payment_db_id,
+        payment_code,
+        booking_id,
+        user_id,
+        amount,
+        method,
+        status,
+        card_name,
+        card_last4,
+        paid_at,
+        provider,
+        provider_order_code,
+        provider_payment_link_id,
+        checkout_url,
+        qr_code,
+        provider_status
+      FROM payments
+      WHERE provider_order_code = ?
+      LIMIT 1
+    `,
+    [Number(providerOrderCode)],
+    connection,
+  );
+
+  return rows[0] ? mapPaymentRow(rows[0], Boolean(options.includeInternal)) : null;
 }
