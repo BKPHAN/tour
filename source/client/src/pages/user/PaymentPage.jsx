@@ -4,7 +4,12 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import BookingStatusPill from '../../components/BookingStatusPill.jsx';
 import { logout } from '../../services/user/authService.js';
 import { getPaymentDetail, payBooking, syncPaymentStatus } from '../../services/user/paymentService.js';
-import { formatCurrency, formatDate, getPayosStatusLabel } from '../../utils/formatters.js';
+import {
+  formatCurrency,
+  formatDate,
+  getPayosStatusLabel,
+  getPayosStatusTone,
+} from '../../utils/formatters.js';
 
 function isImageSource(value) {
   return /^data:image\//.test(value) || /^https?:\/\//.test(value);
@@ -68,6 +73,9 @@ function PaymentPage() {
   useEffect(() => {
     let isActive = true;
 
+    /**
+     * PayOS có thể trả qrCode là ảnh hoặc chuỗi VietQR. Nếu là chuỗi, frontend tự render thành ảnh QR.
+     */
     async function renderQrImage() {
       if (!payment?.qrCode) {
         setQrImageUrl('');
@@ -140,6 +148,9 @@ function PaymentPage() {
     }
   }
 
+  /**
+   * Dùng khi test local không có webhook public, hoặc khi user muốn kiểm tra lại sau khi quét QR.
+   */
   async function handleSyncPaymentStatus() {
     setIsSyncing(true);
     setErrorMessage('');
@@ -175,6 +186,7 @@ function PaymentPage() {
   const isPaid = booking.paymentStatus === 'paid';
   const hasCheckoutUrl = Boolean(payment?.checkoutUrl);
   const hasPayosSession = Boolean(payment?.providerOrderCode);
+  const payosStatus = payment?.providerStatus || (isPaid ? 'PAID' : '');
 
   return (
     <div className="container page-stack">
@@ -196,7 +208,9 @@ function PaymentPage() {
 
           <div className="payos-status-panel">
             <span>Trạng thái PayOS</span>
-            <strong>{getPayosStatusLabel(payment?.providerStatus || (isPaid ? 'PAID' : '')) || 'Chưa tạo phiên'}</strong>
+            <strong className={`payos-status-text payos-status-${getPayosStatusTone(payosStatus)}`}>
+              {getPayosStatusLabel(payosStatus) || 'Chưa tạo phiên'}
+            </strong>
             {payment?.providerOrderCode ? <p>Mã thanh toán: {payment.providerOrderCode}</p> : null}
           </div>
 

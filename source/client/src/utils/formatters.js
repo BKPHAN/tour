@@ -48,6 +48,9 @@ export function getPaymentLabel(status) {
   return labels[status] ?? status;
 }
 
+/**
+ * PayOS trả trạng thái dạng mã tiếng Anh; UI user cần nhãn tiếng Việt dễ hiểu.
+ */
 export function getPayosStatusLabel(status) {
   const normalizedStatus = String(status || '').trim().toUpperCase();
   const labels = {
@@ -61,4 +64,29 @@ export function getPayosStatusLabel(status) {
   };
 
   return labels[normalizedStatus] ?? status;
+}
+
+/**
+ * Tone màu đi cùng nhãn PayOS để trạng thái thành công/chờ/lỗi dễ phân biệt.
+ */
+export function getPayosStatusTone(status) {
+  const normalizedStatus = String(status || '').trim().toUpperCase();
+
+  if (normalizedStatus === 'PAID') {
+    return 'success';
+  }
+
+  if (['FAILED', 'CANCELLED', 'UNDERPAID'].includes(normalizedStatus)) {
+    return 'danger';
+  }
+
+  if (normalizedStatus === 'EXPIRED') {
+    return 'muted';
+  }
+
+  if (['PENDING', 'PROCESSING'].includes(normalizedStatus)) {
+    return 'warning';
+  }
+
+  return 'default';
 }

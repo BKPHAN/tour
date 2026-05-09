@@ -33,10 +33,17 @@ function appendTimelineItem(timeline, title, detail) {
   ];
 }
 
+/**
+ * PayOS yêu cầu orderCode là số. Giá trị này được lưu lại để webhook/sync tìm đúng payment.
+ */
 function generatePayosOrderCode() {
   return Number(`${Date.now()}${Math.floor(Math.random() * 90 + 10)}`);
 }
 
+/**
+ * RETURN/CANCEL URL có thể dùng placeholder :bookingId trong .env để PayOS quay về đúng booking.
+ * Query `payos` giúp frontend phân biệt khách vừa thanh toán xong hay vừa hủy phiên.
+ */
 function buildPayosRedirectUrl(configuredUrl, bookingId, result) {
   const fallbackUrl = new URL(`/payment/${encodeURIComponent(bookingId)}`, env.appUrl);
 
@@ -57,6 +64,9 @@ function buildPayosRedirectUrl(configuredUrl, bookingId, result) {
   return redirectUrl.toString();
 }
 
+/**
+ * Chuẩn hóa trạng thái PayOS sang enum nội bộ đang dùng trong bảng payments/bookings.
+ */
 function mapPayosStatusToPaymentStatus(providerStatus) {
   if (providerStatus === 'PAID') {
     return 'paid';
@@ -91,6 +101,9 @@ function stripPaymentInternals(payment) {
   return publicPayment;
 }
 
+/**
+ * Trang payment cần `booking + payment + tour` trong cùng một response.
+ */
 export async function getPaymentDetail(userId, bookingId) {
   const booking = await findBookingByIdAndUserId(bookingId, userId, { includeInternal: true });
 
@@ -105,6 +118,13 @@ export async function getPaymentDetail(userId, bookingId) {
   };
 }
 
+/**
+ * Luồng tạo QR:
+ * 1. Kiểm tra booking thuộc user và chưa thanh toán
+ * 2. Tạo/cập nhật payment ở trạng thái waiting
+ * 3. Gọi PayOS lấy qrCode/checkoutUrl
+ * 4. Lưu lại dữ liệu PayOS để frontend hiển thị QR và webhook có thể đối chiếu
+ */
 export async function payForBooking(userId, payload) {
   const { bookingId } = payload;
   const paymentDraft = await withTransaction(async (connection) => {
@@ -220,6 +240,9 @@ export async function payForBooking(userId, payload) {
   };
 }
 
+/**
+ * Áp dụng trạng thái PayOS vào DB. Hàm này dùng chung cho webhook và nút sync thủ công.
+ */
 async function applyPayosStatus(payment, providerStatus, amount, connection) {
   const paymentStatus = mapPayosStatusToPaymentStatus(providerStatus);
   const booking = await findBookingByDbId(payment._bookingDbId, { includeInternal: true }, connection);
@@ -286,6 +309,9 @@ async function applyPayosStatus(payment, providerStatus, amount, connection) {
   };
 }
 
+/**
+ * Webhook là nguồn xác nhận tự động từ PayOS. Không cần user đăng nhập nhưng bắt buộc verify chữ ký.
+ */
 export async function handlePayosWebhook(payload) {
   const webhookData = await verifyPayosWebhook(payload);
 
@@ -307,6 +333,9 @@ export async function handlePayosWebhook(payload) {
   });
 }
 
+/**
+ * Sync thủ công cho môi trường local hoặc khi webhook public chưa cấu hình xong.
+ */
 export async function syncPayosPaymentStatus(userId, bookingId) {
   const booking = await findBookingByIdAndUserId(bookingId, userId, { includeInternal: true });
 

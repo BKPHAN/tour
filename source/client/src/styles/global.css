@@ -674,6 +674,22 @@ button {
   color: var(--ink-strong);
 }
 
+.payos-status-text.payos-status-success {
+  color: #1f7a5c;
+}
+
+.payos-status-text.payos-status-warning {
+  color: #b45309;
+}
+
+.payos-status-text.payos-status-danger {
+  color: #b42334;
+}
+
+.payos-status-text.payos-status-muted {
+  color: var(--ink-soft);
+}
+
 .payos-status-panel p {
   margin: 0;
   overflow-wrap: anywhere;
