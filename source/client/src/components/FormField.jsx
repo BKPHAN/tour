@@ -9,11 +9,13 @@ function FormField({
   type = 'text',
   value,
   onChange,
+  onBlur,
   placeholder,
   as = 'input',
   options = [],
   disabled = false,
   readOnly = false,
+  ...inputProps
 }) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const isPasswordField = as === 'input' && type === 'password';
@@ -61,10 +63,12 @@ function FormField({
           disabled={disabled}
           name={name}
           onChange={onChange}
+          onBlur={onBlur}
           placeholder={placeholder}
           readOnly={readOnly}
           type={inputType}
           value={value}
+          {...inputProps}
         />
         {/* Chỉ hiển thị nút con mắt khi field thật sự là password để tránh nhiễu UI. */}
         {isPasswordField && !disabled ? (

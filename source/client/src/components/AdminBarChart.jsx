@@ -41,7 +41,13 @@ function buildAxisLabelLines(label, maxLineLength = 10) {
   return [firstLine, normalizedSecondLine];
 }
 
-function AdminBarChart({ emptyMessage = 'Chua co du lieu de hien thi.', formatValue, items = [] }) {
+function AdminBarChart({
+  chartWidth = 460,
+  emptyMessage = 'Chua co du lieu de hien thi.',
+  formatValue,
+  items = [],
+  labelMaxLineLength = 10,
+}) {
   const normalizedItems = items.filter((item) => Number(item?.value) > 0);
 
   if (!normalizedItems.length) {
@@ -52,7 +58,6 @@ function AdminBarChart({ emptyMessage = 'Chua co du lieu de hien thi.', formatVa
   const maxValue = Math.max(...normalizedItems.map((item) => Number(item.value) || 0), 1);
   const roundedMaxValue = Math.ceil(maxValue / 5) * 5;
   const chartHeight = 220;
-  const chartWidth = 460;
   const leftAxisWidth = 42;
   const rightPadding = 10;
   const topPadding = 16;
@@ -135,7 +140,7 @@ function AdminBarChart({ emptyMessage = 'Chua co du lieu de hien thi.', formatVa
           const height = Math.max((value / roundedMaxValue) * chartHeight, 8);
           const x = leftAxisWidth + index * slotWidth + (slotWidth - barWidth) / 2;
           const y = topPadding + chartHeight - height;
-          const labelLines = buildAxisLabelLines(item.shortLabel || item.label);
+          const labelLines = buildAxisLabelLines(item.shortLabel || item.label, labelMaxLineLength);
 
           return (
             <g key={item.label}>

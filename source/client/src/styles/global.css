@@ -889,9 +889,25 @@ button {
 .history-card {
   display: grid;
   gap: 18px;
-  grid-template-columns: 1.4fr 1fr auto;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px) minmax(320px, 320px);
   padding: 20px 24px;
   align-items: center;
+}
+
+.history-status {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+
+.history-status .status-pill {
+  min-width: 170px;
+  white-space: nowrap;
+}
+
+.history-actions {
+  justify-content: flex-end;
+  min-width: 320px;
 }
 
 .timeline-item {
@@ -1018,6 +1034,11 @@ button {
   .testimonial-grid,
   .history-card {
     grid-template-columns: 1fr;
+  }
+
+  .history-actions {
+    justify-content: flex-start;
+    min-width: 0;
   }
 
   .section-heading-row,

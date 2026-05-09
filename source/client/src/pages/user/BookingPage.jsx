@@ -6,6 +6,11 @@ import { getStoredUser, logout } from '../../services/user/authService.js';
 import { getTourDetail } from '../../services/user/tourService.js';
 import { formatCurrency, formatDate } from '../../utils/formatters.js';
 
+function getTravelerCount(value) {
+  const travelerCount = Number.parseInt(value, 10);
+  return Number.isFinite(travelerCount) && travelerCount >= 1 ? travelerCount : 1;
+}
+
 /**
  * Trang nhập thông tin đặt tour và tạo booking thật trước khi sang bước thanh toán.
  */
@@ -24,7 +29,7 @@ function BookingPage() {
     fullName: storedUser?.fullName || '',
     email: storedUser?.email || '',
     phone: storedUser?.phone || '',
-    travelerCount: '2',
+    travelerCount: '1',
     departureId: '',
     promotionCode: '',
     note: '',
@@ -60,7 +65,8 @@ function BookingPage() {
   }, [formData.departureId, tour]);
 
   // Tổng tiền tạm tính được suy ra trực tiếp từ số khách và giá của lịch đang chọn.
-  const fallbackSubtotalPrice = Number(formData.travelerCount || 0) * (selectedDeparture?.price ?? 0);
+  const travelerCount = getTravelerCount(formData.travelerCount);
+  const fallbackSubtotalPrice = travelerCount * (selectedDeparture?.price ?? 0);
   const priceSummary = priceQuote ?? {
     discountAmount: 0,
     promotionCode: null,
@@ -81,6 +87,13 @@ function BookingPage() {
       setPromotionMessage('');
       setPromotionMessageType('success');
     }
+  }
+
+  function handleTravelerCountBlur() {
+    setFormData((current) => ({
+      ...current,
+      travelerCount: String(getTravelerCount(current.travelerCount)),
+    }));
   }
 
   /**
@@ -108,7 +121,7 @@ function BookingPage() {
         departureId: formData.departureId,
         promotionCode: normalizedPromotionCode,
         tourId,
-        travelers: Number(formData.travelerCount),
+        travelers: travelerCount,
       });
 
       setPriceQuote(quote);
@@ -147,7 +160,7 @@ function BookingPage() {
         phone: formData.phone,
         promotionCode: formData.promotionCode.trim(),
         tourId,
-        travelers: Number(formData.travelerCount),
+        travelers: travelerCount,
       });
 
       navigate(`/payment/${booking.id}`);
@@ -185,16 +198,14 @@ function BookingPage() {
           <FormField label="Email" name="email" onChange={handleChange} placeholder="you@example.com" type="email" value={formData.email} />
           <FormField label="Số điện thoại" name="phone" onChange={handleChange} placeholder="09xxxxxxxx" value={formData.phone} />
           <FormField
-            as="select"
             label="Số lượng hành khách"
+            min="1"
             name="travelerCount"
             onChange={handleChange}
-            options={[
-              { value: '1', label: '1 người' },
-              { value: '2', label: '2 người' },
-              { value: '3', label: '3 người' },
-              { value: '4', label: '4 người' },
-            ]}
+            onBlur={handleTravelerCountBlur}
+            placeholder="1"
+            step="1"
+            type="number"
             value={formData.travelerCount}
           />
           <FormField
@@ -244,7 +255,7 @@ function BookingPage() {
             <li>Điểm khởi hành: {tour.departurePoint}</li>
             <li>Thời lượng: {tour.duration}</li>
             <li>Lịch chọn: {selectedDeparture ? formatDate(selectedDeparture.date) : 'Chưa chọn'}</li>
-            <li>Số khách: {formData.travelerCount}</li>
+            <li>Số khách: {travelerCount}</li>
           </ul>
           <div className="summary-total">
             <span>Tổng tạm tính</span>

@@ -636,6 +636,10 @@
   padding: 24px;
 }
 
+.admin-report-card-wide {
+  grid-column: 1 / -1;
+}
+
 .admin-report-card h3,
 .admin-toolbar-card h3,
 .admin-insight-card h3,
@@ -676,6 +680,47 @@
   border-radius: 0;
   background: #ffffff;
   border: 1px solid rgba(16, 35, 60, 0.12);
+}
+
+.admin-category-chart {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(16, 35, 60, 0.12);
+  background: #ffffff;
+}
+
+.admin-category-chart-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 280px) minmax(0, 1fr) 42px;
+  gap: 14px;
+  align-items: center;
+}
+
+.admin-category-chart-label {
+  color: #2f3b4d;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.admin-category-chart-track {
+  position: relative;
+  height: 28px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(16, 35, 60, 0.08);
+}
+
+.admin-category-chart-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  min-width: 28px;
+  border-radius: inherit;
+}
+
+.admin-category-chart-row strong {
+  color: #10233c;
+  text-align: right;
 }
 
 .admin-chart-empty {
@@ -1649,6 +1694,14 @@
 
   .admin-chart-card-classic {
     padding: 8px 6px 4px;
+  }
+
+  .admin-category-chart-row {
+    grid-template-columns: minmax(0, 1fr) 42px;
+  }
+
+  .admin-category-chart-label {
+    grid-column: 1 / -1;
   }
 
   .admin-topbar h1 {

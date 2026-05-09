@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AdminBarChart from '../../components/AdminBarChart.jsx';
 import AdminDonutChart from '../../components/AdminDonutChart.jsx';
+import AdminHorizontalBarChart from '../../components/AdminHorizontalBarChart.jsx';
 import SectionHeading from '../../components/SectionHeading.jsx';
 import { getAdminBookings } from '../../services/admin/adminBookingService.js';
 import { getAdminPayments } from '../../services/admin/adminPaymentService.js';
@@ -77,7 +78,6 @@ function buildCategoryChart(tours) {
     .map((category, index) => ({
       color: categoryChartColors[index % categoryChartColors.length],
       label: category,
-      shortLabel: category.slice(0, 10),
       value: tours.filter((tour) => tour.category === category && !tour.deleteFlg).length,
     }));
 }
@@ -266,7 +266,7 @@ function AdminDashboardPage() {
           <AdminDonutChart centerLabel="Payment" items={paymentStatusChart} />
         </article>
 
-        <article className="admin-report-card">
+        <article className="admin-report-card admin-report-card-wide">
           <div className="admin-report-head">
             <div>
               <h3>Danh mục tour theo nhóm</h3>
@@ -276,7 +276,7 @@ function AdminDashboardPage() {
               Mở tour
             </Link>
           </div>
-          <AdminBarChart items={categoryChart} />
+          <AdminHorizontalBarChart items={categoryChart} />
         </article>
       </section>
 

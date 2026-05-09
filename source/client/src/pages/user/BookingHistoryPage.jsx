@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import BookingStatusPill from '../../components/BookingStatusPill.jsx';
 import SectionHeading from '../../components/SectionHeading.jsx';
 import { getBookings } from '../../services/user/bookingService.js';
 import { logout } from '../../services/user/authService.js';
 import { getTourDetail } from '../../services/user/tourService.js';
-import { formatCurrency, formatDate } from '../../utils/formatters.js';
+import { formatCurrency, formatDate, getPaymentLabel } from '../../utils/formatters.js';
 
 /**
  * Trang lịch sử booking, lấy danh sách booking thật của user và lọc nhanh theo trạng thái.
@@ -94,8 +93,10 @@ function BookingHistoryPage() {
                   Khởi hành {formatDate(booking.departureDate)} | {booking.travelers} khách
                 </p>
               </div>
-              <div>
-                <BookingStatusPill paymentStatus={booking.paymentStatus} status={booking.status} />
+              <div className="history-status">
+                <span className={`status-pill payment-${booking.paymentStatus}`}>
+                  {getPaymentLabel(booking.paymentStatus)}
+                </span>
                 <strong>{formatCurrency(booking.totalPrice)}</strong>
               </div>
               <div className="history-actions">
