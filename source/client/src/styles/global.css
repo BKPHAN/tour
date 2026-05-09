@@ -538,9 +538,20 @@ button {
   color: #9b6400;
 }
 
+.status-cancelled,
+.payment-failed {
+  background: rgba(201, 67, 67, 0.12);
+  color: #a92f3c;
+}
+
 .status-completed {
   background: rgba(16, 35, 60, 0.1);
   color: #10233c;
+}
+
+.payment-refunded {
+  background: rgba(16, 35, 60, 0.08);
+  color: var(--ink-soft);
 }
 
 .detail-hero {

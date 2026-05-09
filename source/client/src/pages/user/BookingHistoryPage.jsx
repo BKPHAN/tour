@@ -1,10 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import BookingStatusPill from '../../components/BookingStatusPill.jsx';
 import SectionHeading from '../../components/SectionHeading.jsx';
 import { getBookings } from '../../services/user/bookingService.js';
 import { logout } from '../../services/user/authService.js';
 import { getTourDetail } from '../../services/user/tourService.js';
-import { formatCurrency, formatDate, getPaymentLabel } from '../../utils/formatters.js';
+import { formatCurrency, formatDate } from '../../utils/formatters.js';
+
+function getBookingFilterStatus(booking) {
+  if (booking.status === 'cancelled') {
+    return 'cancelled';
+  }
+
+  return booking.paymentStatus === 'paid' ? 'paid' : 'waiting';
+}
 
 /**
  * Trang lịch sử booking, lấy danh sách booking thật của user và lọc nhanh theo trạng thái.
@@ -54,7 +63,7 @@ function BookingHistoryPage() {
       return bookings;
     }
 
-    return bookings.filter((booking) => booking.status === statusFilter);
+    return bookings.filter((booking) => getBookingFilterStatus(booking) === statusFilter);
   }, [bookings, statusFilter]);
 
   return (
@@ -74,9 +83,8 @@ function BookingHistoryPage() {
           <span>Lọc theo trạng thái</span>
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
             <option value="all">Tất cả</option>
-            <option value="pending">Chờ thanh toán</option>
-            <option value="confirmed">Đã xác nhận</option>
-            <option value="completed">Đã hoàn thành</option>
+            <option value="waiting">Chờ thanh toán</option>
+            <option value="paid">Đã thanh toán</option>
             <option value="cancelled">Đã hủy</option>
           </select>
         </label>
@@ -94,16 +102,14 @@ function BookingHistoryPage() {
                 </p>
               </div>
               <div className="history-status">
-                <span className={`status-pill payment-${booking.paymentStatus}`}>
-                  {getPaymentLabel(booking.paymentStatus)}
-                </span>
+                <BookingStatusPill paymentStatus={booking.paymentStatus} status={booking.status} />
                 <strong>{formatCurrency(booking.totalPrice)}</strong>
               </div>
               <div className="history-actions">
                 <Link className="button button-secondary" to={`/bookings/${booking.id}`}>
                   Xem chi tiết
                 </Link>
-                {booking.paymentStatus === 'waiting' ? (
+                {booking.status !== 'cancelled' && booking.paymentStatus === 'waiting' ? (
                   <Link className="button button-primary" to={`/payment/${booking.id}`}>
                     Thanh toán ngay
                   </Link>

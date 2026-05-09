@@ -48,6 +48,27 @@ export function getPaymentLabel(status) {
   return labels[status] ?? status;
 }
 
+export function getBookingDisplayStatus(status, paymentStatus) {
+  if (status === 'cancelled') {
+    return {
+      className: 'status-pill status-cancelled',
+      label: getStatusLabel(status),
+    };
+  }
+
+  if (paymentStatus) {
+    return {
+      className: `status-pill payment-${paymentStatus}`,
+      label: getPaymentLabel(paymentStatus),
+    };
+  }
+
+  return {
+    className: `status-pill status-${status}`,
+    label: getStatusLabel(status),
+  };
+}
+
 /**
  * PayOS trả trạng thái dạng mã tiếng Anh; UI user cần nhãn tiếng Việt dễ hiểu.
  */

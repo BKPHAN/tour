@@ -143,6 +143,10 @@ export async function payForBooking(userId, payload) {
       throw new ApiError(400, 'Booking này đã được thanh toán.');
     }
 
+    if (booking.status === 'cancelled') {
+      throw new ApiError(400, 'Booking đã hủy nên không thể thanh toán.');
+    }
+
     const currentPayment = await findPaymentByBookingId(booking._bookingDbId, connection, {
       includeInternal: true,
     });

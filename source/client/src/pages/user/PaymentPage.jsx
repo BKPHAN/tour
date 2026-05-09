@@ -184,9 +184,10 @@ function PaymentPage() {
   }
 
   const isPaid = booking.paymentStatus === 'paid';
+  const isCancelled = booking.status === 'cancelled';
   const hasCheckoutUrl = Boolean(payment?.checkoutUrl);
   const hasPayosSession = Boolean(payment?.providerOrderCode);
-  const payosStatus = payment?.providerStatus || (isPaid ? 'PAID' : '');
+  const payosStatus = isCancelled ? 'CANCELLED' : payment?.providerStatus || (isPaid ? 'PAID' : '');
 
   return (
     <div className="container page-stack">
@@ -199,10 +200,17 @@ function PaymentPage() {
         <section className="form-card">
           <div>
             <p className="section-eyebrow">PayOS QR</p>
-            <h2>{isPaid ? 'Thanh toán đã hoàn tất' : 'Quét mã để thanh toán'}</h2>
+            <h2>
+              {isCancelled
+                ? 'Booking đã hủy'
+                : isPaid
+                  ? 'Thanh toán đã hoàn tất'
+                  : 'Quét mã để thanh toán'}
+            </h2>
             <p className="helper-text">
-              Booking chỉ được xác nhận sau khi PayOS gửi webhook hoặc API đồng bộ trả về trạng thái
-              thành công.
+              {isCancelled
+                ? 'Booking này đã bị hủy nên không thể tạo hoặc tiếp tục phiên thanh toán.'
+                : 'Booking chỉ được xác nhận sau khi PayOS gửi webhook hoặc API đồng bộ trả về trạng thái thành công.'}
             </p>
           </div>
 
@@ -214,14 +222,14 @@ function PaymentPage() {
             {payment?.providerOrderCode ? <p>Mã thanh toán: {payment.providerOrderCode}</p> : null}
           </div>
 
-          {!isPaid && qrImageUrl ? (
+          {!isPaid && !isCancelled && qrImageUrl ? (
             <div className="payos-qr-panel">
               <img alt="Mã QR thanh toán PayOS" src={qrImageUrl} />
               <p>Quét mã bằng ứng dụng ngân hàng hoặc ví điện tử hỗ trợ VietQR.</p>
             </div>
           ) : null}
 
-          {isPaid ? (
+          {isPaid || isCancelled ? (
             <Link className="button button-primary full-width" to="/bookings">
               Xem lịch sử booking
             </Link>

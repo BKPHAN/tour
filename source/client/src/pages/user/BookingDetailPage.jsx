@@ -120,7 +120,7 @@ function BookingDetailPage() {
             <Link className="button button-secondary" to="/bookings">
               Quay lại lịch sử
             </Link>
-            {booking.paymentStatus === 'waiting' ? (
+            {booking.status !== 'cancelled' && booking.paymentStatus === 'waiting' ? (
               <Link className="button button-primary" to={`/payment/${booking.id}`}>
                 Thanh toán ngay
               </Link>
